@@ -1,0 +1,329 @@
+/* Base Styling for Full Height and Flexbox Layout */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Wrapper takes the full height of the page */
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensures the wrapper takes full viewport height */
+}
+
+/* Content will grow and push footer to bottom */
+.content {
+    flex: 1; /* This makes the content take available space */
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    margin: 20px;
+}
+
+/* Header Styling */
+header {
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 2rem;
+}
+
+/* Gradient Background */
+.gradient-background {
+    background: linear-gradient(135deg, #00bfff, #b2b5e0, #c5adc5);
+    background-size: 200% 200%;
+    animation: gradient-animation 10s ease infinite;
+}
+
+@keyframes gradient-animation {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* User Details Section */
+.user-details {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+.user-details h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.user-details p {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+/* Blogs Section */
+.user-blogs {
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+.user-blogs h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.user-blogs ul {
+    list-style-type: none;
+}
+
+.user-blogs li {
+    background-color: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 5px solid ;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+.user-blogs h3 {
+    font-size: 1.3rem;
+    color: #333;
+}
+
+.user-blogs p {
+    font-size: 1rem;
+    margin: 10px 0;
+    color: #555;
+}
+
+.user-blogs a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.user-blogs a:hover {
+    text-decoration: underline;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.pagination a {
+    margin: 0 8px;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: #555;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    transition: background-color 0.2s ease;
+}
+
+.pagination a.active, .pagination a:hover {
+    background-color: #00bfff;
+    color: white;
+    border-color: #00bfff;
+}
+
+/* Footer Styling */
+.footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 14px;
+    color: #777;
+    background-color: #fafafa;
+    border-top: 1px solid #eaeaea;
+    margin-top: auto; /* Footer stays at the bottom if content is short */
+}
+
+/* Headings */
+h2, h3 {
+    font-family: 'Georgia', serif;
+    color: #444;
+}
+
+/* Custom Typography */
+span {
+    font-family: 'Helvetica', sans-serif;
+    font-size: 16px;
+    color: #555;
+}
+
+/* Textarea & Inputs */
+#content, #author, #title {
+    width: 80%;
+    padding: 12px;
+    box-sizing: border-box;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: border-color 0.2s ease;
+}
+
+#content:focus, #author:focus, #title:focus {
+    border-color: #00bfff;
+    outline: none;
+}
+
+#content {
+    height: 250px;
+    resize: none;
+}
+
+/* Buttons */
+#submit, .code {
+    background-color: #00bfff;
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#submit:hover, .code:hover {
+    background-color: #009fd8;
+    transform: scale(1.05);
+}
+
+/* Form Container */
+.form-container {
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.form-container h2 {
+    font-size: 1.6em;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #444;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-family: 'Helvetica', sans-serif;
+    color: #666;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+    border-color: #00bfff;
+    outline: none;
+}
+
+/* Email and Password Input */
+.email-group, .password-group {
+    margin-bottom: 20px;
+}
+
+.email-input, .password-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #6c5ce7;
+    border-radius: 8px;
+    font-size: 1.1em;
+    background-color: #f7f7f7;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.email-input:focus, .password-input:focus {
+    border-color: #00bfff;
+    box-shadow: 0 5px 15px rgba(0, 191, 255, 0.2);
+    outline: none;
+}
+
+/* Gradient Login Button */
+.gradient-login-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6c5ce7, #00bfff);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 8px 15px rgba(108, 92, 231, 0.3);
+}
+
+.gradient-login-btn:hover {
+    transform: scale(1.05);
+    background-color: #4a34d3;
+    box-shadow: 0 10px 20px rgba(10, 10, 10, 0.4);
+}
+
+/* Google OAuth button */
+.google-btn {
+    display: inline-block;
+    width: 100%;
+    padding: 15px;
+    background-color: white;
+    color: black;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1em;
+    letter-spacing: 1.5px;
+    margin-top: 15px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 8px 15px rgba(7, 7, 7, 0.3);
+}
+
+/* Google button hover effect */
+.google-btn:hover {
+    background-color: white;
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(20, 20, 20, 0.3);
+}
+.profile-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.logout{
+    margin-top: 5px;
+}
+
+.logout:hover {
+    margin-top: 5px;
+  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}

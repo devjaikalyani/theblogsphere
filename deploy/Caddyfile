@@ -1,0 +1,33 @@
+# TheBlogSphere — production reverse proxy (Caddy v2)
+# Serves the Angular SSR app and the NestJS API on the SAME ORIGIN, which is
+# required for auth cookies and Google OAuth to work. Caddy provisions and
+# renews HTTPS automatically.
+#
+# Processes (see deploy/ecosystem.config.cjs):
+#   - NestJS API        -> 127.0.0.1:3000   (PORT=3000 npm run server:start)
+#   - Angular SSR server-> 127.0.0.1:4000   (PORT=4000 npm run serve:ssr:TheBlogSphere)
+#
+# Replace yourdomain.com with your real domain, then: caddy run --config deploy/Caddyfile
+
+yourdomain.com {
+	encode zstd gzip
+
+	# API -> NestJS (helmet already sets security headers on these responses)
+	handle /api/* {
+		reverse_proxy 127.0.0.1:3000
+	}
+
+	# Everything else -> Angular SSR (serves hashed static assets + SSR HTML).
+	# The SSR server already sends `Cache-Control: max-age=1y` for /browser assets.
+	handle {
+		reverse_proxy 127.0.0.1:4000
+	}
+
+	# Defense-in-depth headers for the SSR/document responses.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}

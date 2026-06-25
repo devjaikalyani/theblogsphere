@@ -1,0 +1,71 @@
+<div class="bg-page min-h-screen">
+
+  <!-- Hero -->
+  <div class="border-b border-gray-200 bg-paper">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-20 text-center">
+      <p class="eyebrow eyebrow-clay mb-4">About</p>
+      <h1 class="text-hero mb-6 text-[clamp(2.4rem,6vw,4rem)]">
+        Built for people who<br><span class="text-gradient">think in words.</span>
+      </h1>
+      <p class="font-reading text-gray-600 text-xl leading-relaxed max-w-xl mx-auto">
+        TheBlogSphere is a writing platform that puts your ideas first &mdash; calm, fast, and designed to last.
+      </p>
+    </div>
+  </div>
+
+  <!-- Mission -->
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-16">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
+      <div>
+        <h2 class="font-display text-xl text-gray-900 mb-3">Our mission</h2>
+        <p class="font-reading text-gray-600 text-[1.05rem] leading-relaxed">
+          Great writing deserves a great home. TheBlogSphere gives every writer &mdash; from first-time
+          bloggers to seasoned journalists &mdash; a platform that respects the craft, reaches a global
+          audience, and helps them grow.
+        </p>
+      </div>
+      <div>
+        <h2 class="font-display text-xl text-gray-900 mb-3">Why we exist</h2>
+        <p class="font-reading text-gray-600 text-[1.05rem] leading-relaxed">
+          Most publishing tools are either too simple or too noisy. We focus on one thing: helping you
+          write, publish, and connect &mdash; without distraction, without lock-in, and without
+          compromising your voice.
+        </p>
+      </div>
+    </div>
+
+    <!-- Values -->
+    <div class="mb-16">
+      <p class="eyebrow eyebrow-clay mb-6">What we stand for</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        @for (value of values; track value.title) {
+          <div class="bg-raised rounded-2xl border border-gray-200 p-6">
+            <div class="w-10 h-10 rounded-full bg-sunken flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-clay" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" [attr.d]="value.icon"/>
+              </svg>
+            </div>
+            <h3 class="font-display text-base text-gray-900 mb-1.5">{{ value.title }}</h3>
+            <p class="text-sm text-gray-600 leading-relaxed">{{ value.desc }}</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center bg-featured-panel rounded-2xl py-16 px-8">
+      <h2 class="font-display text-3xl text-[#FAF8F3] font-semibold tracking-[-0.018em] mb-3">Ready to share your story?</h2>
+      <p class="font-reading text-[#C9C2B5] text-lg mb-8 max-w-sm mx-auto">Join the writers publishing on TheBlogSphere every day.</p>
+      <div class="flex items-center justify-center gap-3 flex-wrap">
+        <a routerLink="/signup"
+           class="btn-press inline-flex items-center gap-2 px-6 py-3 bg-[#FAF8F3] text-[#1A1714] text-sm font-semibold rounded-full hover:bg-white transition-colors no-underline">
+          Start writing
+        </a>
+        <a routerLink="/explore"
+           class="btn-press inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-[#FAF8F3] rounded-full border border-[#4A443C] hover:border-[#7E7668] transition-colors no-underline">
+          Explore stories
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

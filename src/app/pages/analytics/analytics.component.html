@@ -1,0 +1,89 @@
+<div class="bg-page min-h-screen">
+  <div class="page-header-band">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+      <p class="eyebrow eyebrow-clay mb-2.5">Dashboard</p>
+      <h1 class="text-section-title">Analytics</h1>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+    @if (loading()) {
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        @for (_ of [1,2,3,4]; track $index) {
+          <div class="bg-raised rounded-2xl border border-gray-200 p-5 space-y-3">
+            <div class="h-3 skeleton rounded w-16"></div>
+            <div class="h-8 skeleton rounded w-20"></div>
+          </div>
+        }
+      </div>
+    } @else if (data()) {
+      <!-- Stats row -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        @for (stat of [
+          { label: 'Total views', value: data().totalViews },
+          { label: 'Published', value: data().publishedCount },
+          { label: 'Comments', value: data().totalComments },
+          { label: 'Bookmarks', value: data().totalBookmarks }
+        ]; track stat.label) {
+          <div class="bg-raised rounded-2xl border border-gray-200 p-5">
+            <p class="eyebrow !text-[11px] mb-2">{{ stat.label }}</p>
+            <p class="font-display text-4xl text-gray-900 font-semibold tracking-[-0.02em]">{{ stat.value.toLocaleString() }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- Monthly views bar chart -->
+      <div class="bg-raised rounded-2xl border border-gray-200 p-6 mb-6">
+        <p class="eyebrow mb-6">Views by month</p>
+        <div class="flex items-end gap-2 h-32">
+          @for (m of data().monthlyViews; track m.label) {
+            <div class="flex-1 flex flex-col items-center gap-1.5">
+              <span class="text-xs text-gray-500">{{ m.views }}</span>
+              <div class="w-full rounded-t-md bg-clay hover:opacity-80 transition-opacity"
+                   [style.height]="(m.views / maxViews() * 96) + 'px'"
+                   [style.min-height]="m.views > 0 ? '4px' : '0'"></div>
+              <span class="text-[11px] text-gray-400 truncate w-full text-center">{{ m.label }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Top posts -->
+      @if (data().topPosts.length > 0) {
+        <div class="bg-raised rounded-2xl border border-gray-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <p class="eyebrow">Top stories</p>
+          </div>
+          <div class="divide-y divide-gray-100">
+            @for (post of data().topPosts; track post.id; let i = $index) {
+              <div class="px-6 py-4 flex items-center gap-4">
+                <span class="font-display text-xl text-gray-300 w-6 shrink-0">{{ i + 1 }}</span>
+                <div class="flex-1 min-w-0">
+                  <a [routerLink]="['/blog', post.slug || post.id]" class="text-sm font-semibold text-gray-900 hover:text-indigo-700 transition-colors line-clamp-1">
+                    {{ post.title }}
+                  </a>
+                  <p class="text-xs text-gray-500 mt-0.5">{{ post.publishDate | date:'MMM d, y' }}</p>
+                </div>
+                <div class="hidden sm:flex items-center gap-4 text-xs text-gray-500 shrink-0">
+                  <span><strong class="text-gray-900 font-semibold">{{ post.views }}</strong> views</span>
+                  <span><strong class="text-gray-900 font-semibold">{{ post.comments }}</strong> comments</span>
+                  <span><strong class="text-gray-900 font-semibold">{{ post.bookmarks }}</strong> saves</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      @if (data().publishedCount === 0) {
+        <div class="text-center py-16 bg-raised rounded-2xl border border-gray-200">
+          <p class="font-display text-xl text-gray-900 mb-1">No data yet</p>
+          <p class="text-sm text-gray-500 mb-6">Publish your first story to start seeing analytics.</p>
+          <a routerLink="/create" class="btn-ink btn-press inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-full no-underline">
+            Write a story
+          </a>
+        </div>
+      }
+    }
+  </div>
+</div>

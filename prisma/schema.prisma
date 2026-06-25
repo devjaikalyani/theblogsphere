@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id
+  name           String
+  firstName      String
+  lastName       String
+  email          String   @unique
+  emailVerified  Boolean  @default(false)
+  password       String?
+  googleId       String?  @unique
+  image          String?
+  profilePicture String   @default("/images/default-profile.png")
+  bio            String?
+  website        String?
+  writingStyle   String?
+  tippingEnabled Boolean  @default(false)
+  tipUrl         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  blogs          Blog[]
+  sessions       Session[]
+  accounts       Account[]
+  bookmarks      Bookmark[]
+  comments       Comment[]
+  following      Follow[]  @relation("Follower")
+  followers      Follow[]  @relation("Following")
+}
+
+model Blog {
+  id          Int       @id @default(autoincrement())
+  title       String
+  slug        String?   @unique
+  content     String
+  author      String
+  publishDate DateTime?
+  visibility  String    @default("public")
+  status      String    @default("published")
+  coverImage  String?
+  views       Int       @default(0)
+  deletedAt   DateTime?
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags        BlogTag[]
+  bookmarks   Bookmark[]
+  comments    Comment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  // Hot path: public listings ordered by recency (explore/home/feed)
+  @@index([visibility, status, publishDate])
+}
+
+model Tag {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  slug  String    @unique
+  blogs BlogTag[]
+}
+
+model BlogTag {
+  blogId Int
+  tagId  Int
+  blog   Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogId, tagId])
+}
+
+model Bookmark {
+  userId    String
+  blogId    Int
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blog      Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@id([userId, blogId])
+  @@index([userId])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  userId    String
+  blogId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blog      Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@index([blogId])
+  @@index([userId])
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User @relation("Follower",  fields: [followerId],  references: [id], onDelete: Cascade)
+  following   User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+}
+
+// Better Auth tables
+model Session {
+  id        String   @id
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

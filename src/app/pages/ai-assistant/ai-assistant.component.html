@@ -1,0 +1,153 @@
+<div class="bg-page min-h-screen flex flex-col">
+  <!-- Page header -->
+  <div class="page-header-band">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-9">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="eyebrow eyebrow-clay mb-2.5">Writing tools</p>
+          <h1 class="text-section-title">Writing assistant</h1>
+          <p class="font-reading text-[1.05rem] text-gray-600 mt-2">Find ideas, draft passages, and shape your writing &mdash; in your voice.</p>
+        </div>
+        @if (history().length > 0) {
+          <button type="button" (click)="clearHistory()" title="Clear conversation"
+            class="text-xs font-medium text-gray-500 hover:text-red-600 transition-colors mt-1 px-3 py-1.5 hover:bg-red-50 rounded-full shrink-0">
+            Clear history
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-5">
+
+    <!-- Empty state -->
+    @if (history().length === 0 && !loading()) {
+      <div class="flex-1 flex flex-col items-center justify-center text-center py-16">
+        <div class="w-14 h-14 rounded-full bg-sunken flex items-center justify-center mx-auto mb-5">
+          <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+        </div>
+        <h3 class="font-display text-2xl text-gray-900 mb-2">Where shall we begin?</h3>
+        <p class="font-reading text-[1.05rem] text-gray-600 max-w-sm">Generate ideas, write an opening, expand an outline, or draft a full piece.</p>
+
+        <!-- Suggested prompts -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-9 w-full max-w-lg text-left">
+          <button type="button"
+            (click)="generate('Write a compelling blog post about the future of AI in everyday life')"
+            class="btn-press px-4 py-3.5 bg-raised border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-gray-900 transition-colors text-left">
+            A post on AI in everyday life
+          </button>
+          <button type="button"
+            (click)="generate('Give me 10 creative blog post ideas for a tech-focused blog')"
+            class="btn-press px-4 py-3.5 bg-raised border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-gray-900 transition-colors text-left">
+            Ten ideas for a tech blog
+          </button>
+          <button type="button"
+            (click)="generate('Write an engaging introduction for a blog about remote work productivity')"
+            class="btn-press px-4 py-3.5 bg-raised border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-gray-900 transition-colors text-left">
+            An intro on remote-work focus
+          </button>
+          <button type="button"
+            (click)="generate('Explain the concept of mindfulness to a beginner in a blog format')"
+            class="btn-press px-4 py-3.5 bg-raised border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-gray-900 transition-colors text-left">
+            Mindfulness, for a beginner
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- History — chronological order (oldest first) -->
+    @for (item of history(); track $index) {
+      <!-- User message -->
+      <div class="flex justify-end gap-3 animate-float-up">
+        <div class="max-w-xl">
+          <div class="bg-[#2E2A24] rounded-2xl rounded-tr-sm px-5 py-3.5">
+            <p class="text-sm text-[#F3EFE7] leading-relaxed">{{ item.prompt }}</p>
+          </div>
+        </div>
+        <div class="w-8 h-8 rounded-full bg-sunken flex items-center justify-center shrink-0 mt-0.5">
+          <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- AI response -->
+      <div class="flex gap-3 animate-float-up">
+        <div class="w-8 h-8 rounded-full bg-avatar flex items-center justify-center shrink-0 mt-0.5">
+          <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="flex-1 max-w-2xl">
+          <div class="bg-raised rounded-2xl rounded-tl-sm border border-gray-200 p-5">
+            <div class="prose max-w-none" [innerHTML]="item.response | markdown"></div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Live streaming bubble -->
+    @if (loading()) {
+      <div class="flex gap-3 animate-float-up">
+        <div class="w-8 h-8 rounded-full bg-avatar flex items-center justify-center shrink-0 mt-0.5">
+          <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="flex-1 max-w-2xl">
+          <div class="bg-raised rounded-2xl rounded-tl-sm border border-gray-200 p-5">
+            @if (output()) {
+              <p class="font-reading text-[1.02rem] text-gray-700 whitespace-pre-wrap leading-relaxed">{{ output() }}</p>
+            } @else {
+              <div class="flex items-center gap-1.5 py-1">
+                <div class="w-2 h-2 rounded-full bg-clay animate-dot-1"></div>
+                <div class="w-2 h-2 rounded-full bg-clay animate-dot-2"></div>
+                <div class="w-2 h-2 rounded-full bg-clay animate-dot-3"></div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Scroll anchor -->
+    <div #scrollAnchor></div>
+  </div>
+
+  <!-- Input bar — sticky at bottom -->
+  <div class="sticky bottom-0 glass-bar border-t border-gray-200">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-4">
+      <div class="flex gap-3 items-end">
+        <div class="flex-1 bg-sunken border border-gray-300 rounded-2xl focus-within:border-clay transition-colors overflow-hidden">
+          <textarea
+            [(ngModel)]="prompt"
+            (keydown)="onEnter($event)"
+            rows="1"
+            [disabled]="loading()"
+            placeholder="Ask anything — write a post, generate ideas, draft an opening…"
+            class="w-full px-4 py-3.5 text-sm text-gray-800 bg-transparent resize-none focus:outline-none placeholder-gray-400 leading-relaxed max-h-32">
+          </textarea>
+          <div class="px-4 pb-2 flex items-center justify-between">
+            <p class="text-xs text-gray-400">Enter to send &middot; Shift+Enter for a new line</p>
+          </div>
+        </div>
+        <button type="button" (click)="generate()" [disabled]="loading() || !prompt.trim()" title="Send message"
+          class="btn-ink btn-press w-11 h-11 rounded-full flex items-center justify-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
+          @if (loading()) {
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          } @else {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

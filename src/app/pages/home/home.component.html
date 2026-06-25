@@ -1,0 +1,230 @@
+<!-- ===== HERO ===== -->
+<section class="hero-section">
+  <div class="relative z-10 max-w-3xl mx-auto text-center">
+    <p [appReveal]="0" class="eyebrow mb-7">Essays &middot; Stories &middot; Ideas</p>
+
+    <!-- Headline with rotating typewriter line -->
+    <h1 [appReveal]="60" class="text-hero text-balance mb-8">
+      A quiet home for<br>
+      <span class="text-gradient">{{ typewriterText() }}<span class="typewriter-cursor"></span></span>
+    </h1>
+
+    <p [appReveal]="120" class="font-reading max-w-xl mx-auto mb-10 text-hero-sub text-pretty">
+      Long-form writing and the people who read it. Discover stories worth your
+      time &mdash; and publish your own, with a writing companion when you want one.
+    </p>
+
+    <!-- CTAs -->
+    <div [appReveal]="180" class="flex flex-wrap justify-center items-center gap-x-6 gap-y-3">
+      <a routerLink="/explore"
+         class="btn-ink btn-press px-7 py-3 text-sm font-semibold rounded-full no-underline">
+        Start reading
+      </a>
+      <a routerLink="/signup"
+         class="group inline-flex items-center gap-1.5 text-sm font-semibold text-gray-800 no-underline">
+        <span class="link-underline">Start writing</span>
+        <svg class="w-3.5 h-3.5 text-clay group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Restrained value row -->
+  <div [appReveal]="240" class="relative z-10 max-w-2xl mx-auto mt-16 grid grid-cols-3 divide-x divide-gray-200 text-center">
+    <div class="px-3">
+      <p class="font-display text-lg text-gray-900">Writing assistant</p>
+      <p class="text-xs text-gray-500 mt-1">Drafts in your voice</p>
+    </div>
+    <div class="px-3">
+      <p class="font-display text-lg text-gray-900">Always free</p>
+      <p class="text-xs text-gray-500 mt-1">No paywalls</p>
+    </div>
+    <div class="px-3">
+      <p class="font-display text-lg text-gray-900">Open to all</p>
+      <p class="text-xs text-gray-500 mt-1">Every voice welcome</p>
+    </div>
+  </div>
+
+  <div class="hero-rule"></div>
+</section>
+
+<!-- ===== STORIES ===== -->
+<section class="stories-section">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- Section header -->
+    <div [appReveal]="0" class="flex items-end justify-between mb-10">
+      <div>
+        <p class="eyebrow eyebrow-clay mb-2.5">Latest from the sphere</p>
+        <h2 class="text-section-title">Recent stories</h2>
+      </div>
+      <a routerLink="/explore" class="group hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-gray-800 no-underline shrink-0 mb-1.5">
+        <span class="link-underline">View all</span>
+        <svg class="w-3.5 h-3.5 text-clay group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Loading skeletons -->
+    @if (loading()) {
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-0 bg-raised rounded-2xl border border-gray-200 overflow-hidden mb-5 min-h-52">
+        <div class="md:col-span-2 skeleton min-h-44"></div>
+        <div class="md:col-span-3 p-8 space-y-3">
+          <div class="flex gap-3">
+            <div class="w-9 h-9 rounded-full skeleton shrink-0"></div>
+            <div class="flex-1 space-y-1.5 pt-1">
+              <div class="h-3 skeleton w-28"></div>
+              <div class="h-2.5 skeleton w-20"></div>
+            </div>
+          </div>
+          <div class="h-6 skeleton w-3/4"></div>
+          <div class="h-4 skeleton w-full"></div>
+          <div class="h-4 skeleton w-5/6"></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        @for (i of [1,2,3,4,5]; track i) {
+          <div class="bg-raised rounded-2xl p-6 border border-gray-200 space-y-3">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full skeleton shrink-0"></div>
+              <div class="flex-1 space-y-1.5">
+                <div class="h-2.5 skeleton w-24"></div>
+                <div class="h-2 skeleton w-16"></div>
+              </div>
+            </div>
+            <div class="h-5 skeleton w-3/4"></div>
+            <div class="h-3.5 skeleton w-full"></div>
+            <div class="h-3.5 skeleton w-5/6"></div>
+            <div class="h-3 skeleton w-14 mt-2"></div>
+          </div>
+        }
+      </div>
+    } @else if (blogs().length === 0) {
+
+      <!-- Empty state -->
+      <div [appReveal]="0" class="text-center py-24 bg-raised rounded-2xl border border-gray-200">
+        <div class="w-14 h-14 rounded-full bg-sunken flex items-center justify-center mx-auto mb-5">
+          <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <h3 class="font-display text-xl text-gray-900 mb-2">No stories yet</h3>
+        <p class="text-gray-500 text-sm mb-7">Be the first to publish on TheBlogSphere.</p>
+        <a routerLink="/create"
+           class="btn-ink btn-press inline-block px-6 py-2.5 text-sm font-semibold rounded-full no-underline">
+          Write the first story
+        </a>
+      </div>
+
+    } @else {
+
+      <!-- Featured post -->
+      @if (blogs()[0]) {
+        <article [appReveal]="0" [routerLink]="['/blog', blogs()[0].slug || blogs()[0].id]" class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden mb-5 group cursor-pointer">
+          <div class="grid md:grid-cols-5 min-h-56">
+            <!-- Cover image or ink panel -->
+            @if (blogs()[0].coverImage) {
+              <div class="md:col-span-2 zoom-wrap relative min-h-48">
+                <img [src]="blogs()[0].coverImage" alt="{{ blogs()[0].title }}" title="{{ blogs()[0].title }}"
+                     class="zoom-img w-full h-full object-cover min-h-48"/>
+                <span class="badge absolute top-4 left-4 bg-[#1A1714]/70 !text-[#F3EFE7] backdrop-blur-sm">Featured</span>
+              </div>
+            } @else {
+              <div class="md:col-span-2 bg-featured-panel p-8 flex flex-col justify-between min-h-48 relative overflow-hidden">
+                <span class="eyebrow !text-[#C9C2B5]">Featured</span>
+                <p class="font-display text-[#FAF8F3]/10 leading-none select-none text-8xl">01</p>
+              </div>
+            }
+
+            <!-- Content -->
+            <div class="md:col-span-3 p-8 sm:p-10 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center gap-3 mb-6">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0"
+                       [style.background]="avatarGradient(blogs()[0].author)">
+                    {{ blogs()[0].author.charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-gray-800">{{ blogs()[0].author }}</p>
+                    <p class="text-xs text-gray-500 mt-0.5">{{ formatDate(blogs()[0].publishDate) }}</p>
+                  </div>
+                  <span class="ml-auto eyebrow !text-[11px]">{{ readTime(blogs()[0].content) }} min read</span>
+                </div>
+                <h2 class="text-featured-title mb-3.5 group-hover:text-indigo-700 transition-colors line-clamp-2">
+                  {{ blogs()[0].title }}
+                </h2>
+                <p class="font-reading text-gray-600 text-[1.05rem] leading-relaxed line-clamp-3">{{ excerpt(blogs()[0].content, 220) }}</p>
+              </div>
+              <div class="mt-7 flex items-center gap-2">
+                <span class="text-sm font-semibold text-gray-800 link-underline">Read story</span>
+                <svg class="w-3.5 h-3.5 text-clay group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </article>
+      }
+
+      <!-- Remaining blog grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        @for (blog of blogs().slice(1); track blog.id; let i = $index) {
+          <article [appReveal]="i * 60" [routerLink]="['/blog', blog.slug || blog.id]" class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden group cursor-pointer flex flex-col">
+            @if (blog.coverImage) {
+              <div class="zoom-wrap shrink-0">
+                <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="{{ blog.title }}" title="{{ blog.title }}"
+                     class="zoom-img w-full h-44 object-cover"/>
+              </div>
+            }
+            <div class="p-6 flex-1">
+              <div class="flex items-center gap-2.5 mb-4">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
+                     [style.background]="avatarGradient(blog.author)">
+                  {{ blog.author.charAt(0).toUpperCase() }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-gray-700 truncate">{{ blog.author }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5">{{ formatDate(blog.publishDate) }}</p>
+                </div>
+              </div>
+              <h3 class="text-card-title mb-2.5 group-hover:text-indigo-700 transition-colors line-clamp-2">
+                {{ blog.title }}
+              </h3>
+              <p class="font-reading text-gray-600 text-[0.98rem] leading-relaxed line-clamp-3">{{ excerpt(blog.content) }}</p>
+            </div>
+            <div class="px-6 pb-5 pt-1 flex items-center justify-between border-t border-gray-100 mt-1">
+              <span class="eyebrow !text-[11px]">{{ readTime(blog.content) }} min read</span>
+              <svg class="w-3.5 h-3.5 text-gray-300 group-hover:text-clay group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ===== AI CTA ===== -->
+<section class="bg-cta-section">
+  <div class="max-w-2xl mx-auto text-center relative z-10">
+    <p [appReveal]="0" class="eyebrow !text-[#C9A08F] mb-6">The writing assistant</p>
+    <h2 [appReveal]="80" class="font-display text-[#FAF8F3] mb-6 font-semibold tracking-[-0.018em] leading-[1.1] text-[clamp(2rem,4.4vw,3rem)]">
+      A companion for the<br><span class="italic text-[#E0A485]">blank page.</span>
+    </h2>
+    <p [appReveal]="140" class="font-reading text-[#C9C2B5] text-lg mb-10 max-w-lg mx-auto leading-relaxed">
+      Shape ideas, expand an outline, or find the right phrasing &mdash; with help
+      that learns your voice and stays out of the way.
+    </p>
+    <a [appReveal]="200" routerLink="/ai-assistant"
+       class="btn-press inline-flex items-center gap-2 px-7 py-3.5 text-[#1A1714] font-semibold rounded-full bg-[#FAF8F3] hover:bg-white transition-colors no-underline">
+      Open the assistant
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+</section>

@@ -1,0 +1,52 @@
+<div class="bg-page min-h-screen">
+
+  <!-- Header -->
+  <div class="border-b border-gray-200 bg-paper">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 py-16 text-center">
+      <p class="eyebrow eyebrow-clay mb-4">Help</p>
+      <h1 class="text-hero mb-4 text-[clamp(2.2rem,5.5vw,3.4rem)]">Questions &amp; answers</h1>
+      <p class="font-reading text-gray-600 text-lg">Everything you need to know about TheBlogSphere.</p>
+    </div>
+  </div>
+
+  <!-- FAQ list -->
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 py-12">
+    <div class="divide-y divide-gray-200 border-y border-gray-200">
+      @for (faq of faqs; track faq.q; let i = $index) {
+        <div>
+          <button type="button" (click)="toggle(i)"
+            class="w-full flex items-center justify-between gap-4 py-5 text-left focus:outline-none"
+            [attr.aria-expanded]="open() === i">
+            <span class="font-display text-lg text-gray-900">{{ faq.q }}</span>
+            <svg class="w-4 h-4 text-clay shrink-0 transition-transform duration-200"
+                 [class.rotate-45]="open() === i"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+          </button>
+          @if (open() === i) {
+            <div class="pb-6 -mt-1 font-reading text-[1.05rem] text-gray-600 leading-relaxed max-w-xl">
+              {{ faq.a }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Still have questions -->
+    <div class="mt-12 text-center bg-raised rounded-2xl border border-gray-200 py-12 px-6">
+      <p class="font-display text-xl text-gray-900 mb-1">Still have questions?</p>
+      <p class="text-sm text-gray-500 mb-6">Browse stories or start writing &mdash; most answers become clear in practice.</p>
+      <div class="flex items-center justify-center gap-3 flex-wrap">
+        <a routerLink="/explore"
+           class="btn-ink btn-press inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-full no-underline">
+          Explore stories
+        </a>
+        <a routerLink="/create"
+           class="btn-press inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-gray-800 border border-gray-300 rounded-full hover:border-gray-900 transition-colors no-underline">
+          Start writing
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

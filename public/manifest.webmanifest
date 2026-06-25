@@ -1,0 +1,18 @@
+{
+  "name": "TheBlogSphere",
+  "short_name": "BlogSphere",
+  "description": "A quiet home for long-form writing and the people who read it.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FAF8F3",
+  "theme_color": "#FAF8F3",
+  "categories": ["news", "books", "lifestyle"],
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,190 @@
+<div class="bg-page min-h-screen">
+  <!-- Top bar -->
+  <div class="glass-bar border-b border-gray-200 sticky top-16 z-40">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <h1 class="eyebrow">New story</h1>
+        @if (wordCount() > 0) {
+          <span class="text-xs text-gray-500">{{ wordCount() }} words &middot; {{ readTime() }} min read</span>
+        }
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" (click)="aiPanelOpen.set(!aiPanelOpen())"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full transition-colors"
+          [class]="aiPanelOpen() ? 'text-clay bg-indigo-50' : 'text-gray-600 hover:bg-gray-100'">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+          </svg>
+          Assistant
+        </button>
+        <button type="button" (click)="saveDraft()" [disabled]="savingDraft() || submitting()"
+          class="px-3.5 py-1.5 text-xs font-semibold text-gray-700 border border-gray-300 hover:border-gray-900 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          @if (savingDraft()) { Saving&hellip; } @else { Save draft }
+        </button>
+        <button type="button" (click)="submit()" [disabled]="submitting() || savingDraft()"
+          class="btn-ink btn-press px-4 py-1.5 text-xs font-semibold rounded-full disabled:opacity-50 disabled:cursor-not-allowed">
+          @if (submitting()) { Publishing&hellip; } @else { Publish }
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-4">
+      <div class="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{{ error() }}</div>
+    </div>
+  }
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div class="grid gap-6" [class]="aiPanelOpen() ? 'grid-cols-1 lg:grid-cols-5' : 'grid-cols-1'">
+
+      <!-- Editor -->
+      <div [class]="aiPanelOpen() ? 'lg:col-span-3 space-y-4' : 'max-w-3xl mx-auto w-full space-y-4'">
+
+        <!-- Title -->
+        <div class="bg-raised rounded-2xl border border-gray-200 overflow-hidden">
+          <input type="text" [(ngModel)]="title" placeholder="Story title"
+            class="w-full px-6 py-5 text-3xl text-gray-900 placeholder-gray-300 border-none focus:outline-none font-display font-semibold tracking-[-0.018em] bg-transparent"/>
+        </div>
+
+        <!-- Cover image -->
+        <div class="bg-raised rounded-2xl border border-gray-200 overflow-hidden">
+          @if (coverImage()) {
+            <div class="relative">
+              <img [src]="coverImage()" alt="Cover image" title="Cover image"
+                   class="w-full h-44 object-cover"/>
+              <button type="button" (click)="removeCover()" title="Remove cover image"
+                aria-label="Remove cover image"
+                class="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          } @else {
+            <label class="flex items-center gap-2 px-4 py-3 cursor-pointer text-sm text-gray-500 hover:text-clay transition-colors group">
+              @if (uploadingCover()) {
+                <svg class="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                <span>Uploading&hellip;</span>
+              } @else {
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>Add cover image</span>
+              }
+              <input type="file" accept="image/*" class="hidden" (change)="onCoverImageChange($event)" [disabled]="uploadingCover()"/>
+            </label>
+          }
+        </div>
+
+        <!-- Tags -->
+        <div class="bg-raised rounded-2xl border border-gray-200">
+          <div class="px-4 py-2.5 flex flex-wrap gap-2 items-center min-h-11">
+            @for (tag of tags(); track tag) {
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-sunken text-gray-700 text-xs font-medium rounded-full">
+                {{ tag }}
+                <button type="button" (click)="removeTag(tag)" [title]="'Remove ' + tag" [attr.aria-label]="'Remove tag ' + tag"
+                  class="ml-0.5 hover:text-gray-900 transition-colors leading-none">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </span>
+            }
+            @if (tags().length < 5) {
+              <input type="text" [(ngModel)]="tagInput"
+                (keydown)="onTagKeydown($event)"
+                (blur)="addTag()"
+                [placeholder]="tags().length === 0 ? 'Add tags — Enter or comma (max 5)' : 'Add another tag'"
+                title="Add a tag"
+                class="flex-1 min-w-40 text-sm text-gray-700 placeholder-gray-400 border-none focus:outline-none bg-transparent py-1"/>
+            } @else {
+              <span class="text-xs text-gray-400">5 tags max</span>
+            }
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="bg-raised rounded-2xl border border-gray-200 overflow-hidden">
+          <div #editor
+               contenteditable="true"
+               data-placeholder="Tell your story…"
+               class="w-full px-6 py-6 min-h-88 focus:outline-none article-prose editor-content"
+               (input)="onEditorInput($event)">
+          </div>
+          @if (aiOutput() && !aiLoading()) {
+            <div class="border-t border-gray-200 px-6 py-3 bg-sunken flex items-center justify-between">
+              <p class="text-xs text-gray-600">Assistant draft ready to insert</p>
+              <button type="button" (click)="useAIContent()"
+                class="text-xs font-semibold text-gray-900 link-underline">
+                Insert into editor &rarr;
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- AI Panel -->
+      @if (aiPanelOpen()) {
+        <div class="lg:col-span-2">
+          <div class="bg-raised rounded-2xl border border-gray-200 sticky top-28 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-200 flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-avatar flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-display text-base text-gray-900 leading-tight">Writing assistant</p>
+                <p class="text-xs text-gray-500">Drafts in your voice</p>
+              </div>
+            </div>
+            <div class="p-5">
+              <textarea [(ngModel)]="aiPrompt" rows="4"
+                placeholder="e.g. An essay on the quiet craft of revision…"
+                class="w-full text-sm text-gray-800 placeholder-gray-400 border border-gray-300 rounded-xl px-3.5 py-3 focus:outline-none focus:border-clay resize-none bg-sunken transition-colors">
+              </textarea>
+              <button type="button" (click)="generateWithAI()" [disabled]="aiLoading() || !aiPrompt.trim()"
+                class="btn-ink btn-press mt-3 w-full py-2.5 text-sm font-semibold rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                @if (aiLoading()) {
+                  <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Generating&hellip;
+                } @else { Generate draft }
+              </button>
+            </div>
+            @if (aiOutput()) {
+              <div class="border-t border-gray-200">
+                @if (aiLoading()) {
+                  <div class="px-5 py-3 flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 rounded-full bg-clay animate-dot-1"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-clay animate-dot-2"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-clay animate-dot-3"></div>
+                    <span class="text-xs text-gray-500 ml-1">Writing&hellip;</span>
+                  </div>
+                }
+                <div class="px-5 pb-4 max-h-72 overflow-y-auto">
+                  <p class="eyebrow !text-[11px] mb-2 pt-4">Output</p>
+                  <div class="prose" [innerHTML]="aiOutput() | markdown"></div>
+                </div>
+                @if (!aiLoading()) {
+                  <div class="px-5 pb-5">
+                    <button type="button" (click)="useAIContent()"
+                      class="w-full py-2 border border-gray-300 text-gray-800 text-sm font-medium rounded-full hover:border-gray-900 transition-colors">
+                      Insert into editor
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  readonly session = signal<any>(null);
+
+  constructor(private http: HttpClient) {}
+
+  refreshSession(): Observable<any> {
+    return this.http.get('/api/auth/get-session', { withCredentials: true }).pipe(
+      tap({
+        next: (s) => this.session.set(s ?? null),
+        error: () => this.session.set(null),
+      }),
+    );
+  }
+
+  signup(data: { email: string; password: string; name: string; firstName: string; lastName: string }): Observable<any> {
+    return this.http.post('/api/auth/sign-up/email', data, { withCredentials: true });
+  }
+
+  login(data: { email: string; password: string }): Observable<any> {
+    return this.http.post('/api/auth/sign-in/email', data, { withCredentials: true });
+  }
+
+  logout(): Observable<any> {
+    return this.http.post('/api/auth/sign-out', {}, { withCredentials: true }).pipe(
+      tap(() => this.session.set(null)),
+    );
+  }
+
+  getSession(): Observable<any> {
+    return this.http.get('/api/auth/get-session', { withCredentials: true });
+  }
+}

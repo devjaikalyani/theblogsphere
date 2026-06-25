@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TheBlogSphere — Ideas, written to last</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A quiet home for long-form writing and the people who read it. Discover essays, stories and ideas worth your time.">
+  <meta name="theme-color" content="#FAF8F3">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TheBlogSphere">
+  <meta property="og:title" content="TheBlogSphere — Ideas, written to last">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="/">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="BlogSphere">
+
+  <!-- Theme bootstrap: set light/dark on <html> before first paint (no flash) -->
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        var dark = stored === 'dark' ||
+          (stored !== 'light' && window.matchMedia &&
+           window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var el = document.documentElement;
+        el.classList.add('theme-init');
+        if (dark) el.classList.add('dark');
+        el.style.colorScheme = dark ? 'dark' : 'light';
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', dark ? '#15120E' : '#FAF8F3');
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { el.classList.remove('theme-init'); });
+        });
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Self-hosted fonts (no render-blocking third-party request). Preload the
+       above-the-fold UI + display faces; the rest load via fonts.css. -->
+  <link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fraunces-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/fonts/fonts.css">
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

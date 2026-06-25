@@ -1,0 +1,74 @@
+<div class="bg-page min-h-screen">
+  <div class="page-header-band">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+      <p class="eyebrow eyebrow-clay mb-2.5">Reading list</p>
+      <h1 class="text-section-title">Bookmarks</h1>
+    </div>
+  </div>
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+    @if (loading()) {
+      <div class="space-y-3">
+        @for (_ of [1,2,3]; track $index) {
+          <div class="bg-raised rounded-2xl border border-gray-200 p-5 space-y-2.5">
+            <div class="h-5 skeleton rounded w-2/3"></div>
+            <div class="h-3 skeleton rounded w-full"></div>
+            <div class="h-3 skeleton rounded w-4/5"></div>
+          </div>
+        }
+      </div>
+    } @else if (blogs().length === 0) {
+      <div class="text-center py-20 bg-raised rounded-2xl border border-gray-200">
+        <div class="w-14 h-14 rounded-full bg-sunken flex items-center justify-center mx-auto mb-4">
+          <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+          </svg>
+        </div>
+        <p class="font-display text-xl text-gray-900 mb-1">No bookmarks yet</p>
+        <p class="text-sm text-gray-500 mb-6">Save stories to read later.</p>
+        <a routerLink="/explore" class="btn-ink btn-press inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-full no-underline">
+          Explore stories
+        </a>
+      </div>
+    } @else {
+      <div class="space-y-3">
+        @for (blog of blogs(); track blog.id) {
+          <div class="group bg-raised rounded-2xl border border-gray-200 hover:border-gray-300 p-5 flex gap-4 transition-colors">
+            @if (blog.coverImage) {
+              <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="" class="w-20 h-20 rounded-lg object-cover shrink-0"/>
+            }
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <a [routerLink]="['/blog', blog.slug || blog.id]" class="text-card-title hover:text-indigo-700 transition-colors line-clamp-2 block mb-1.5">
+                    {{ blog.title }}
+                  </a>
+                  <p class="font-reading text-[0.98rem] text-gray-600 line-clamp-2 mb-2.5">{{ excerpt(blog.content) }}</p>
+                  @if (blogTags(blog).length > 0) {
+                    <div class="flex flex-wrap gap-1.5 mb-2.5">
+                      @for (tag of blogTags(blog).slice(0, 3); track tag) {
+                        <span class="text-[11px] px-2.5 py-0.5 bg-sunken text-gray-600 rounded-full font-medium">{{ tag }}</span>
+                      }
+                    </div>
+                  }
+                  <div class="flex items-center gap-2 text-xs text-gray-500">
+                    <a [routerLink]="['/author', blog.user?.id]" (click)="$event.stopPropagation()"
+                       class="hover:text-indigo-700 transition-colors">{{ blog.author }}</a>
+                    <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                    <span>{{ readTime(blog.content) }} min read</span>
+                  </div>
+                </div>
+                <button type="button" (click)="remove(blog.id)" [disabled]="removing() === blog.id"
+                  title="Remove bookmark" class="p-1.5 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 disabled:opacity-40">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,173 @@
+<div class="bg-page min-h-screen">
+  <!-- Page header -->
+  <div class="page-header-band">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+      <p class="eyebrow eyebrow-clay mb-3">Discover</p>
+      <h1 class="text-section-title mb-8">Explore stories</h1>
+
+      <!-- Search -->
+      <div class="relative max-w-lg">
+        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input [(ngModel)]="search" (ngModelChange)="onSearch()" type="search"
+               placeholder="Search by title or content"
+               title="Search stories"
+               class="w-full pl-11 pr-4 py-3 text-sm bg-raised border border-gray-300 rounded-full focus:outline-none focus:border-clay transition-colors"/>
+      </div>
+
+      <!-- Tag chips -->
+      @if (tags().length > 0) {
+        <div class="flex flex-wrap gap-2 mt-5">
+          @for (tag of tags(); track tag.id) {
+            <button type="button" (click)="selectTag(tag.slug)"
+              [class]="selectedTag() === tag.slug ? 'chip chip-active' : 'chip'">
+              {{ tag.name }}
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Active filters summary -->
+      @if (hasFilters && !loading()) {
+        <div class="flex items-center gap-3 mt-5">
+          <p class="text-xs text-gray-500">
+            {{ total() }} {{ total() === 1 ? 'result' : 'results' }}
+            @if (search) { for &ldquo;{{ search }}&rdquo; }
+            @if (selectedTag()) { in #{{ selectedTag() }} }
+          </p>
+          <button type="button" (click)="clearFilters()"
+            class="text-xs text-indigo-700 hover:text-indigo-800 font-semibold transition-colors link-underline">
+            Clear filters
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="bg-raised rounded-2xl p-6 border border-gray-200 space-y-3">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full skeleton shrink-0"></div>
+              <div class="flex-1 space-y-1.5">
+                <div class="h-2.5 skeleton w-24"></div>
+                <div class="h-2 skeleton w-16"></div>
+              </div>
+            </div>
+            <div class="h-5 skeleton w-3/4"></div>
+            <div class="h-3.5 skeleton w-full"></div>
+            <div class="h-3.5 skeleton w-5/6"></div>
+            <div class="flex justify-between mt-3">
+              <div class="h-3 skeleton w-14"></div>
+              <div class="h-3 skeleton w-14"></div>
+            </div>
+          </div>
+        }
+      </div>
+
+    } @else if (blogs().length === 0) {
+      <!-- Empty / no results -->
+      <div class="text-center py-24 bg-raised rounded-2xl border border-gray-200">
+        <div class="w-14 h-14 rounded-full bg-sunken flex items-center justify-center mx-auto mb-4">
+          <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        @if (hasFilters) {
+          <p class="font-display text-xl text-gray-900 mb-1">No stories match your search</p>
+          <p class="text-sm text-gray-500 mb-5">Try different keywords or remove filters.</p>
+          <button type="button" (click)="clearFilters()"
+            class="text-sm text-indigo-700 font-semibold hover:text-indigo-800 transition-colors link-underline">
+            Clear filters
+          </button>
+        } @else {
+          <p class="font-display text-xl text-gray-900 mb-1">No stories yet</p>
+          <p class="text-sm text-gray-500">Be the first to publish here.</p>
+        }
+      </div>
+
+    } @else {
+      <!-- Blog grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        @for (blog of blogs(); track blog.id; let i = $index) {
+          <article [appReveal]="i * 50" [routerLink]="['/blog', blog.slug || blog.id]"
+            class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden group cursor-pointer flex flex-col">
+
+            @if (blog.coverImage) {
+              <div class="zoom-wrap shrink-0">
+                <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="{{ blog.title }}" title="{{ blog.title }}"
+                     class="zoom-img w-full h-44 object-cover"/>
+              </div>
+            }
+
+            <!-- Author row -->
+            <div class="p-6 flex-1">
+              <div class="flex items-center gap-2.5 mb-4">
+                <a [routerLink]="['/author', blog.user?.id ?? blog.userId]"
+                   (click)="$event.stopPropagation()"
+                   class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 hover:opacity-80 transition-opacity"
+                   [style.background]="avatarGradient(blog.author)">
+                  {{ blog.author.charAt(0).toUpperCase() }}
+                </a>
+                <div class="flex-1 min-w-0">
+                  <a [routerLink]="['/author', blog.user?.id ?? blog.userId]"
+                     (click)="$event.stopPropagation()"
+                     class="text-sm font-semibold text-gray-700 truncate block hover:text-indigo-700 transition-colors">
+                    {{ blog.author }}
+                  </a>
+                  <p class="text-xs text-gray-500 mt-0.5">{{ formatDate(blog.publishDate) }}</p>
+                </div>
+              </div>
+
+              <!-- Title + excerpt -->
+              <h3 class="text-card-title mb-2.5 group-hover:text-indigo-700 transition-colors line-clamp-2">
+                {{ blog.title }}
+              </h3>
+              <p class="font-reading text-gray-600 text-[0.98rem] leading-relaxed line-clamp-3">{{ excerpt(blog.content) }}</p>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 pb-5 pt-1 mt-1 border-t border-gray-100 flex items-center justify-between gap-2">
+              <div class="flex flex-wrap gap-1.5">
+                @for (tag of blogTags(blog).slice(0, 2); track tag) {
+                  <span class="text-[11px] px-2.5 py-0.5 bg-sunken text-gray-600 rounded-full font-medium">{{ tag }}</span>
+                }
+              </div>
+              <span class="eyebrow !text-[11px] shrink-0">{{ readTime(blog.content) }} min</span>
+            </div>
+          </article>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="flex justify-center items-center gap-1.5 mt-16">
+          <button type="button" (click)="load(currentPage() - 1)" [disabled]="currentPage() === 1"
+            class="px-4 py-2 rounded-full text-sm font-semibold border border-gray-300 text-gray-700 bg-transparent hover:border-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+            &larr; Prev
+          </button>
+          @for (p of pages(); track p) {
+            <button type="button" (click)="load(p)"
+              [class]="p === currentPage()
+                ? 'w-10 py-2 rounded-full text-sm font-semibold btn-ink transition-colors'
+                : 'w-10 py-2 rounded-full text-sm font-semibold border border-gray-300 text-gray-600 bg-transparent hover:border-gray-900 hover:text-gray-900 transition-colors'">
+              {{ p }}
+            </button>
+          }
+          <button type="button" (click)="load(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
+            class="px-4 py-2 rounded-full text-sm font-semibold border border-gray-300 text-gray-700 bg-transparent hover:border-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+            Next &rarr;
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

@@ -1,0 +1,18 @@
+# TheBlogSphere — robots
+User-agent: *
+Allow: /
+
+# Private / app-only routes (no SEO value, keep out of the index)
+Disallow: /login
+Disallow: /signup
+Disallow: /settings
+Disallow: /analytics
+Disallow: /create
+Disallow: /edit/
+Disallow: /my-stories
+Disallow: /bookmarks
+Disallow: /feed
+Disallow: /ai-assistant
+
+# Dynamic sitemap (served by the API). Replace the host with your domain.
+Sitemap: https://yourdomain.com/api/sitemap.xml

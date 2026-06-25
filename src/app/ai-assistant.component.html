@@ -1,0 +1,11 @@
+<div class="ai-container">
+    <h2>AI Writing Assistant</h2>
+    <textarea [(ngModel)]="prompt" placeholder="What should I write about?"></textarea>
+    <button (click)="generateContent()">Generate</button>
+
+    <div *ngIf="loading">Generating...</div>
+    <div *ngIf="result">
+        <h3>Suggested Content:</h3>
+        <p>{{ result }}</p>
+    </div>
+</div>
