@@ -68,6 +68,18 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     return firstLine.replace(/[*_`#>]/g, '').length >= 40; // long enough to anchor a drop cap
   });
 
+  /** Memoised so scroll-driven change detection (reading progress + scroll-spy
+   *  fire every frame) doesn't re-run the regex passes over the full article
+   *  body on each cycle — they only depend on blog(), which is set once. */
+  readTimeC = computed<number>(() => {
+    const b = this.blog();
+    return b ? this.readTime(b.content) : 0;
+  });
+  wordCountC = computed<number>(() => {
+    const b = this.blog();
+    return b ? this.wordCount(b.content) : 0;
+  });
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,

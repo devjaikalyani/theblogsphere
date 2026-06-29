@@ -45,7 +45,7 @@
 
   <!-- Article -->
   @if (!loading() && blog()) {
-    <div class="mx-auto max-w-2xl xl:max-w-5xl px-4 sm:px-6 xl:grid xl:grid-cols-[200px_minmax(0,1fr)_64px] xl:gap-x-10">
+    <div class="mx-auto max-w-2xl xl:max-w-7xl px-4 sm:px-6 xl:grid xl:grid-cols-[minmax(200px,1fr)_minmax(0,680px)_minmax(200px,1fr)] xl:gap-x-10">
 
       <!-- Reusable actions — shared by the desktop rail and the mobile header row -->
       <ng-template #actionButtons>
@@ -77,8 +77,8 @@
         }
       </ng-template>
 
-      <!-- Table of contents (left column, desktop) -->
-      <aside class="hidden xl:block" aria-label="On this page">
+      <!-- Table of contents (left column, desktop) — pinned to the left margin -->
+      <aside class="hidden xl:block w-[200px]" aria-label="On this page">
         @if (toc().length > 1) {
           <nav class="sticky top-28 toc">
             <p class="eyebrow !text-[10px] mb-3.5">On this page</p>
@@ -141,7 +141,7 @@
               <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
                 <span>{{ blog().publishDate | date:'MMMM d, y' }}</span>
                 <span class="text-gray-300">&middot;</span>
-                <span>{{ readTime(blog().content) }} min read</span>
+                <span>{{ readTimeC() }} min read</span>
               </div>
             </div>
           </div>
@@ -401,15 +401,41 @@
       </article>
       </div>
 
-      <!-- Article actions (right column, desktop) -->
-      <aside class="hidden xl:block" aria-label="Article actions">
-        <div class="sticky top-28 flex flex-col items-center gap-1">
-          <ng-container [ngTemplateOutlet]="actionButtons"></ng-container>
-          <div class="w-5 h-px my-2 bg-[var(--hairline-strong)]"></div>
-          <button type="button" (click)="scrollToTop()" title="Back to top" aria-label="Back to top" class="icon-btn btn-press">
-            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <!-- Story panel (right column, desktop) — mirrors the contents rail so the
+           two margins read as balanced, intentional structure, not empty bands. -->
+      <aside class="hidden xl:block w-[200px] justify-self-end" aria-label="Story tools">
+        <div class="sticky top-28">
+          <p class="eyebrow !text-[10px] mb-3.5">This story</p>
+          <dl class="space-y-2.5 text-[13px] mb-5">
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-gray-600">Length</dt>
+              <dd class="font-medium text-gray-800">{{ readTimeC() }} min</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-gray-600">Words</dt>
+              <dd class="font-medium text-gray-800 tabular-nums">{{ wordCountC().toLocaleString('en-US') }}</dd>
+            </div>
+            @if (blog().publishDate) {
+              <div class="flex items-baseline justify-between gap-3">
+                <dt class="text-gray-600">Published</dt>
+                <dd class="font-medium text-gray-800">{{ blog().publishDate | date:'MMM y' }}</dd>
+              </div>
+            }
+          </dl>
+
+          <div class="rule mb-4"></div>
+
+          <p class="eyebrow !text-[10px] mb-2.5">Save &amp; share</p>
+          <div class="flex items-center gap-1 -ml-1.5">
+            <ng-container [ngTemplateOutlet]="actionButtons"></ng-container>
+          </div>
+
+          <button type="button" (click)="scrollToTop()"
+            class="group inline-flex items-center gap-1.5 mt-6 eyebrow !text-[10px] hover:text-gray-900 transition-colors">
+            <svg class="w-3.5 h-3.5 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
             </svg>
+            Back to top
           </button>
         </div>
       </aside>
