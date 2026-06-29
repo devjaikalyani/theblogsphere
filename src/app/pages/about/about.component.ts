@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SeoService } from '../../services/seo.service';
+import { RevealDirective } from '../../directives/reveal.directive';
+import { HoverDirective } from '../../directives/hover.directive';
 
 @Component({
   selector: 'app-about',
-  imports: [RouterLink],
+  imports: [RouterLink, RevealDirective, HoverDirective],
   templateUrl: './about.component.html',
   styleUrl: './about.component.css',
 })

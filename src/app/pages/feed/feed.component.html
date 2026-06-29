@@ -1,7 +1,7 @@
 <div class="bg-page min-h-screen">
   <div class="page-header-band">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-      <p class="eyebrow eyebrow-clay mb-2.5">Following</p>
+      <p class="running-head mb-2.5">Following</p>
       <h1 class="text-section-title">Your feed</h1>
       <p class="text-sm text-gray-500 mt-2">Stories from the people you follow.</p>
     </div>
@@ -39,7 +39,7 @@
       <div class="space-y-4">
         @for (blog of blogs(); track blog.id) {
           <article [routerLink]="['/blog', blog.slug || blog.id]"
-            class="card-interactive bg-raised rounded-2xl border border-gray-200 p-6 cursor-pointer group">
+            appHover class="card-interactive bg-raised rounded-2xl border border-gray-200 p-6 cursor-pointer group">
 
             @if (blog.coverImage) {
               <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="" class="w-full h-44 object-cover rounded-lg mb-5"/>

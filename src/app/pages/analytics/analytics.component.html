@@ -1,7 +1,7 @@
 <div class="bg-page min-h-screen">
   <div class="page-header-band">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
-      <p class="eyebrow eyebrow-clay mb-2.5">Dashboard</p>
+      <p class="running-head mb-2.5">Dashboard</p>
       <h1 class="text-section-title">Analytics</h1>
     </div>
   </div>
@@ -57,7 +57,7 @@
           <div class="divide-y divide-gray-100">
             @for (post of data().topPosts; track post.id; let i = $index) {
               <div class="px-6 py-4 flex items-center gap-4">
-                <span class="font-display text-xl text-gray-300 w-6 shrink-0">{{ i + 1 }}</span>
+                <span class="font-display text-xl text-clay/70 w-7 shrink-0 tabular-nums">{{ (i + 1).toString().padStart(2, '0') }}</span>
                 <div class="flex-1 min-w-0">
                   <a [routerLink]="['/blog', post.slug || post.id]" class="text-sm font-semibold text-gray-900 hover:text-indigo-700 transition-colors line-clamp-1">
                     {{ post.title }}

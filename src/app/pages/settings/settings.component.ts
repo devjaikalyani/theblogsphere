@@ -3,10 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { BlogService } from '../../services/blog.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
+import { RevealDirective } from '../../directives/reveal.directive';
 
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule],
+  imports: [FormsModule, RevealDirective],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent implements OnInit {

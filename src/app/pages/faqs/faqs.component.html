@@ -11,7 +11,7 @@
 
   <!-- FAQ list -->
   <div class="max-w-2xl mx-auto px-4 sm:px-6 py-12">
-    <div class="divide-y divide-gray-200 border-y border-gray-200">
+    <div appReveal [revealStagger]="0.05" class="divide-y divide-gray-200 border-y border-gray-200">
       @for (faq of faqs; track faq.q; let i = $index) {
         <div>
           <button type="button" (click)="toggle(i)"

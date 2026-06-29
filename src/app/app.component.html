@@ -72,7 +72,7 @@
             </button>
             @if (profileMenuOpen()) {
               <div class="fixed inset-0 z-40" (click)="profileMenuOpen.set(false)"></div>
-              <div class="absolute right-0 top-full mt-2 w-60 bg-raised rounded-xl shadow-elevated border border-gray-200 py-1.5 z-50 overflow-hidden">
+              <div class="pop-in absolute right-0 top-full mt-2 w-60 bg-raised rounded-xl shadow-elevated border border-gray-200 py-1.5 z-50 overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100">
                   <p class="text-sm font-semibold text-gray-900 truncate">{{ auth.session()?.user?.firstName }} {{ auth.session()?.user?.lastName }}</p>
                   <p class="text-xs text-gray-500 mt-0.5 truncate">{{ auth.session()?.user?.email }}</p>
@@ -176,7 +176,7 @@
 
     <!-- Mobile menu -->
     @if (menuOpen()) {
-      <div class="md:hidden border-t border-gray-200 py-2 space-y-0.5">
+      <div class="pop-in md:hidden border-t border-gray-200 py-2 space-y-0.5">
         <a routerLink="/" (click)="menuOpen.set(false)"
            class="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Home</a>
         <a routerLink="/explore" (click)="menuOpen.set(false)"
@@ -220,7 +220,7 @@
   </div>
 </nav>
 
-<main id="main" tabindex="-1" [class]="pageVisible() ? 'min-h-screen bg-page page-enter' : 'min-h-screen bg-page page-exit'">
+<main id="main" tabindex="-1" appPageTransition class="min-h-screen bg-page">
   <router-outlet />
 </main>
 

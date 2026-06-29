@@ -270,6 +270,10 @@
   55%, 100% { opacity: 0; }
 }
 @keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 @layer utilities {
 
@@ -512,13 +516,15 @@
 
   /* ══════════ TOAST ══════════ */
   .toast-item { animation: toast-in 0.32s var(--ease-out) forwards; will-change: opacity, transform; }
+  /* Enter animation for menus / dropdowns / popovers. */
+  .pop-in { animation: pop-in 0.2s var(--ease-out); }
 
   /* ══════════ INTERACTIVE CARD ══════════ */
   .card-interactive {
-    transition: transform 0.24s var(--ease-out), box-shadow 0.24s ease, border-color 0.24s ease;
+    /* Transform is owned by Motion ([appHover]); CSS keeps shadow + border. */
+    transition: box-shadow 0.24s ease, border-color 0.24s ease;
   }
   .card-interactive:hover {
-    transform: translateY(-3px);
     box-shadow: var(--shadow-3) !important;
     border-color: var(--hairline-strong) !important;
   }
@@ -538,6 +544,60 @@
     padding-bottom: 1px;
   }
   .link-underline:hover { background-size: 100% 1px; }
+
+  /* ══════════ EDITORIAL SIGNATURE ══════════
+     A small, print-inspired vocabulary shared across the flagship pages
+     (home · explore · article) so the site reads as one publication:
+     running index numerals, a masthead rail, and a strong section rule. */
+
+  /* Masthead rail — a centered label flanked by fading hairlines. Frames a
+     hero or section the way a printed page frames a running head. */
+  .masthead-rail {
+    display: flex; align-items: center; gap: 1.1rem;
+    font-family: var(--font-sans);
+    font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .masthead-rail::before,
+  .masthead-rail::after {
+    content: ''; height: 1px; flex: 1 1 auto;
+    background: linear-gradient(90deg, transparent, var(--hairline-strong));
+  }
+  .masthead-rail::after {
+    background: linear-gradient(90deg, var(--hairline-strong), transparent);
+  }
+
+  /* Section rule — a single ink hairline the heading sits above. The classic
+     newspaper section divider, restated in warm ink: confident but thin (1px),
+     so it reads as intentional structure, not a heavy table border. */
+  .section-rule {
+    border-top: 1px solid var(--ink);
+    padding-top: 1.15rem;
+  }
+  /* Quiet running-head kicker that pairs an index with a label on the rule. */
+  .running-head {
+    display: flex; align-items: baseline; gap: 0.6rem;
+    font-family: var(--font-sans);
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* Card running head — the thin "filed under" line at the top of an
+     editorial card: an index numeral, a hairline, then meta. */
+  .card-index {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-serif);
+    font-size: 0.82rem; font-weight: 600;
+    color: var(--clay);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .card-index::after {
+    content: ''; width: 1.6rem; height: 1px;
+    background: var(--hairline-strong);
+  }
 
   /* ══════════ CHIPS / TAGS / BADGES ══════════ */
   .chip {
@@ -715,14 +775,35 @@
     line-height: 1.78;
     font-size: 1.24rem;
     letter-spacing: -0.003em;
+    counter-reset: section;
   }
-  .article-prose > p:first-of-type::first-letter {
+  /* Standfirst / deck — promoted from the opening bold line. Bridges the
+     title and the body with a calm, larger serif and a closing hairline. */
+  .article-prose > .article-deck {
+    font-size: 1.42rem;
+    line-height: 1.5;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.011em;
+    margin: 0 0 1.8rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+  /* The opening paragraph carries the reader in: a touch larger, calmer color. */
+  .article-prose > p:first-of-type:not(.article-deck) {
+    font-size: 1.32rem;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  /* Drop cap only when the body genuinely opens on prose (guarded in the component). */
+  .article-prose--dropcap > p:first-of-type:not(.article-deck)::first-letter {
     font-family: var(--font-serif);
     float: left;
     font-size: 3.4em;
     line-height: 0.82;
     font-weight: 600;
     padding: 0.04em 0.09em 0 0;
+    margin-right: 0.02em;
     color: var(--ink);
   }
   .article-prose h1, .article-prose h2, .article-prose h3, .article-prose h4 {
@@ -731,16 +812,43 @@
     margin-top: 1.7em; margin-bottom: 0.5em; letter-spacing: -0.016em;
   }
   .article-prose h1 { font-size: 1.9rem; }
-  .article-prose h2 { font-size: 1.6rem; }
-  .article-prose h3 { font-size: 1.32rem; }
+  .article-prose h2 {
+    font-size: 1.64rem;
+    margin-top: 2.9rem;
+    counter-increment: section;
+  }
+  /* A clay section numeral (01, 02 …) gives the read editorial rhythm and
+     mirrors the contents rail. */
+  .article-prose h2::before {
+    content: counter(section, decimal-leading-zero);
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--clay);
+    margin-bottom: 0.5rem;
+  }
+  .article-prose h3 { font-size: 1.32rem; margin-top: 1.9rem; }
   .article-prose h4 { font-size: 1.12rem; }
+
+  /* AI key-takeaways panel — a soft clay-tinted aside above the article body. */
+  .takeaways {
+    background: rgba(193, 92, 61, 0.05);
+    border: 1px solid var(--hairline);
+    border-left: 3px solid var(--clay);
+    border-radius: 0.9rem;
+    padding: 1.35rem 1.5rem;
+  }
   .article-prose p { margin-top: 0; margin-bottom: 1.4em; }
   .article-prose p:last-child { margin-bottom: 0; }
   .article-prose strong { color: var(--ink); font-weight: 600; }
   .article-prose em { font-style: italic; }
   .article-prose ul { list-style: disc; padding-left: 1.4em; margin-bottom: 1.4em; }
   .article-prose ol { list-style: decimal; padding-left: 1.4em; margin-bottom: 1.4em; }
-  .article-prose li { margin-bottom: 0.5em; line-height: 1.7; }
+  .article-prose li { margin-bottom: 0.5em; line-height: 1.7; padding-left: 0.2em; }
+  .article-prose li::marker { color: var(--clay); }
+  .article-prose ol li::marker { font-weight: 600; }
   .article-prose code {
     font-family: 'Fira Code', ui-monospace, monospace;
     background: var(--code-bg); color: var(--code-fg);
@@ -786,6 +894,18 @@
     font-size: 0.9rem;
   }
   .article-prose img { max-width: 100%; border-radius: 6px; margin: 1.8em 0; }
+
+  /* ══════════ Table of contents (margin rail) ══════════ */
+  .toc-link {
+    color: var(--ink-muted);
+    letter-spacing: 0.005em;
+  }
+  .toc-link:hover { color: var(--ink); }
+  .toc-sub { padding-left: 0.85rem; font-size: 12px; }
+  .toc-active {
+    color: var(--clay) !important;
+    font-weight: 600;
+  }
 
   /* ══════════ DARK-MODE FIXES for non-token rules ══════════ */
   .dark .shadow-card,

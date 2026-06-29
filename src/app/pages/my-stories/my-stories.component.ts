@@ -3,10 +3,12 @@ import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { BlogService } from '../../services/blog.service';
 import { ToastService } from '../../services/toast.service';
+import { RevealDirective } from '../../directives/reveal.directive';
+import { HoverDirective } from '../../directives/hover.directive';
 
 @Component({
   selector: 'app-my-stories',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, RevealDirective, HoverDirective],
   templateUrl: './my-stories.component.html',
 })
 export class MyStoriesComponent implements OnInit {

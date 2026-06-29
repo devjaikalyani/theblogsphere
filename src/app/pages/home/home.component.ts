@@ -4,10 +4,11 @@ import { isPlatformBrowser } from '@angular/common';
 import { BlogService } from '../../services/blog.service';
 import { SeoService } from '../../services/seo.service';
 import { RevealDirective } from '../../directives/reveal.directive';
+import { HoverDirective } from '../../directives/hover.directive';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, RevealDirective],
+  imports: [RouterLink, RevealDirective, HoverDirective],
   templateUrl: './home.component.html',
 })
 export class HomeComponent implements OnInit, OnDestroy {

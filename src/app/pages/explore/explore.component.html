@@ -2,7 +2,7 @@
   <!-- Page header -->
   <div class="page-header-band">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-      <p class="eyebrow eyebrow-clay mb-3">Discover</p>
+      <p class="running-head mb-3">Discover</p>
       <h1 class="text-section-title mb-8">Explore stories</h1>
 
       <!-- Search -->
@@ -98,7 +98,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         @for (blog of blogs(); track blog.id; let i = $index) {
           <article [appReveal]="i * 50" [routerLink]="['/blog', blog.slug || blog.id]"
-            class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden group cursor-pointer flex flex-col">
+            appHover class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden group cursor-pointer flex flex-col">
 
             @if (blog.coverImage) {
               <div class="zoom-wrap shrink-0">
@@ -109,6 +109,9 @@
 
             <!-- Author row -->
             <div class="p-6 flex-1">
+              @if (!hasFilters) {
+                <div class="card-index mb-4" aria-hidden="true">{{ globalIndex(i).toString().padStart(2, '0') }}</div>
+              }
               <div class="flex items-center gap-2.5 mb-4">
                 <a [routerLink]="['/author', blog.user?.id ?? blog.userId]"
                    (click)="$event.stopPropagation()"

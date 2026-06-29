@@ -10,6 +10,18 @@ const BLOG_INCLUDE = {
   tags: { include: { tag: true } },
 };
 
+// Lean projection for "read next" cards — omits the (potentially large) body.
+const RELATED_SELECT = {
+  id: true,
+  slug: true,
+  title: true,
+  coverImage: true,
+  author: true,
+  publishDate: true,
+  user: { select: { id: true, firstName: true, lastName: true } },
+  tags: { include: { tag: true } },
+};
+
 @Injectable()
 export class BlogService {
   constructor(
@@ -207,6 +219,46 @@ export class BlogService {
 
   async getTags() {
     return this.prisma.tag.findMany({ orderBy: { name: 'asc' } });
+  }
+
+  /** Stories to read next: those sharing tags with this one, topped up with
+   *  recent posts if there aren't enough tag matches. (Tag-overlap now; an
+   *  embedding-based version can replace this later without touching callers.) */
+  async findRelated(id: number, take = 3) {
+    const cacheKey = `blogs:related:${id}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const base = await this.prisma.blog.findUnique({
+      where: { id },
+      select: { tags: { select: { tagId: true } } },
+    });
+    const tagIds = base?.tags.map((t) => t.tagId) ?? [];
+    const publicWhere = { status: 'published', visibility: 'public', deletedAt: null };
+
+    let related: any[] = [];
+    if (tagIds.length) {
+      related = await this.prisma.blog.findMany({
+        where: { ...publicWhere, id: { not: id }, tags: { some: { tagId: { in: tagIds } } } },
+        orderBy: { publishDate: 'desc' },
+        take,
+        select: RELATED_SELECT,
+      });
+    }
+
+    if (related.length < take) {
+      const exclude = [id, ...related.map((r) => r.id)];
+      const filler = await this.prisma.blog.findMany({
+        where: { ...publicWhere, id: { notIn: exclude } },
+        orderBy: { publishDate: 'desc' },
+        take: take - related.length,
+        select: RELATED_SELECT,
+      });
+      related = [...related, ...filler];
+    }
+
+    this.cache.set(cacheKey, related, 300);
+    return related;
   }
 
   private async resolveTagConnections(tagNames: string[]) {

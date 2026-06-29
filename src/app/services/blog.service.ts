@@ -46,6 +46,16 @@ export class BlogService {
     return this.http.get<any[]>('/api/blogs/tags');
   }
 
+  /** Stories to read next (tag-related, topped up with recent). */
+  getRelated(id: number): Observable<any[]> {
+    return this.http.get<any[]>(`/api/blogs/${id}/related`);
+  }
+
+  /** AI-generated key takeaways for a story. */
+  getSummary(id: number): Observable<{ summary: string[] }> {
+    return this.http.get<{ summary: string[] }>(`/api/ai/summary/${id}`);
+  }
+
   getAuthorProfile(userId: string): Observable<any> {
     return this.http.get(`/api/users/${userId}`);
   }

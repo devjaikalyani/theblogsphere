@@ -34,6 +34,11 @@ export class BlogController {
     return this.blogService.getTags();
   }
 
+  @Get(':id/related')
+  async getRelated(@Param('id', ParseIntPipe) id: number) {
+    return this.blogService.findRelated(id);
+  }
+
   @Get(':idOrSlug')
   async getBlog(@Param('idOrSlug') idOrSlug: string) {
     return this.blogService.findBySlugOrId(idOrSlug);

@@ -97,11 +97,14 @@
           <p class="text-sm text-gray-500">Check back later.</p>
         </div>
       } @else {
-        <p class="eyebrow eyebrow-clay mb-6">Stories</p>
+        <div class="section-rule mb-7">
+          <p class="running-head mb-2">Selected writing</p>
+          <h2 class="font-display text-2xl text-gray-900">Stories</h2>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          @for (blog of blogs(); track blog.id) {
+          @for (blog of blogs(); track blog.id; let i = $index) {
             <article [routerLink]="['/blog', blog.slug || blog.id]"
-              class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden flex flex-col cursor-pointer group">
+              appHover class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden flex flex-col cursor-pointer group">
 
               @if (blog.coverImage) {
                 <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="{{ blog.title }}" title="{{ blog.title }}"
@@ -109,6 +112,7 @@
               }
 
               <div class="p-6 flex flex-col gap-2.5 flex-1">
+                <div class="card-index" aria-hidden="true">{{ (i + 1).toString().padStart(2, '0') }}</div>
                 <h3 class="text-card-title leading-snug line-clamp-2 group-hover:text-indigo-700 transition-colors">
                   {{ blog.title }}
                 </h3>

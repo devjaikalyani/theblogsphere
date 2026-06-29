@@ -4,10 +4,11 @@ import { RouterLink } from '@angular/router';
 import { BlogService } from '../../services/blog.service';
 import { SeoService } from '../../services/seo.service';
 import { RevealDirective } from '../../directives/reveal.directive';
+import { HoverDirective } from '../../directives/hover.directive';
 
 @Component({
   selector: 'app-explore',
-  imports: [FormsModule, RouterLink, RevealDirective],
+  imports: [FormsModule, RouterLink, RevealDirective, HoverDirective],
   templateUrl: './explore.component.html',
 })
 export class ExploreComponent implements OnInit {
@@ -17,6 +18,9 @@ export class ExploreComponent implements OnInit {
   currentPage = signal(1);
   totalPages = signal(1);
   total = signal(0);
+  /** Mirrors the server's BLOGS_PER_PAGE so the running index stays a stable,
+   *  continuous ordinal across pages (page 2 starts at 11, not 01). */
+  readonly pageSize = 10;
   search = '';
   selectedTag = signal('');
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -69,6 +73,11 @@ export class ExploreComponent implements OnInit {
 
   get hasFilters(): boolean {
     return !!this.search || !!this.selectedTag();
+  }
+
+  /** Continuous 1-based position across pages, for the editorial running index. */
+  globalIndex(i: number): number {
+    return (this.currentPage() - 1) * this.pageSize + i + 1;
   }
 
   blogTags(blog: any): string[] {

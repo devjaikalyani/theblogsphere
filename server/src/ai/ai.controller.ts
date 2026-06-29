@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, Res, Inject } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, ParseIntPipe, Req, Res, Inject } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { fromNodeHeaders } from 'better-auth/node';
@@ -35,5 +35,19 @@ export class AiController {
     }
 
     await this.aiService.streamBlogContent(body.prompt, res, writingStyle);
+  }
+
+  // Key takeaways for a published story. Cached per blog in the service, so the
+  // throttle just blunts cold-cache abuse.
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Get('summary/:blogId')
+  async summary(@Param('blogId', ParseIntPipe) blogId: number) {
+    const blog = await this.prisma.blog.findFirst({
+      where: { id: blogId, deletedAt: null },
+      select: { content: true },
+    });
+    if (!blog) return { summary: [] };
+    const summary = await this.aiService.summarize(blogId, blog.content);
+    return { summary };
   }
 }

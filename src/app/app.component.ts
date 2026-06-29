@@ -6,10 +6,11 @@ import { AuthService } from './services/auth.service';
 import { ToastService } from './services/toast.service';
 import { I18nService } from './services/i18n.service';
 import { ThemeService } from './services/theme.service';
+import { PageTransitionDirective } from './directives/page-transition.directive';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, PageTransitionDirective],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -18,7 +19,6 @@ export class AppComponent implements OnInit {
   profileMenuOpen = signal(false);
   scrolled = signal(false);
   readingProgress = signal(0);
-  pageVisible = signal(true);
 
   initials = computed(() => {
     const user = this.auth.session()?.user;
@@ -40,10 +40,6 @@ export class AppComponent implements OnInit {
         .subscribe(() => {
           this.menuOpen.set(false);
           this.profileMenuOpen.set(false);
-          this.pageVisible.set(false);
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() => this.pageVisible.set(true)),
-          );
         });
     }
   }

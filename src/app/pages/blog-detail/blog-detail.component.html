@@ -1,5 +1,13 @@
 <div class="bg-page min-h-screen">
 
+  <!-- Reading progress -->
+  @if (!loading() && blog()) {
+    <div class="fixed top-0 inset-x-0 h-[3px] z-[60] pointer-events-none" aria-hidden="true">
+      <div class="h-full bg-[var(--clay)] transition-[width] duration-100 ease-out"
+           [style.width.%]="readProgress()"></div>
+    </div>
+  }
+
   <!-- Loading skeleton -->
   @if (loading()) {
     <div class="max-w-2xl mx-auto px-4 sm:px-6 pt-10 pb-16">
@@ -37,91 +45,205 @@
 
   <!-- Article -->
   @if (!loading() && blog()) {
-    <article class="max-w-2xl mx-auto px-4 sm:px-6">
+    <div class="mx-auto max-w-2xl xl:max-w-5xl px-4 sm:px-6 xl:grid xl:grid-cols-[200px_minmax(0,1fr)_64px] xl:gap-x-10">
 
-      <!-- Top bar -->
-      <div class="pt-8 pb-8 flex items-center justify-between">
-        <a routerLink="/explore"
-           class="group inline-flex items-center gap-1.5 eyebrow !text-[11px] hover:text-gray-900 transition-colors">
-          <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      <!-- Reusable actions — shared by the desktop rail and the mobile header row -->
+      <ng-template #actionButtons>
+        <button type="button" (click)="toggleBookmark()" [disabled]="bookmarkLoading()"
+          aria-label="Bookmark"
+          [title]="bookmarked() ? 'Saved — tap to remove' : 'Save to bookmarks'"
+          [style.color]="bookmarked() ? 'var(--clay)' : null"
+          class="icon-btn btn-press disabled:opacity-40">
+          <svg class="w-[18px] h-[18px]" [attr.fill]="bookmarked() ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
           </svg>
-          All stories
-        </a>
-        <div class="flex items-center gap-1">
-          <button type="button" (click)="toggleBookmark()" [disabled]="bookmarkLoading()"
-            aria-label="Toggle bookmark"
-            [title]="bookmarked() ? 'Remove bookmark' : 'Save to bookmarks'"
-            class="p-2 rounded-full transition-colors disabled:opacity-40"
-            [class]="bookmarked() ? 'text-clay bg-indigo-50' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'">
-            <svg class="w-4 h-4" [attr.fill]="bookmarked() ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+        </button>
+        <button type="button" (click)="copyLink()" title="Copy link" aria-label="Copy link" class="icon-btn btn-press">
+          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+          </svg>
+        </button>
+        <button type="button" (click)="sharePost()" title="Share" aria-label="Share" class="icon-btn btn-press">
+          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+          </svg>
+        </button>
+        @if (isOwner()) {
+          <a [routerLink]="['/edit', blog().id]" title="Edit story" aria-label="Edit story" class="icon-btn btn-press">
+            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
             </svg>
-          </button>
-          @if (isOwner()) {
-            <a [routerLink]="['/edit', blog().id]" title="Edit story"
-               class="p-2 rounded-full text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-              </svg>
-            </a>
-          }
-        </div>
-      </div>
-
-      <!-- Header (centered, magazine style) -->
-      <header class="text-center mb-10">
-        @if (blogTags().length > 0) {
-          <div class="flex flex-wrap justify-center gap-2 mb-6">
-            @for (tag of blogTags(); track tag.id) {
-              <a [routerLink]="['/explore']" [queryParams]="{ tag: tag.slug }"
-                 class="chip chip-clay no-underline">{{ tag.name }}</a>
-            }
-          </div>
-        }
-
-        <h1 class="article-title mb-7">{{ blog().title }}</h1>
-
-        <!-- Author + meta -->
-        <div class="flex items-center justify-center gap-3">
-          <a [routerLink]="['/author', blog().user?.id ?? blog().userId]"
-             class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 hover:opacity-80 transition-opacity"
-             [style.background]="avatarGradient(blog().author)">
-            {{ blog().author?.charAt(0)?.toUpperCase() }}
           </a>
-          <div class="text-left">
+        }
+      </ng-template>
+
+      <!-- Table of contents (left column, desktop) -->
+      <aside class="hidden xl:block" aria-label="On this page">
+        @if (toc().length > 1) {
+          <nav class="sticky top-28 toc">
+            <p class="eyebrow !text-[10px] mb-3.5">On this page</p>
+            <div class="relative pl-4">
+              <!-- guide line + clay progress fill -->
+              <span class="absolute left-0 top-0 bottom-0 w-px bg-[var(--hairline-strong)]" aria-hidden="true"></span>
+              <span class="absolute left-0 top-0 w-px bg-[var(--clay)] transition-[height] duration-150"
+                    [style.height.%]="readProgress()" aria-hidden="true"></span>
+              @for (item of toc(); track item.id) {
+                <a [href]="'#' + item.id" (click)="scrollToHeading(item.id, $event)"
+                   class="toc-link block py-[5px] text-[12.5px] leading-snug no-underline transition-colors"
+                   [class.toc-sub]="item.level === 3"
+                   [class.toc-active]="item.active">{{ item.text }}</a>
+              }
+            </div>
+          </nav>
+        }
+      </aside>
+
+      <!-- Content: middle column -->
+      <div class="min-w-0">
+      <article>
+
+        <!-- Back -->
+        <div class="pt-8 pb-7">
+          <a routerLink="/explore"
+             class="group inline-flex items-center gap-1.5 eyebrow !text-[11px] hover:text-gray-900 transition-colors">
+            <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            All stories
+          </a>
+        </div>
+
+        <!-- Header -->
+        <header class="text-center mb-9">
+          @if (blogTags().length > 0) {
+            <div class="flex flex-wrap justify-center gap-2 mb-6">
+              @for (tag of blogTags(); track tag.id) {
+                <a [routerLink]="['/explore']" [queryParams]="{ tag: tag.slug }"
+                   class="chip chip-clay no-underline">{{ tag.name }}</a>
+              }
+            </div>
+          }
+
+          <h1 class="article-title text-balance mb-6">{{ blog().title }}</h1>
+
+          <!-- Byline -->
+          <div class="flex items-center justify-center gap-3">
             <a [routerLink]="['/author', blog().user?.id ?? blog().userId]"
-               class="text-sm font-semibold text-gray-900 hover:text-indigo-700 transition-colors block leading-tight">
-              {{ blog().author }}
+               class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 hover:opacity-80 transition-opacity"
+               [style.background]="avatarGradient(blog().author)">
+              {{ blog().author?.charAt(0)?.toUpperCase() }}
             </a>
-            <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
-              <span>{{ blog().publishDate | date:'MMMM d, y' }}</span>
-              <span class="text-gray-300">&middot;</span>
-              <span>{{ readTime(blog().content) }} min read</span>
+            <div class="text-left">
+              <a [routerLink]="['/author', blog().user?.id ?? blog().userId]"
+                 class="text-sm font-semibold text-gray-900 hover:text-indigo-700 transition-colors block leading-tight">
+                {{ blog().author }}
+              </a>
+              <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                <span>{{ blog().publishDate | date:'MMMM d, y' }}</span>
+                <span class="text-gray-300">&middot;</span>
+                <span>{{ readTime(blog().content) }} min read</span>
+              </div>
             </div>
           </div>
+
+          <!-- Actions (mobile / when the desktop rail is hidden) -->
+          <div class="xl:hidden flex items-center justify-center gap-1 mt-6">
+            <ng-container [ngTemplateOutlet]="actionButtons"></ng-container>
+          </div>
+        </header>
+
+        <!-- Cover -->
+        @if (blog().coverImage) {
+          <figure class="mb-12">
+            <img [src]="blog().coverImage" alt="{{ blog().title }}" title="{{ blog().title }}"
+                 fetchpriority="high" decoding="async"
+                 class="w-full rounded-xl elev-2"/>
+          </figure>
+        } @else {
+          <hr class="rule-fade mb-12"/>
+        }
+
+        <!-- AI key takeaways -->
+        @if (summaryLoading() || summary().length > 0) {
+          <aside class="takeaways mb-12" aria-label="Key takeaways">
+            <div class="flex items-center gap-2 mb-3.5">
+              <svg class="w-4 h-4 text-clay shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <p class="eyebrow !text-[11px]">Key takeaways</p>
+              <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">AI summary</span>
+            </div>
+            @if (summaryLoading() && summary().length === 0) {
+              <div class="space-y-2.5">
+                @for (_ of [1,2,3]; track $index) {
+                  <div class="h-3.5 skeleton rounded" [style.width]="$index === 2 ? '72%' : '100%'"></div>
+                }
+              </div>
+            } @else {
+              <ul class="space-y-2.5">
+                @for (point of summary(); track point) {
+                  <li class="flex gap-3 text-[1.02rem] font-reading text-gray-700 leading-relaxed">
+                    <span class="mt-2 shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--clay)]"></span>
+                    <span>{{ point }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </aside>
+        }
+
+        <!-- Content -->
+        <div class="article-prose" [class.article-prose--dropcap]="useDropCap()" [innerHTML]="blog().content | markdown"></div>
+
+        <!-- End mark -->
+        <div class="mt-14 mb-9 flex items-center justify-center gap-3 text-gray-300">
+          <span class="h-px w-8 bg-[var(--hairline-strong)]"></span>
+          <span class="font-display text-xl select-none">&sect;</span>
+          <span class="h-px w-8 bg-[var(--hairline-strong)]"></span>
         </div>
-      </header>
 
-      <!-- Cover image -->
-      @if (blog().coverImage) {
-        <img [src]="blog().coverImage" alt="{{ blog().title }}" title="{{ blog().title }}"
-             class="w-full rounded-xl elev-2 mb-12"/>
-      } @else {
-        <hr class="rule-fade mb-12"/>
-      }
-
-      <!-- Content -->
-      <div class="article-prose" [innerHTML]="blog().content | markdown"></div>
-
-      <!-- End mark + meta -->
-      <div class="mt-14 mb-12 text-center">
-        <p class="font-display text-2xl text-gray-300 select-none">&sect;</p>
-      </div>
+        <!-- Tags + share -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12">
+          @if (blogTags().length > 0) {
+            <div class="flex flex-wrap gap-2">
+              @for (tag of blogTags(); track tag.id) {
+                <a [routerLink]="['/explore']" [queryParams]="{ tag: tag.slug }" class="chip no-underline">{{ tag.name }}</a>
+              }
+            </div>
+          } @else { <span></span> }
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span class="eyebrow !text-[11px] mr-1">Share</span>
+            <button type="button" (click)="copyLink()" title="Copy link" aria-label="Copy link" class="icon-btn btn-press">
+              <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+              </svg>
+            </button>
+            <a [href]="shareUrl('x')" target="_blank" rel="noopener" title="Share on X" aria-label="Share on X" class="icon-btn btn-press">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231zm-1.161 17.52h1.833L7.084 4.126H5.117l11.966 15.644z"/>
+              </svg>
+            </a>
+            <a [href]="shareUrl('linkedin')" target="_blank" rel="noopener" title="Share on LinkedIn" aria-label="Share on LinkedIn" class="icon-btn btn-press">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
 
       <!-- Author bio card -->
       <div class="bg-raised rounded-2xl border border-gray-200 p-7 mb-14">
-        <p class="eyebrow mb-5">Written by</p>
+        <div class="flex items-center justify-between mb-5">
+          <p class="eyebrow">Written by</p>
+          @if (canFollow()) {
+            <button type="button" (click)="toggleFollow()" [disabled]="followLoading()"
+              [class]="following()
+                ? 'btn-press text-xs font-semibold px-4 py-1.5 rounded-full border border-gray-300 text-gray-600 hover:border-gray-400 transition-colors disabled:opacity-50'
+                : 'btn-ink btn-press text-xs font-semibold px-4 py-1.5 rounded-full disabled:opacity-50'">
+              {{ following() ? 'Following' : 'Follow' }}
+            </button>
+          }
+        </div>
         <div class="flex items-start gap-4">
           <a [routerLink]="['/author', blog().user?.id ?? blog().userId]"
              class="w-12 h-12 rounded-full flex items-center justify-center text-white text-base font-semibold shrink-0 hover:opacity-80 transition-opacity"
@@ -133,6 +255,9 @@
                class="font-display text-xl text-gray-900 hover:text-indigo-700 transition-colors block leading-tight">
               {{ blog().author }}
             </a>
+            @if (followers() > 0) {
+              <p class="text-xs text-gray-500 mt-1">{{ followers() }} {{ followers() === 1 ? 'follower' : 'followers' }}</p>
+            }
             @if (blog().user?.bio) {
               <p class="font-reading text-[1.02rem] text-gray-600 mt-2 leading-relaxed">{{ blog().user.bio }}</p>
             }
@@ -147,12 +272,53 @@
         </div>
       </div>
 
+      <!-- Read next -->
+      @if (related().length > 0) {
+        <section class="mb-16" aria-label="Read next">
+          <div class="section-rule mb-6 flex items-end justify-between gap-6">
+            <div>
+              <p class="running-head mb-2.5">Keep reading</p>
+              <h2 class="font-display text-2xl text-gray-900">Read next</h2>
+            </div>
+            <a routerLink="/explore" class="text-sm font-semibold text-gray-900 no-underline group shrink-0 mb-1">
+              <span class="link-underline">More stories</span>
+            </a>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            @for (post of related(); track post.id) {
+              <a appHover [routerLink]="['/blog', post.slug || post.id]"
+                 class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden flex flex-col no-underline group">
+                @if (post.coverImage) {
+                  <img loading="lazy" decoding="async" [src]="post.coverImage" alt="" class="w-full h-32 object-cover"/>
+                }
+                <div class="p-4 flex flex-col flex-1">
+                  @if (tagsOf(post).length) {
+                    <span class="eyebrow !text-[10px] text-clay mb-1.5">{{ tagsOf(post)[0] }}</span>
+                  }
+                  <h3 class="font-display text-[1.05rem] text-gray-900 leading-snug line-clamp-3 group-hover:text-indigo-700 transition-colors">{{ post.title }}</h3>
+                  <div class="mt-auto pt-3 flex items-center gap-2 text-xs text-gray-500">
+                    <span class="truncate">{{ post.author }}</span>
+                    @if (post.publishDate) {
+                      <span class="text-gray-300">&middot;</span>
+                      <span class="shrink-0">{{ post.publishDate | date:'MMM d' }}</span>
+                    }
+                  </div>
+                </div>
+              </a>
+            }
+          </div>
+        </section>
+      }
+
       <!-- Comments -->
       <section class="pb-24">
-        <h2 class="font-display text-2xl text-gray-900 mb-7">
-          Comments
-          @if (comments().length > 0) { <span class="text-gray-400">({{ comments().length }})</span> }
-        </h2>
+        <div class="section-rule mb-7">
+          <p class="running-head mb-2.5">Join in</p>
+          <h2 class="font-display text-2xl text-gray-900">
+            Comments
+            @if (comments().length > 0) { <span class="text-gray-400">({{ comments().length }})</span> }
+          </h2>
+        </div>
 
         @if (auth.session()) {
           <div class="flex gap-3 mb-9">
@@ -232,6 +398,21 @@
           </div>
         }
       </section>
-    </article>
+      </article>
+      </div>
+
+      <!-- Article actions (right column, desktop) -->
+      <aside class="hidden xl:block" aria-label="Article actions">
+        <div class="sticky top-28 flex flex-col items-center gap-1">
+          <ng-container [ngTemplateOutlet]="actionButtons"></ng-container>
+          <div class="w-5 h-px my-2 bg-[var(--hairline-strong)]"></div>
+          <button type="button" (click)="scrollToTop()" title="Back to top" aria-label="Back to top" class="icon-btn btn-press">
+            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+            </svg>
+          </button>
+        </div>
+      </aside>
+    </div>
   }
 </div>

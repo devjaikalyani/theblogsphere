@@ -2,6 +2,7 @@ import { Component, Inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
 import { SeoService } from '../../services/seo.service';
+import { RevealDirective } from '../../directives/reveal.directive';
 
 interface Faq {
   q: string;
@@ -10,7 +11,7 @@ interface Faq {
 
 @Component({
   selector: 'app-faqs',
-  imports: [RouterLink],
+  imports: [RouterLink, RevealDirective],
   templateUrl: './faqs.component.html',
   styleUrl: './faqs.component.css',
 })

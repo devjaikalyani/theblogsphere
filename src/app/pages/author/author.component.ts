@@ -5,10 +5,11 @@ import { BlogService } from '../../services/blog.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SeoService } from '../../services/seo.service';
+import { HoverDirective } from '../../directives/hover.directive';
 
 @Component({
   selector: 'app-author',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, HoverDirective],
   templateUrl: './author.component.html',
 })
 export class AuthorComponent implements OnInit {

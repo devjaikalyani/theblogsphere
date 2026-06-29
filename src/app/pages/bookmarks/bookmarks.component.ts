@@ -2,10 +2,12 @@ import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BlogService } from '../../services/blog.service';
 import { ToastService } from '../../services/toast.service';
+import { RevealDirective } from '../../directives/reveal.directive';
+import { HoverDirective } from '../../directives/hover.directive';
 
 @Component({
   selector: 'app-bookmarks',
-  imports: [RouterLink],
+  imports: [RouterLink, RevealDirective, HoverDirective],
   templateUrl: './bookmarks.component.html',
 })
 export class BookmarksComponent implements OnInit {

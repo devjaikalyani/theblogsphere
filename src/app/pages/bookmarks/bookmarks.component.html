@@ -1,7 +1,7 @@
 <div class="bg-page min-h-screen">
   <div class="page-header-band">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-      <p class="eyebrow eyebrow-clay mb-2.5">Reading list</p>
+      <p class="running-head mb-2.5">Reading list</p>
       <h1 class="text-section-title">Bookmarks</h1>
     </div>
   </div>
@@ -31,9 +31,9 @@
         </a>
       </div>
     } @else {
-      <div class="space-y-3">
+      <div appReveal [revealStagger]="0.05" class="space-y-3">
         @for (blog of blogs(); track blog.id) {
-          <div class="group bg-raised rounded-2xl border border-gray-200 hover:border-gray-300 p-5 flex gap-4 transition-colors">
+          <div appHover [hoverScale]="1" class="group bg-raised rounded-2xl border border-gray-200 hover:border-gray-300 p-5 flex gap-4 transition-colors">
             @if (blog.coverImage) {
               <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="" class="w-20 h-20 rounded-lg object-cover shrink-0"/>
             }

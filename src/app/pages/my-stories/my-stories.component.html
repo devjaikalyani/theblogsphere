@@ -4,7 +4,7 @@
     <div class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       <div class="flex items-end justify-between gap-4">
         <div>
-          <p class="eyebrow eyebrow-clay mb-2.5">Writer</p>
+          <p class="running-head mb-2.5">Writer</p>
           <h1 class="text-section-title">My stories</h1>
           @if (!loading()) {
             <p class="text-sm text-gray-500 mt-2">
@@ -58,9 +58,9 @@
 
   <!-- Stories list -->
   @if (!loading() && blogs().length > 0) {
-    <div class="space-y-3">
+    <div appReveal [revealStagger]="0.05" class="space-y-3">
       @for (blog of blogs(); track blog.id) {
-        <div class="group bg-raised rounded-2xl border border-gray-200 hover:border-gray-300 p-6 transition-colors">
+        <div appHover [hoverScale]="1" class="group bg-raised rounded-2xl border border-gray-200 hover:border-gray-300 p-6 transition-colors">
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0 flex-1">
 

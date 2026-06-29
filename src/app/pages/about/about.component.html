@@ -37,9 +37,9 @@
     <!-- Values -->
     <div class="mb-16">
       <p class="eyebrow eyebrow-clay mb-6">What we stand for</p>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div appReveal [revealStagger]="0.07" class="grid grid-cols-1 sm:grid-cols-3 gap-5">
         @for (value of values; track value.title) {
-          <div class="bg-raised rounded-2xl border border-gray-200 p-6">
+          <div appHover class="bg-raised rounded-2xl border border-gray-200 p-6">
             <div class="w-10 h-10 rounded-full bg-sunken flex items-center justify-center mb-4">
               <svg class="w-5 h-5 text-clay" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" [attr.d]="value.icon"/>
