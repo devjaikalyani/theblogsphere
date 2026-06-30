@@ -48,14 +48,13 @@
           @if (p.pro) {
             <button type="button" (click)="manageBilling()" [disabled]="billingLoading()"
               class="text-sm font-semibold px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 transition-colors disabled:opacity-50">
-              {{ billingLoading() ? 'Opening…' : 'Manage billing' }}
+              {{ billingLoading() ? 'Working…' : (p.provider === 'razorpay' ? 'Cancel subscription' : 'Manage billing') }}
             </button>
           } @else {
-            <button type="button" (click)="upgrade()" [disabled]="billingLoading()"
-              class="btn-ink btn-press text-sm font-semibold px-5 py-2.5 rounded-full disabled:opacity-50">
-              {{ billingLoading() ? 'Redirecting…' : 'Upgrade to Pro' }}
-            </button>
-            <a routerLink="/pricing" class="text-sm font-semibold text-gray-600 hover:text-gray-900 link-underline">Compare plans</a>
+            <a routerLink="/pricing"
+              class="btn-ink btn-press text-sm font-semibold px-5 py-2.5 rounded-full no-underline">
+              Upgrade to Pro
+            </a>
           }
         </div>
       </div>
@@ -123,10 +122,16 @@
       </div>
       @if (tippingEnabled) {
         <div class="mt-5">
-          <label class="block eyebrow !text-[11px] mb-2" for="tipUrl">Tip link (Buy Me a Coffee, Ko-fi, etc.)</label>
+          <label class="block eyebrow !text-[11px] mb-2" for="upiId">UPI ID <span class="normal-case text-gray-400">&mdash; India, recommended</span></label>
+          <input id="upiId" type="text" [(ngModel)]="upiId" placeholder="yourname@okhdfcbank"
+            class="w-full text-sm text-gray-800 border border-gray-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-clay bg-sunken transition-colors"/>
+          <p class="text-xs text-gray-400 mt-1.5">Indian readers see a &ldquo;Pay via UPI&rdquo; button and QR. A UPI ID is receive-only &mdash; sharing it is safe; no one can debit your account with it.</p>
+        </div>
+        <div class="mt-4">
+          <label class="block eyebrow !text-[11px] mb-2" for="tipUrl">Tip link <span class="normal-case text-gray-400">&mdash; international (Ko-fi, Buy Me a Coffee, etc.)</span></label>
           <input id="tipUrl" type="url" [(ngModel)]="tipUrl" placeholder="https://buymeacoffee.com/yourname"
             class="w-full text-sm text-gray-800 border border-gray-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-clay bg-sunken transition-colors"/>
-          <p class="text-xs text-gray-400 mt-1.5">Readers are sent here when they tap the tip button on your profile.</p>
+          <p class="text-xs text-gray-400 mt-1.5">Shown to readers without a UPI app. Optional if you set a UPI ID.</p>
         </div>
       }
     </div>

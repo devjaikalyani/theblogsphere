@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { BillingService, PlanStatus } from '../../services/billing.service';
+import { BillingService, BillingProvider, PlanStatus } from '../../services/billing.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SeoService } from '../../services/seo.service';
@@ -38,13 +38,13 @@ export class PricingComponent implements OnInit {
     return this.status()?.pro ?? false;
   }
 
-  upgrade() {
+  upgrade(provider: BillingProvider) {
     if (!this.auth.session()?.user) {
       this.toast.show('Sign in to upgrade to Pro.', 'info');
       return;
     }
     this.loading.set(true);
-    this.billing.checkout().subscribe({
+    this.billing.checkout(provider).subscribe({
       next: (r) => { if (r.url) window.location.href = r.url; else this.fail(); },
       error: (e) => this.fail(e),
     });
@@ -52,8 +52,15 @@ export class PricingComponent implements OnInit {
 
   manage() {
     this.loading.set(true);
-    this.billing.portal().subscribe({
-      next: (r) => { if (r.url) window.location.href = r.url; else this.fail(); },
+    this.billing.manage().subscribe({
+      next: (r) => {
+        if (r.url) { window.location.href = r.url; return; }
+        this.loading.set(false);
+        if (r.cancelled) {
+          this.toast.show('Your plan will not renew. You keep Pro until the current period ends.', 'success');
+          this.billing.status().subscribe({ next: (s) => this.status.set(s) });
+        }
+      },
       error: (e) => this.fail(e),
     });
   }

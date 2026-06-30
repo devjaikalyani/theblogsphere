@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Req, Headers, UseGuards, Inject, RawBodyRequest } from '@nestjs/common';
+import { Controller, Post, Get, Body, Req, Headers, UseGuards, Inject, RawBodyRequest } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { BillingService } from './billing.service';
@@ -15,26 +15,40 @@ export class BillingController {
     return this.billing.getStatus(userId);
   }
 
+  // provider: 'razorpay' (India/INR/UPI) or 'stripe' (international/USD).
   @Post('checkout')
   @UseGuards(AuthGuard)
-  async checkout(@CurrentUser() user: any) {
+  async checkout(@CurrentUser() user: any, @Body('provider') provider?: string) {
+    if (provider === 'razorpay') {
+      return this.billing.createRazorpaySubscription(user.id, user.email);
+    }
     return this.billing.createCheckoutSession(user.id, user.email);
   }
 
-  @Post('portal')
+  // Stripe -> hosted billing portal URL; Razorpay -> cancels at cycle end.
+  @Post('manage')
   @UseGuards(AuthGuard)
-  async portal(@CurrentUser('id') userId: string) {
-    return this.billing.createPortalSession(userId);
+  async manage(@CurrentUser('id') userId: string) {
+    return this.billing.manageOrCancel(userId);
   }
 
-  // Public: Stripe calls this. Signature verification (not auth) is the gate,
-  // and it needs the raw body, so the app is created with `rawBody: true`.
+  // Public webhooks: signature verification (not auth) is the gate, and both
+  // need the raw body (app is created with `rawBody: true`).
   @SkipThrottle()
   @Post('webhook')
-  async webhook(
+  async stripeWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') signature: string,
   ) {
     return this.billing.handleWebhook(req.rawBody as Buffer, signature);
+  }
+
+  @SkipThrottle()
+  @Post('razorpay-webhook')
+  async razorpayWebhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('x-razorpay-signature') signature: string,
+  ) {
+    return this.billing.handleRazorpayWebhook(req.rawBody as Buffer, signature);
   }
 }

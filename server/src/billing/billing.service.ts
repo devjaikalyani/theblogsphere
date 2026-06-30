@@ -1,5 +1,7 @@
 import { Injectable, Inject, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
+import { createHmac } from 'crypto';
 import Stripe from 'stripe';
+import Razorpay from 'razorpay';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Free writers get this many AI actions per rolling 30-day window. Pro is
@@ -11,17 +13,25 @@ const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 @Injectable()
 export class BillingService {
   private stripe: Stripe | null = null;
+  private razorpay: Razorpay | null = null;
 
   constructor(@Inject(PrismaService) private prisma: PrismaService) {
-    const key = process.env.STRIPE_SECRET_KEY;
-    if (key) this.stripe = new Stripe(key);
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (stripeKey) this.stripe = new Stripe(stripeKey);
+
+    const rzpId = process.env.RAZORPAY_KEY_ID;
+    const rzpSecret = process.env.RAZORPAY_KEY_SECRET;
+    if (rzpId && rzpSecret) this.razorpay = new Razorpay({ key_id: rzpId, key_secret: rzpSecret });
   }
 
-  /** Billing only works once Stripe keys are configured; until then the rest of
-   *  the app (free tier + AI metering) runs normally and upgrade calls 400. */
+  /** Billing only works once a gateway is configured; until then the rest of
+   *  the app (free tier + AI metering) runs normally and upgrade calls 400.
+   *  Razorpay serves India (INR/UPI), Stripe serves international (USD). */
   get enabled(): boolean {
-    return !!this.stripe;
+    return !!this.stripe || !!this.razorpay;
   }
+  get stripeEnabled(): boolean { return !!this.stripe; }
+  get razorpayEnabled(): boolean { return !!this.razorpay; }
 
   isPro(plan?: string | null): boolean {
     return plan === 'pro';
@@ -31,7 +41,7 @@ export class BillingService {
   async getStatus(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { plan: true, planRenewsAt: true, aiUsageCount: true, aiUsagePeriodStart: true },
+      select: { plan: true, planRenewsAt: true, billingProvider: true, aiUsageCount: true, aiUsagePeriodStart: true },
     });
     const pro = this.isPro(user?.plan);
     const expired = this.periodExpired(user?.aiUsagePeriodStart ?? null);
@@ -42,7 +52,10 @@ export class BillingService {
       plan: user?.plan ?? 'free',
       pro,
       renewsAt: user?.planRenewsAt ?? null,
+      provider: user?.billingProvider ?? null,
       billingEnabled: this.enabled,
+      stripeEnabled: this.stripeEnabled,
+      razorpayEnabled: this.razorpayEnabled,
       ai: {
         used: pro ? 0 : used,
         limit: pro ? null : FREE_AI_MONTHLY_LIMIT,
@@ -193,10 +206,91 @@ export class BillingService {
       where: { stripeCustomerId: sub.customer as string },
       data: {
         plan: active ? 'pro' : 'free',
+        billingProvider: active ? 'stripe' : undefined,
         stripeSubscriptionId: sub.id,
         planRenewsAt: active && periodEnd ? new Date(periodEnd * 1000) : null,
       },
     });
+  }
+
+  // ── Razorpay (India — INR / UPI) ────────────────────────────────────────
+  /** Create a Razorpay subscription and return its hosted auth/checkout URL
+   *  (short_url) for the client to redirect to — mirrors the Stripe flow. */
+  async createRazorpaySubscription(userId: string, email: string) {
+    if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
+    const planId = process.env.RAZORPAY_PLAN_PRO;
+    if (!planId) throw new BadRequestException('RAZORPAY_PLAN_PRO is not set.');
+
+    const sub: any = await this.razorpay.subscriptions.create({
+      plan_id: planId,
+      total_count: 120,
+      customer_notify: 1,
+      notify_info: { notify_email: email },
+      notes: { userId },
+    } as any);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { razorpaySubscriptionId: sub.id, billingProvider: 'razorpay' },
+    });
+    return { url: sub.short_url as string };
+  }
+
+  /** Cancel the user's subscription. Stripe users get the billing portal;
+   *  Razorpay users are cancelled at cycle end (they keep Pro until then). */
+  async manageOrCancel(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { billingProvider: true, stripeCustomerId: true, razorpaySubscriptionId: true },
+    });
+    if (!user) throw new BadRequestException('No account.');
+
+    if (user.billingProvider === 'razorpay') {
+      if (!this.razorpay || !user.razorpaySubscriptionId) throw new BadRequestException('No active subscription.');
+      await this.razorpay.subscriptions.cancel(user.razorpaySubscriptionId, true); // at cycle end
+      return { cancelled: true, atCycleEnd: true };
+    }
+    // Stripe (default): hand off to the hosted billing portal.
+    return this.createPortalSession(userId);
+  }
+
+  /** Verify (HMAC-SHA256) + apply a Razorpay webhook. */
+  async handleRazorpayWebhook(rawBody: Buffer, signature: string) {
+    if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!secret) throw new BadRequestException('RAZORPAY_WEBHOOK_SECRET is not set.');
+
+    const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
+    if (expected !== signature) throw new BadRequestException('Invalid Razorpay webhook signature.');
+
+    const event = JSON.parse(rawBody.toString());
+    const sub = event?.payload?.subscription?.entity;
+    if (!sub?.id) return { received: true };
+
+    const active = sub.status === 'active' || sub.status === 'authenticated';
+    const ended = ['cancelled', 'completed', 'halted', 'expired'].includes(sub.status);
+    const renews = sub.current_end ? new Date(sub.current_end * 1000) : null;
+    const userId = sub.notes?.userId as string | undefined;
+
+    if (active) {
+      const res = await this.prisma.user.updateMany({
+        where: { razorpaySubscriptionId: sub.id },
+        data: { plan: 'pro', billingProvider: 'razorpay', planRenewsAt: renews },
+      });
+      // Fallback if the subscription id wasn't persisted (race on first auth).
+      if (res.count === 0 && userId) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { plan: 'pro', billingProvider: 'razorpay', razorpaySubscriptionId: sub.id, planRenewsAt: renews },
+        });
+      }
+    } else if (ended) {
+      await this.prisma.user.updateMany({
+        where: { razorpaySubscriptionId: sub.id },
+        data: { plan: 'free', planRenewsAt: null },
+      });
+    }
+    return { received: true };
   }
 
   private async downgradeByCustomer(customerId: string) {

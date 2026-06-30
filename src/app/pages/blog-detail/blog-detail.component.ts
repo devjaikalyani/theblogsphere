@@ -38,6 +38,9 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   /** Browser read-aloud (Web Speech API) — purely client-side, no cost. */
   speaking = signal(false);
 
+  /** Data-URL QR for the author's UPI tip (India), generated client-side. */
+  upiQr = signal('');
+
   comments = signal<any[]>([]);
   commentsLoading = signal(true);
   commentText = '';
@@ -133,6 +136,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     this.bookmarked.set(false);
     this.liked.set(false);
     this.likeCount.set(0);
+    this.upiQr.set('');
     this.following.set(false);
     this.followers.set(0);
     this.commentText = '';
@@ -172,6 +176,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
           if (isPlatformBrowser(this.platformId)) {
             // Enhance the body (promote pseudo-headings) and index it once painted.
             this.enhanceArticle();
+            if (b.user?.upiId) this.buildUpiQr(b.user.upiId, b.author);
           }
         }
         this.loading.set(false);
@@ -287,6 +292,27 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
       next: (r) => { this.liked.set(r.liked); this.likeCount.set(r.count); this.likeLoading.set(false); },
       error: () => this.likeLoading.set(false),
     });
+  }
+
+  // ── UPI tipping (India) ──────────────────────────────────────────────────
+  /** `upi://pay` deep link — opens the reader's UPI app (mobile) prefilled to
+   *  pay the author. Receive-only; cannot debit the author. */
+  upiLink(): string {
+    const u = this.blog()?.user;
+    return u?.upiId ? this.upiUri(u.upiId, this.blog()?.author) : '';
+  }
+
+  private upiUri(vpa: string, name: string): string {
+    return `upi://pay?pa=${encodeURIComponent(vpa)}&pn=${encodeURIComponent(name ?? 'Writer')}&cu=INR`;
+  }
+
+  private async buildUpiQr(vpa: string, name: string) {
+    try {
+      const QRCode = (await import('qrcode')).default;
+      this.upiQr.set(await QRCode.toDataURL(this.upiUri(vpa, name), { margin: 1, width: 160 }));
+    } catch {
+      // QR is a progressive enhancement — the link button still works without it.
+    }
   }
 
   // ── Read aloud (Web Speech API) ──────────────────────────────────────────

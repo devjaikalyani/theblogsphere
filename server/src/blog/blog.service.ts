@@ -78,7 +78,7 @@ export class BlogService {
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
       include: {
-        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, bio: true, tippingEnabled: true, tipUrl: true } },
+        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, bio: true, tippingEnabled: true, tipUrl: true, upiId: true } },
         tags: { include: { tag: true } },
       },
     });
@@ -98,7 +98,7 @@ export class BlogService {
     const blog = await this.prisma.blog.findFirst({
       where: { slug: idOrSlug, deletedAt: null },
       include: {
-        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, bio: true, tippingEnabled: true, tipUrl: true } },
+        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, bio: true, tippingEnabled: true, tipUrl: true, upiId: true } },
         tags: { include: { tag: true } },
       },
     });

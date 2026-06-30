@@ -297,16 +297,36 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
               </a>
-              @if (blog().user?.tippingEnabled && blog().user?.tipUrl && !isOwner()) {
-                <a [href]="blog().user.tipUrl" target="_blank" rel="noopener nofollow"
-                   class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full btn-clay btn-press no-underline">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
-                  </svg>
-                  Support this writer
-                </a>
+              @if (blog().user?.tippingEnabled && !isOwner()) {
+                @if (blog().user?.upiId) {
+                  <a [href]="upiLink()"
+                     class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full btn-clay btn-press no-underline">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+                    </svg>
+                    Pay via UPI
+                  </a>
+                } @else if (blog().user?.tipUrl) {
+                  <a [href]="blog().user.tipUrl" target="_blank" rel="noopener nofollow"
+                     class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full btn-clay btn-press no-underline">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+                    </svg>
+                    Support this writer
+                  </a>
+                }
               }
             </div>
+
+            @if (blog().user?.tippingEnabled && blog().user?.upiId && !isOwner() && upiQr()) {
+              <div class="mt-4 flex items-center gap-3">
+                <img [src]="upiQr()" alt="UPI QR to tip the writer" class="w-20 h-20 rounded-lg border border-gray-200 bg-white p-1 shrink-0"/>
+                <div class="text-xs text-gray-500 min-w-0">
+                  <p class="font-semibold text-gray-700">Scan to tip via UPI</p>
+                  <p class="mt-0.5 truncate">{{ blog().user.upiId }}</p>
+                </div>
+              </div>
+            }
           </div>
         </div>
       </div>

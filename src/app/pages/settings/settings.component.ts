@@ -20,6 +20,7 @@ export class SettingsComponent implements OnInit {
   writingStyle = '';
   tippingEnabled = false;
   tipUrl = '';
+  upiId = '';
   saving = signal(false);
 
   plan = signal<PlanStatus | null>(null);
@@ -44,6 +45,7 @@ export class SettingsComponent implements OnInit {
         this.website = p.website ?? '';
         this.tippingEnabled = p.tippingEnabled ?? false;
         this.tipUrl = p.tipUrl ?? '';
+        this.upiId = p.upiId ?? '';
       },
     });
     fetch('/api/users/me/writing-style', { credentials: 'include' })
@@ -62,18 +64,17 @@ export class SettingsComponent implements OnInit {
     this.billing.status().subscribe({ next: (s) => this.plan.set(s), error: () => {} });
   }
 
-  upgrade() {
-    this.billingLoading.set(true);
-    this.billing.checkout().subscribe({
-      next: (r) => { if (r.url) window.location.href = r.url; else this.billingFail(); },
-      error: (e) => this.billingFail(e),
-    });
-  }
-
   manageBilling() {
     this.billingLoading.set(true);
-    this.billing.portal().subscribe({
-      next: (r) => { if (r.url) window.location.href = r.url; else this.billingFail(); },
+    this.billing.manage().subscribe({
+      next: (r) => {
+        if (r.url) { window.location.href = r.url; return; }
+        this.billingLoading.set(false);
+        if (r.cancelled) {
+          this.toast.show('Your plan will not renew. You keep Pro until the period ends.', 'success');
+          this.loadPlan();
+        }
+      },
       error: (e) => this.billingFail(e),
     });
   }
@@ -93,6 +94,7 @@ export class SettingsComponent implements OnInit {
       writingStyle: this.writingStyle,
       tippingEnabled: this.tippingEnabled,
       tipUrl: this.tipUrl || undefined,
+      upiId: this.upiId || undefined,
     }).subscribe({
       next: () => { this.saving.set(false); this.toast.show('Settings saved.', 'success'); },
       error: () => { this.saving.set(false); this.toast.show('Could not save settings.', 'error'); },

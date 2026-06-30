@@ -26,6 +26,7 @@ export class UserController {
           website: true,
           tippingEnabled: true,
           tipUrl: true,
+          upiId: true,
           createdAt: true,
           _count: {
             select: { followers: true, following: true },
@@ -57,7 +58,7 @@ export class UserController {
   @Patch('me')
   @UseGuards(AuthGuard)
   async updateProfile(
-    @Body() body: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string },
+    @Body() body: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string; upiId?: string },
     @CurrentUser('id') userId: string,
   ) {
     return this.prisma.user.update({
@@ -70,8 +71,9 @@ export class UserController {
         ...(body.writingStyle !== undefined && { writingStyle: body.writingStyle }),
         ...(body.tippingEnabled !== undefined && { tippingEnabled: body.tippingEnabled }),
         ...(body.tipUrl !== undefined && { tipUrl: body.tipUrl }),
+        ...(body.upiId !== undefined && { upiId: body.upiId }),
       },
-      select: { id: true, firstName: true, lastName: true, bio: true, website: true, writingStyle: true, tippingEnabled: true, tipUrl: true },
+      select: { id: true, firstName: true, lastName: true, bio: true, website: true, writingStyle: true, tippingEnabled: true, tipUrl: true, upiId: true },
     });
   }
 

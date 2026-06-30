@@ -60,10 +60,10 @@
           <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--clay)] text-white">Most popular</span>
         </div>
         <div class="flex items-baseline gap-1 mb-1">
-          <span class="font-display text-4xl text-[#F3EFE7]">$8</span>
+          <span class="font-display text-4xl text-[#F3EFE7]">&#8377;200</span>
           <span class="text-sm text-[#A39B8D]">/ month</span>
         </div>
-        <p class="text-sm text-[#A39B8D] mb-6">For writers who want the full toolkit.</p>
+        <p class="text-sm text-[#A39B8D] mb-6">For writers who want the full toolkit. <span class="text-[#7E7668]">Or $4/mo internationally.</span></p>
         <ul class="space-y-3 text-sm text-[#E8E3DA] flex-1">
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -82,17 +82,25 @@
             Support an independent, ad-free platform
           </li>
         </ul>
-        <div class="mt-8">
+        <div class="mt-8 space-y-2.5">
           @if (isPro) {
             <button type="button" (click)="manage()" [disabled]="loading()"
               class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
-              {{ loading() ? 'Opening…' : 'Manage billing' }}
+              {{ loading() ? 'Working…' : (status()?.provider === 'razorpay' ? 'Cancel subscription' : 'Manage billing') }}
             </button>
           } @else {
-            <button type="button" (click)="upgrade()" [disabled]="loading()"
-              class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
-              {{ loading() ? 'Redirecting…' : 'Upgrade to Pro' }}
-            </button>
+            @if (!status() || status()?.razorpayEnabled) {
+              <button type="button" (click)="upgrade('razorpay')" [disabled]="loading()"
+                class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
+                {{ loading() ? 'Redirecting…' : 'Pay in INR — UPI / Cards' }}
+              </button>
+            }
+            @if (!status() || status()?.stripeEnabled) {
+              <button type="button" (click)="upgrade('stripe')" [disabled]="loading()"
+                class="block w-full px-5 py-3 text-sm font-semibold rounded-full border border-[#C9C2B5]/30 text-[#E8E3DA] hover:bg-white/10 transition-colors disabled:opacity-60">
+                {{ loading() ? 'Redirecting…' : 'Pay with international card ($4)' }}
+              </button>
+            }
           }
         </div>
       </div>
