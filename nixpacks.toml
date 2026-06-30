@@ -1,0 +1,18 @@
+# Nixpacks build config for the NestJS API (the service Railway deploys).
+#
+# INSTALL PHASE — must be `npm install`, NOT Nixpacks' default `npm ci`.
+# Railway/Nixpacks provisions npm 9 (see the build plan: `npm-9_x`), whose
+# strict `npm ci` aborts with "Missing @rollup/rollup-*" on the cross-platform
+# rollup optional deps that npm 11 wrote into package-lock.json. This is the
+# known npm optional-deps lockfile bug, not a broken lock. `npm install`
+# reconciles the lock in place instead of failing.
+#
+# BUILD PHASE — we deliberately skip `npm run build` (the Angular SSR build).
+# The API runs server/src directly through the SWC loader, so the only build
+# step is generating the Prisma client.
+
+[phases.install]
+cmds = ["npm install --include=dev --no-audit --no-fund"]
+
+[phases.build]
+cmds = ["npx prisma generate"]

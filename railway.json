@@ -2,8 +2,7 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "comment": "Override the default build so Nixpacks does NOT run `npm run build` (the Angular SSR build) — the API runs server/src directly via the SWC loader, so the only build step is generating the Prisma client. Use `npm install` (not `npm ci`): npm < 10 fails to resolve rollup's nested cross-platform optional deps from the lock and aborts; `npm install` reconciles instead. --include=dev keeps the `prisma` CLI (a devDependency) available for generate.",
-    "buildCommand": "npm install --include=dev --no-audit --no-fund && npx prisma generate"
+    "comment": "Install + build phases are defined in nixpacks.toml (the install phase must use `npm install`, not Nixpacks' default `npm ci`, which strict-fails on npm 9's rollup optional-deps bug). This block only carries deploy settings."
   },
   "deploy": {
     "startCommand": "npm run server:start",
