@@ -75,3 +75,6 @@ server/dist/
 .DS_Store
 Thumbs.db
 *.swp
+
+# Nested deploy clone — not part of this working tree
+theblogsphere/

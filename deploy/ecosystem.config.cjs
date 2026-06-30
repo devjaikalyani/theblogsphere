@@ -13,6 +13,11 @@ module.exports = {
       args: 'run server:start',
       env: { NODE_ENV: 'production', PORT: '3000' },
       max_memory_restart: '512M',
+      // If a process crashes on boot (e.g. a missing env var), back off
+      // exponentially and give up after 10 tries instead of hammering fork()
+      // and exhausting the per-user process limit.
+      max_restarts: 10,
+      exp_backoff_restart_delay: 200,
     },
     {
       name: 'tbs-ssr',
@@ -21,6 +26,11 @@ module.exports = {
       args: 'run serve:ssr:TheBlogSphere',
       env: { NODE_ENV: 'production', PORT: '4000' },
       max_memory_restart: '512M',
+      // If a process crashes on boot (e.g. a missing env var), back off
+      // exponentially and give up after 10 tries instead of hammering fork()
+      // and exhausting the per-user process limit.
+      max_restarts: 10,
+      exp_backoff_restart_delay: 200,
     },
   ],
 };

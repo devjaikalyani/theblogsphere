@@ -9,6 +9,8 @@ A full-stack blogging platform built with Angular 19, NestJS, PostgreSQL (Prisma
 - Write, publish, and discover blog posts (SEO-friendly slug URLs, e.g. `/blog/my-title-123`)
 - AI writing assistant with streaming output (Groq / llama-3.3-70b)
 - AI writing memory — stores your style, uses it in every generation
+- AI "key takeaways" — a one-tap summary of any post (cached)
+- Immersive reading view — reading-progress bar, auto-built table of contents with scroll-spy, and a "Read next" related-posts rail
 - Cover image upload (Cloudflare R2), with server-side magic-byte validation
 - Comments, bookmarks, follow system, and personalized feed
 - Writer analytics dashboard (views, top posts, monthly trends)
@@ -19,6 +21,8 @@ A full-stack blogging platform built with Angular 19, NestJS, PostgreSQL (Prisma
 ### Design & front-end
 
 - **"Refined Editorial" design system** — warm paper/ink/clay palette; Fraunces (display), Newsreader (reading), Inter (UI)
+- **Editorial signature layer** — masthead rails, ink section rules, and running index numerals shared across home, explore, and the reading view
+- Subtle **motion** throughout (scroll-reveal, hover lift, route page-transitions), all reduced-motion aware
 - **Light / dark / system theme** with a nav toggle and no flash on load (theme set before first paint)
 - Self-hosted fonts (no render-blocking third-party request), lazy-loaded images, reduced-motion support, skip-to-content link
 - **PWA installable** (web app manifest)
@@ -35,7 +39,7 @@ A full-stack blogging platform built with Angular 19, NestJS, PostgreSQL (Prisma
 
 - Boot-time environment validation (fails fast on missing config)
 - Helmet CSP, CORS allowlist, global rate limiting, `/api/health` probe
-- Production reverse-proxy configs (Caddy + nginx) and PM2 process file in [`deploy/`](deploy/)
+- Deploy configs: same-origin [`vercel.json`](vercel.json) rewrite (Vercel + managed backend), plus Caddy / nginx reverse-proxy + PM2 process file in [`deploy/`](deploy/) for single-VPS
 
 ---
 
@@ -172,6 +176,7 @@ Before going live:
 - [ ] Run `npm run db:trigram` and `npm run backfill:slugs` on production
 - [ ] Set `NODE_ENV=production`
 - [ ] Ensure R2 bucket CORS policy allows your domain
+- [ ] Route `/api/*` to the backend on one public origin (Vercel [`vercel.json`](vercel.json) rewrite, or a reverse proxy)
 
 ---
 
@@ -187,6 +192,7 @@ Before going live:
 | PATCH | `/api/blogs/:id` | Yes | Update blog post |
 | DELETE | `/api/blogs/:id` | Yes | Soft-delete blog post |
 | POST | `/api/blogs/:id/view` | No | Increment view count |
+| GET | `/api/blogs/:id/related` | No | Related posts ("Read next") — shared-tag matches, topped up with recent (cached) |
 | GET | `/api/blogs/my` | Yes | Current user's blogs |
 | GET | `/api/blogs/tags` | No | All tags |
 
@@ -235,6 +241,7 @@ Before going live:
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | POST | `/api/ai/generate` | Optional | Stream AI content (SSE); uses your saved writing style when signed in. Rate-limited to 5 req/min per IP |
+| GET | `/api/ai/summary/:blogId` | No | AI "key takeaways" for a post (cached). Rate-limited to 10 req/min per IP |
 
 ### Uploads
 
@@ -275,7 +282,7 @@ rate-limited to 10 attempts / 5 min per IP to blunt brute-force attacks.
 TheBlogSphere/
 ├── src/                         # Angular frontend
 │   └── app/
-│       ├── directives/          # Reveal, counter animations
+│       ├── directives/          # reveal, hover, page-transition (Motion-powered)
 │       ├── interceptors/        # HTTP cache interceptor
 │       ├── pages/               # Route components
 │       │   ├── home/
@@ -317,6 +324,7 @@ TheBlogSphere/
 │   ├── robots.txt
 │   └── manifest.webmanifest     # PWA manifest
 ├── deploy/                      # Caddyfile, nginx.conf, ecosystem.config.cjs (PM2)
+├── vercel.json                  # Same-origin /api rewrite (Vercel frontend + managed backend)
 ├── .github/workflows/ci.yml     # CI: install, prisma generate, build, test
 ├── DEPLOYMENT.md                # Full production deploy guide
 ├── .env.example                 # Environment variable template
@@ -327,7 +335,40 @@ TheBlogSphere/
 
 ## Deployment
 
-See **[DEPLOYMENT.md](DEPLOYMENT.md)** for the full guide. In short: two processes
-(NestJS API on `:3000`, Angular SSR on `:4000`) behind one reverse proxy on a
-single origin (required for auth cookies + OAuth). Configs for Caddy, nginx and
-PM2 are in [`deploy/`](deploy/).
+This is a two-tier app (Angular SSR frontend + NestJS/Postgres backend). Auth
+cookies and Google OAuth require both to be reachable on **one origin**, so every
+deploy routes `/api/*` to the backend and everything else to the frontend.
+
+### Option A — Vercel (frontend) + managed Node host (backend)
+
+Recommended when the frontend lives on Vercel. The NestJS API **cannot** run on
+Vercel's serverless runtime, so host it on a platform that runs a persistent Node
+process (Render, Railway, Fly.io) with a managed Postgres (Neon, Supabase, Render
+Postgres).
+
+1. **Backend** → deploy this repo to your Node host as a web service:
+   - Build: `npm ci --include=dev && npx prisma generate`
+     (the `prisma` CLI is a devDependency, so `--include=dev` is required)
+   - Start: `npm run server:start` — binds to `$PORT`, serves under `/api/*`
+   - Health check path: `/api/health`
+   - One-off, once the DB is connected:
+     `npx prisma db push && npm run db:trigram && npm run backfill:slugs`
+2. **Same-origin glue** → [`vercel.json`](vercel.json) proxies `/api/*` on the
+   Vercel domain to the backend. Replace `REPLACE-WITH-BACKEND-HOST` with your
+   backend's URL, then redeploy the frontend.
+3. **Origin env** — set the public Vercel domain everywhere the browser sees it.
+   These go on the **backend host** (the API issues the cookies and OAuth redirect):
+   ```
+   BETTER_AUTH_URL=https://<your-app>.vercel.app
+   ALLOWED_ORIGINS=https://<your-app>.vercel.app
+   GOOGLE_CALLBACK_URL=https://<your-app>.vercel.app/api/auth/callback/google
+   SITE_URL=https://<your-app>.vercel.app
+   ```
+   Whitelist that callback URL (and the JS origin) in the Google Cloud console.
+4. **Verify:** `curl https://<your-app>.vercel.app/api/health` returns `200`.
+
+### Option B — Single VPS (self-hosted)
+
+One box running both processes (NestJS `:3000`, Angular SSR `:4000`) behind one
+reverse proxy. See **[DEPLOYMENT.md](DEPLOYMENT.md)**; Caddy / nginx / PM2 configs
+are in [`deploy/`](deploy/).
