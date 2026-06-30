@@ -34,6 +34,13 @@ export class BlogController {
     return this.blogService.getTags();
   }
 
+  // Must be declared before the ':idOrSlug' catch-all, or it would be matched
+  // as a story lookup with id="trending".
+  @Get('trending')
+  async getTrending() {
+    return this.blogService.findTrending();
+  }
+
   @Get(':id/related')
   async getRelated(@Param('id', ParseIntPipe) id: number) {
     return this.blogService.findRelated(id);

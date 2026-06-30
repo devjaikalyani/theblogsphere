@@ -1,0 +1,109 @@
+<div class="bg-page min-h-screen">
+  <!-- Page header -->
+  <div class="page-header-band">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+      <p class="running-head mb-3">Trending now</p>
+      <h1 class="text-section-title mb-3">The top 100</h1>
+      <p class="font-reading text-gray-600 text-[1.05rem] leading-relaxed max-w-xl">
+        The most-read stories on TheBlogSphere right now, ranked by readership and reader engagement.
+      </p>
+    </div>
+  </div>
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="divide-y divide-gray-100">
+        @for (i of [1,2,3,4,5,6,7,8]; track i) {
+          <div class="flex items-center gap-4 sm:gap-5 py-5">
+            <div class="h-7 skeleton w-8 rounded shrink-0"></div>
+            <div class="w-16 h-16 sm:w-20 sm:h-20 skeleton rounded-xl shrink-0 hidden sm:block"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 skeleton w-3/4 rounded"></div>
+              <div class="h-3 skeleton w-1/2 rounded"></div>
+            </div>
+            <div class="h-4 skeleton w-12 rounded shrink-0"></div>
+          </div>
+        }
+      </div>
+
+    } @else if (blogs().length === 0) {
+      <!-- Empty -->
+      <div class="text-center py-24 bg-raised rounded-2xl border border-gray-200">
+        <div class="w-14 h-14 rounded-full bg-sunken flex items-center justify-center mx-auto mb-4">
+          <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+          </svg>
+        </div>
+        <p class="font-display text-xl text-gray-900 mb-1">Nothing trending yet</p>
+        <p class="text-sm text-gray-500 mb-5">Stories climb this list as readers discover them.</p>
+        <a routerLink="/explore"
+          class="text-sm text-indigo-700 font-semibold hover:text-indigo-800 transition-colors link-underline">
+          Explore all stories
+        </a>
+      </div>
+
+    } @else {
+      <!-- Ranked list -->
+      <ol class="divide-y divide-gray-100">
+        @for (blog of blogs(); track blog.id; let i = $index) {
+          <li [appReveal]="i < 12 ? i * 40 : 0">
+            <a [routerLink]="['/blog', blog.slug || blog.id]" appHover
+               class="group flex items-center gap-4 sm:gap-5 py-5 no-underline">
+
+              <!-- Rank -->
+              <span class="font-display tabular-nums shrink-0 w-9 sm:w-12 text-right leading-none text-2xl sm:text-3xl"
+                    [class]="blog.rank <= 3 ? 'text-clay' : 'text-gray-300'">
+                {{ blog.rank }}
+              </span>
+
+              <!-- Thumbnail -->
+              @if (blog.coverImage) {
+                <div class="zoom-wrap hidden sm:block shrink-0 rounded-xl overflow-hidden">
+                  <img loading="lazy" decoding="async" [src]="blog.coverImage" [alt]="blog.title"
+                       class="zoom-img w-20 h-20 object-cover"/>
+                </div>
+              }
+
+              <!-- Content -->
+              <div class="min-w-0 flex-1">
+                <h2 class="font-display text-[1.05rem] sm:text-[1.15rem] text-gray-900 leading-snug line-clamp-2 group-hover:text-indigo-700 transition-colors">
+                  {{ blog.title }}
+                </h2>
+                <div class="mt-1.5 flex items-center flex-wrap gap-x-2.5 gap-y-1 text-xs text-gray-500">
+                  <span class="inline-flex items-center gap-1.5 min-w-0">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-semibold shrink-0"
+                          [style.background]="avatarGradient(blog.author)">{{ blog.author.charAt(0).toUpperCase() }}</span>
+                    <span class="font-medium text-gray-700 truncate max-w-[9rem]">{{ blog.author }}</span>
+                  </span>
+                  @if (blog.publishDate) {
+                    <span class="text-gray-300" aria-hidden="true">&middot;</span>
+                    <span class="shrink-0">{{ formatDate(blog.publishDate) }}</span>
+                  }
+                  @for (tag of blogTags(blog).slice(0, 1); track tag) {
+                    <span class="text-gray-300" aria-hidden="true">&middot;</span>
+                    <span class="text-clay font-medium">#{{ tag }}</span>
+                  }
+                </div>
+              </div>
+
+              <!-- Reads -->
+              <div class="shrink-0 flex flex-col items-end gap-0.5 pl-1">
+                <span class="inline-flex items-center gap-1 text-sm font-semibold text-gray-900 tabular-nums">
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  {{ formatViews(blog.views) }}
+                </span>
+                <span class="eyebrow !text-[10px] text-gray-400">reads</span>
+              </div>
+            </a>
+          </li>
+        }
+      </ol>
+    }
+  </div>
+</div>

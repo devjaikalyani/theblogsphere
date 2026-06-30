@@ -221,6 +221,57 @@ export class BlogService {
     return this.prisma.tag.findMany({ orderBy: { name: 'asc' } });
   }
 
+  /** Top 100 stories by a popularity score — readership plus weighted
+   *  engagement (a comment counts more than a view, a bookmark more still) —
+   *  multiplied by a gentle recency decay so fresh hits can rise above stale
+   *  ones without erasing genuinely popular older posts. Cached; invalidated
+   *  whenever a story is created/updated/deleted via the `blogs:` prefix. */
+  async findTrending() {
+    const cacheKey = 'blogs:trending';
+    const cached = this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const candidates = await this.prisma.blog.findMany({
+      where: { status: 'published', visibility: 'public', deletedAt: null },
+      orderBy: { views: 'desc' },
+      take: 500,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        coverImage: true,
+        author: true,
+        publishDate: true,
+        createdAt: true,
+        views: true,
+        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
+        tags: { include: { tag: true } },
+        _count: { select: { comments: true, bookmarks: true } },
+      },
+    });
+
+    const now = Date.now();
+    const DAY = 86_400_000;
+    const scored = candidates.map((b) => {
+      const comments = b._count.comments;
+      const bookmarks = b._count.bookmarks;
+      const ageDays = Math.max(0, (now - new Date(b.publishDate ?? b.createdAt).getTime()) / DAY);
+      const recencyWeight = 1 / (1 + ageDays / 45);
+      const score = (b.views + comments * 4 + bookmarks * 6 + 1) * recencyWeight;
+      return { blog: b, comments, bookmarks, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score || b.blog.views - a.blog.views);
+
+    const top = scored.slice(0, 100).map(({ blog, comments, bookmarks }, i) => {
+      const { _count, createdAt, ...rest } = blog;
+      return { ...rest, commentCount: comments, bookmarkCount: bookmarks, rank: i + 1 };
+    });
+
+    this.cache.set(cacheKey, top, 120);
+    return top;
+  }
+
   /** Stories to read next: those sharing tags with this one, topped up with
    *  recent posts if there aren't enough tag matches. (Tag-overlap now; an
    *  embedding-based version can replace this later without touching callers.) */

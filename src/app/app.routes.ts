@@ -11,6 +11,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/explore/explore.component').then(m => m.ExploreComponent),
   },
   {
+    path: 'trending',
+    loadComponent: () => import('./pages/trending/trending.component').then(m => m.TrendingComponent),
+  },
+  {
     path: 'login',
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
   },

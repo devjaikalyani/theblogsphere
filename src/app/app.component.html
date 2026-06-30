@@ -31,6 +31,10 @@
            class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
           Explore
         </a>
+        <a routerLink="/trending" routerLinkActive="!text-gray-900"
+           class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+          Trending
+        </a>
 
         @if (auth.session()?.user) {
           <a routerLink="/create" routerLinkActive="!text-gray-900"
@@ -150,6 +154,8 @@
            class="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Home</a>
         <a routerLink="/explore" (click)="menuOpen.set(false)"
            class="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Explore</a>
+        <a routerLink="/trending" (click)="menuOpen.set(false)"
+           class="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Trending</a>
         @if (auth.session()?.user) {
           <div class="flex items-center gap-3 px-3 py-3 border-y border-gray-100 my-1">
             <div class="w-9 h-9 rounded-full bg-avatar text-white flex items-center justify-center text-xs font-semibold shrink-0">
@@ -211,6 +217,7 @@
         <p class="eyebrow text-[#7E7668] mb-5">Platform</p>
         <div class="space-y-3">
           <a routerLink="/explore" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">Explore stories</a>
+          <a routerLink="/trending" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">Trending</a>
           <a routerLink="/create" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">Write a post</a>
           <a routerLink="/ai-assistant" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">Writing assistant</a>
           <a routerLink="/about" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">About</a>

@@ -46,6 +46,11 @@ export class BlogService {
     return this.http.get<any[]>('/api/blogs/tags');
   }
 
+  /** Top 100 stories ranked by popularity (views + engagement, recency-weighted). */
+  getTrending(): Observable<any[]> {
+    return this.http.get<any[]>('/api/blogs/trending');
+  }
+
   /** Stories to read next (tag-related, topped up with recent). */
   getRelated(id: number): Observable<any[]> {
     return this.http.get<any[]>(`/api/blogs/${id}/related`);
