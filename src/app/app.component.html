@@ -32,23 +32,6 @@
           Explore
         </a>
 
-        <!-- Theme toggle -->
-        <button type="button" (click)="theme.toggle()"
-          [attr.aria-label]="theme.resolved() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-          [title]="theme.resolved() === 'dark' ? 'Light mode' : 'Dark mode'"
-          class="icon-btn btn-press ml-1">
-          @if (theme.resolved() === 'dark') {
-            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="12" r="4" stroke-width="2"/>
-              <path stroke-linecap="round" stroke-width="2" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
-            </svg>
-          } @else {
-            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 9 0 0021 12.79z"/>
-            </svg>
-          }
-        </button>
-
         @if (auth.session()?.user) {
           <a routerLink="/create" routerLinkActive="!text-gray-900"
              class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
@@ -145,20 +128,6 @@
 
       <!-- Mobile controls -->
       <div class="md:hidden flex items-center gap-0.5 -mr-2">
-      <button type="button" (click)="theme.toggle()"
-        [attr.aria-label]="theme.resolved() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-        class="icon-btn btn-press">
-        @if (theme.resolved() === 'dark') {
-          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="4" stroke-width="2"/>
-            <path stroke-linecap="round" stroke-width="2" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
-          </svg>
-        } @else {
-          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 9 0 0021 12.79z"/>
-          </svg>
-        }
-      </button>
       <button type="button" (click)="menuOpen.set(!menuOpen())"
         class="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
         @if (menuOpen()) {

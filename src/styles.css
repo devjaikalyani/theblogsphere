@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/* Class-based dark mode: `dark:` utilities respond to `.dark` on <html> */
-@custom-variant dark (&:where(.dark, .dark *));
-
 /* ════════════════════════════════════════════════════════════════
    TheBlogSphere — "Refined Editorial" design system  ·  v2
    A quiet-luxury reading experience: warm paper, ink type, a serif
@@ -10,14 +7,14 @@
    chrome (Inter), and a single restrained clay accent.
 
    v2 elevation:
-   · Full light + dark theme via runtime CSS-variable token flipping —
-     existing `gray-*` / `indigo-*` / `clay` utilities adapt for free.
+   · A semantic CSS-variable token layer — components reference `--ink`,
+     `--paper`, `--clay`, etc. so the palette stays consistent everywhere.
    · A layered, warm elevation (shadow) scale for genuine depth.
    · A unified motion language + full reduced-motion support.
-   · New components: chips, badges, icon buttons, segmented control,
-     hover-zoom media, refined cards, kbd, dividers.
+   · New components: chips, badges, icon buttons, hover-zoom media,
+     refined cards, kbd, dividers.
    The Tailwind theme is remapped so `indigo-*` utilities are the clay
-   accent and `gray-*` are warm stone neutrals — in BOTH themes.
+   accent and `gray-*` are warm stone neutrals.
    ════════════════════════════════════════════════════════════════ */
 
 @theme {
@@ -55,9 +52,9 @@
 }
 
 /* ────────────────────────────────────────────────────────────────
-   SEMANTIC TOKENS — light theme (default)
-   These are what components actually reference, so the entire UI
-   re-themes by flipping the values under `.dark`.
+   SEMANTIC TOKENS
+   These are what components actually reference, so the whole palette
+   lives in one place.
    ──────────────────────────────────────────────────────────────── */
 :root {
   color-scheme: light;
@@ -119,81 +116,6 @@
   --ring-inset: inset 0 0 0 1px var(--hairline);
 }
 
-.dark {
-  color-scheme: dark;
-
-  /* Flip the Tailwind ramps so every gray-* / indigo-* utility adapts */
-  --color-gray-50:  #1B1813;
-  --color-gray-100: #221E19;
-  --color-gray-200: #2C2820;
-  --color-gray-300: #564F46;
-  --color-gray-400: #6E675C;
-  --color-gray-500: #938C7F;
-  --color-gray-600: #B8B1A4;
-  --color-gray-700: #D6CFC4;
-  --color-gray-800: #E8E3DA;
-  --color-gray-900: #F5F1EA;
-
-  --color-indigo-50:  #2A1C14;
-  --color-indigo-100: #3A2519;
-  --color-indigo-200: #4E3122;
-  --color-indigo-300: #6B4630;
-  --color-indigo-400: #C97B53;
-  --color-indigo-500: #D9805B;
-  --color-indigo-600: #E08A60;
-  --color-indigo-700: #E6A487;
-  --color-indigo-800: #EDC0A8;
-  --color-indigo-900: #F4D8C8;
-
-  --color-clay:      #DB835E;
-  --color-clay-soft: #E0A485;
-
-  --paper:           #15120E;
-  --paper-raised:    #1E1A15;
-  --paper-sunken:    #100E0A;
-  --paper-overlay:   rgba(21, 18, 14, 0.82);
-
-  --ink:             #F5F1EA;
-  --ink-soft:        #C9C2B5;
-  --ink-muted:       #938C7F;
-
-  --hairline:        #2C2820;
-  --hairline-strong: #3A3329;
-
-  --clay:            #DB835E;
-  --clay-soft:       #E0A485;
-  --clay-tint:       rgba(219, 131, 94, 0.10);
-  --clay-tint-2:     rgba(219, 131, 94, 0.18);
-  --select-bg:       #6B4630;
-  --select-fg:       #F6E2D7;
-
-  --inverse-surface:    #211D18;
-  --inverse-surface-2:  #2C261F;
-  --inverse-text:       #F3EFE7;
-  --inverse-text-soft:  #C9C2B5;
-  --inverse-text-muted: #A39B8D;
-  --inverse-hairline:   rgba(231, 226, 216, 0.08);
-
-  --btn-ink-bg:    #F5F1EA;
-  --btn-ink-fg:    #1A1714;
-  --btn-ink-hover: #E3DDD2;
-
-  --reading-fg: #DCD6CB;
-
-  --skeleton-base: #221E19;
-  --skeleton-hi:   #2E2920;
-
-  --code-bg:   #2A251F;
-  --code-fg:   #E0A485;
-  --pre-bg:    #100E0A;
-  --pre-fg:    #E8E3DA;
-
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40);
-  --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.40), 0 4px 12px rgba(0, 0, 0, 0.45);
-  --shadow-3: 0 2px 6px rgba(0, 0, 0, 0.45), 0 14px 34px rgba(0, 0, 0, 0.55);
-  --shadow-4: 0 4px 10px rgba(0, 0, 0, 0.50), 0 26px 60px rgba(0, 0, 0, 0.62);
-}
-
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -207,7 +129,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    transition: background-color 0.4s ease, color 0.4s ease;
   }
   ::selection {
     background-color: var(--select-bg);
@@ -642,26 +563,6 @@
   }
   .icon-btn:hover { color: var(--ink); background: var(--paper-sunken); }
 
-  /* ══════════ SEGMENTED CONTROL (theme toggle) ══════════ */
-  .segmented {
-    display: inline-flex; align-items: center; gap: 2px;
-    padding: 3px; border-radius: 999px;
-    background: var(--paper-sunken);
-    box-shadow: inset 0 0 0 1px var(--hairline);
-  }
-  .segmented button {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 1.8rem; height: 1.8rem; border-radius: 999px;
-    color: var(--ink-muted);
-    transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
-  }
-  .segmented button:hover { color: var(--ink); }
-  .segmented button[aria-pressed="true"] {
-    color: var(--ink);
-    background: var(--paper-raised);
-    box-shadow: var(--shadow-1);
-  }
-
   /* ══════════ BUTTONS ══════════ */
   .btn-ink {
     background: var(--btn-ink-bg); color: var(--btn-ink-fg);
@@ -906,13 +807,6 @@
     color: var(--clay) !important;
     font-weight: 600;
   }
-
-  /* ══════════ DARK-MODE FIXES for non-token rules ══════════ */
-  .dark .shadow-card,
-  .dark .shadow-card-xs,
-  .dark .shadow-white-card,
-  .dark .shadow-badge,
-  .dark .shadow-stats { box-shadow: inset 0 0 0 1px var(--hairline); }
 }
 
 /* Editor placeholder (create/edit) */
@@ -922,6 +816,3 @@
   pointer-events: none;
 }
 .editor-content:focus { outline: none; }
-
-/* Prevent theme-transition flash on first paint / theme swap of big panels */
-.theme-init * { transition: none !important; }

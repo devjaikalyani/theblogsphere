@@ -5,7 +5,6 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from './services/auth.service';
 import { ToastService } from './services/toast.service';
 import { I18nService } from './services/i18n.service';
-import { ThemeService } from './services/theme.service';
 import { PageTransitionDirective } from './directives/page-transition.directive';
 
 @Component({
@@ -31,7 +30,6 @@ export class AppComponent implements OnInit {
     private router: Router,
     readonly toast: ToastService,
     readonly i18n: I18nService,
-    readonly theme: ThemeService,
     @Inject(PLATFORM_ID) private platformId: object,
   ) {
     if (isPlatformBrowser(this.platformId)) {

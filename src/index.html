@@ -19,27 +19,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="BlogSphere">
 
-  <!-- Theme bootstrap: set light/dark on <html> before first paint (no flash) -->
-  <script>
-    (function () {
-      try {
-        var stored = localStorage.getItem('theme');
-        var dark = stored === 'dark' ||
-          (stored !== 'light' && window.matchMedia &&
-           window.matchMedia('(prefers-color-scheme: dark)').matches);
-        var el = document.documentElement;
-        el.classList.add('theme-init');
-        if (dark) el.classList.add('dark');
-        el.style.colorScheme = dark ? 'dark' : 'light';
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', dark ? '#15120E' : '#FAF8F3');
-        requestAnimationFrame(function () {
-          requestAnimationFrame(function () { el.classList.remove('theme-init'); });
-        });
-      } catch (e) {}
-    })();
-  </script>
-
   <!-- Self-hosted fonts (no render-blocking third-party request). Preload the
        above-the-fold UI + display faces; the rest load via fonts.css. -->
   <link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
