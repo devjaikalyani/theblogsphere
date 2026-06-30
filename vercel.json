@@ -1,9 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "ng build",
+  "outputDirectory": "dist/the-blog-sphere/browser",
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "https://theblogsphere-production.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

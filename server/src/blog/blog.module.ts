@@ -7,5 +7,6 @@ import { BlogCacheService } from './blog.cache.service';
 @Module({
   controllers: [BlogController, SitemapController],
   providers: [BlogService, BlogCacheService],
+  exports: [BlogCacheService],
 })
 export class BlogModule {}

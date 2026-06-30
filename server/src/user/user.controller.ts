@@ -3,12 +3,16 @@ import { Response, Request } from 'express';
 import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth.config';
 import { PrismaService } from '../prisma/prisma.service';
+import { BlogCacheService } from '../blog/blog.cache.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 
 @Controller('api/users')
 export class UserController {
-  constructor(@Inject(PrismaService) private prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private prisma: PrismaService,
+    @Inject(BlogCacheService) private blogCache: BlogCacheService,
+  ) {}
 
   // Optional auth: `isFollowing` is computed only when a session is present.
   @Get(':id')
@@ -61,7 +65,7 @@ export class UserController {
     @Body() body: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string; upiId?: string },
     @CurrentUser('id') userId: string,
   ) {
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
         ...(body.firstName !== undefined && { firstName: body.firstName }),
@@ -75,6 +79,20 @@ export class UserController {
       },
       select: { id: true, firstName: true, lastName: true, bio: true, website: true, writingStyle: true, tippingEnabled: true, tipUrl: true, upiId: true },
     });
+
+    // The author name is denormalised onto every Blog (`author`) and onto the
+    // auth `name` field. When the name changes, propagate it so existing posts
+    // (and new ones) always show the latest name, then drop cached listings.
+    if (body.firstName !== undefined || body.lastName !== undefined) {
+      const fullName = `${user.firstName} ${user.lastName}`.trim();
+      await this.prisma.$transaction([
+        this.prisma.user.update({ where: { id: userId }, data: { name: fullName } }),
+        this.prisma.blog.updateMany({ where: { userId }, data: { author: fullName } }),
+      ]);
+      this.blogCache.invalidate('blogs:');
+    }
+
+    return user;
   }
 
   @Get('me/writing-style')
