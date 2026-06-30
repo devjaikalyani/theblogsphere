@@ -58,10 +58,11 @@ node_modules/
 # dataconnect generated files
 .dataconnect
 .vercel
-# Ignore .env files
+# Ignore .env files (real secrets) — keep only the *.example templates
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.production.example
 
 # Angular / build artifacts
 /dist
