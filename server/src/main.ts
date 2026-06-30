@@ -15,7 +15,9 @@ import helmet from 'helmet';
 import { authRateLimit } from './auth/auth-rate-limit.middleware';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody is needed so the Stripe webhook can verify its signature against
+  // the exact bytes Stripe signed (JSON re-serialisation would break it).
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   // Behind a reverse proxy in production: honour X-Forwarded-* so client IPs
   // (used by rate limiting) and secure-cookie detection work correctly.

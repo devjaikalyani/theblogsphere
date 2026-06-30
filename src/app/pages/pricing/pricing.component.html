@@ -1,0 +1,111 @@
+<div class="bg-page min-h-screen">
+  <!-- Header -->
+  <div class="page-header-band">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-14 sm:py-20 text-center">
+      <p class="running-head mb-3">Pricing</p>
+      <h1 class="text-section-title mb-4">Free to read. Free to write.</h1>
+      <p class="font-reading text-gray-600 text-[1.1rem] leading-relaxed max-w-xl mx-auto">
+        TheBlogSphere will always be free, with no ads. Upgrade to Writer Pro when you want
+        unlimited AI, deeper analytics, and a more professional presence.
+      </p>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Free -->
+      <div class="bg-raised rounded-2xl border border-gray-200 p-8 flex flex-col">
+        <p class="eyebrow text-gray-500 mb-2">Free</p>
+        <div class="flex items-baseline gap-1 mb-1">
+          <span class="font-display text-4xl text-gray-900">$0</span>
+          <span class="text-sm text-gray-500">/ forever</span>
+        </div>
+        <p class="text-sm text-gray-500 mb-6">Everything you need to read and publish.</p>
+        <ul class="space-y-3 text-sm text-gray-700 flex-1">
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Unlimited reading and publishing
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            25 AI writing actions per month
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Core analytics (6-month history)
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Accept reader tips
+          </li>
+        </ul>
+        <div class="mt-8">
+          @if (!isPro) {
+            <span class="block w-full text-center px-5 py-3 text-sm font-semibold rounded-full border border-gray-300 text-gray-500">
+              Your current plan
+            </span>
+          } @else {
+            <span class="block w-full text-center px-5 py-3 text-sm font-semibold rounded-full border border-gray-200 text-gray-400">
+              Included in Pro
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Pro -->
+      <div class="bg-featured-panel rounded-2xl p-8 flex flex-col relative overflow-hidden">
+        <div class="flex items-center justify-between mb-2">
+          <p class="eyebrow text-indigo-300">Writer Pro</p>
+          <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--clay)] text-white">Most popular</span>
+        </div>
+        <div class="flex items-baseline gap-1 mb-1">
+          <span class="font-display text-4xl text-[#F3EFE7]">$8</span>
+          <span class="text-sm text-[#A39B8D]">/ month</span>
+        </div>
+        <p class="text-sm text-[#A39B8D] mb-6">For writers who want the full toolkit.</p>
+        <ul class="space-y-3 text-sm text-[#E8E3DA] flex-1">
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span><span class="font-semibold text-[#F3EFE7]">Unlimited</span> AI writing assistance</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Premium analytics — followers, engagement rate, 12-month history
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Everything in Free
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Support an independent, ad-free platform
+          </li>
+        </ul>
+        <div class="mt-8">
+          @if (isPro) {
+            <button type="button" (click)="manage()" [disabled]="loading()"
+              class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
+              {{ loading() ? 'Opening…' : 'Manage billing' }}
+            </button>
+          } @else {
+            <button type="button" (click)="upgrade()" [disabled]="loading()"
+              class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
+              {{ loading() ? 'Redirecting…' : 'Upgrade to Pro' }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (isPro && status()?.renewsAt) {
+      <p class="text-center text-xs text-gray-500 mt-6">
+        Your Pro plan renews on {{ status()?.renewsAt | date:'mediumDate' }}.
+      </p>
+    }
+
+    <p class="text-center text-sm text-gray-500 mt-10">
+      Just here to read? <a routerLink="/explore" class="text-indigo-700 font-semibold hover:text-indigo-800 link-underline">Explore stories</a> — no account needed.
+    </p>
+  </div>
+</div>

@@ -7,6 +7,18 @@
           <p class="eyebrow eyebrow-clay mb-2.5">Writing tools</p>
           <h1 class="text-section-title">Writing assistant</h1>
           <p class="font-reading text-[1.05rem] text-gray-600 mt-2">Find ideas, draft passages, and shape your writing &mdash; in your voice.</p>
+          @if (plan(); as p) {
+            @if (p.pro) {
+              <span class="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold px-3 py-1 rounded-full bg-sunken text-gray-700">
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--clay)]"></span> Pro &mdash; unlimited AI
+              </span>
+            } @else if (p.ai.remaining !== null) {
+              <span class="inline-flex items-center gap-2 mt-3 text-xs font-medium px-3 py-1 rounded-full bg-sunken text-gray-600">
+                {{ p.ai.remaining }} of {{ p.ai.limit }} AI actions left this month
+                <a routerLink="/pricing" class="text-indigo-700 font-semibold hover:text-indigo-800 link-underline">Upgrade</a>
+              </span>
+            }
+          }
         </div>
         @if (history().length > 0) {
           <button type="button" (click)="clearHistory()" title="Clear conversation"
@@ -17,6 +29,21 @@
       </div>
     </div>
   </div>
+
+  @if (quotaReached()) {
+    <div class="max-w-3xl w-full mx-auto px-4 sm:px-6 pt-6">
+      <div class="bg-featured-panel rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        <div>
+          <p class="font-display text-[#F3EFE7] text-base mb-0.5">You've hit your free AI limit</p>
+          <p class="text-sm text-[#A39B8D]">{{ quotaMessage() || 'Upgrade to Writer Pro for unlimited assistance.' }}</p>
+        </div>
+        <a routerLink="/pricing"
+          class="shrink-0 inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors no-underline">
+          Upgrade to Pro
+        </a>
+      </div>
+    </div>
+  }
 
   <div class="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col gap-5">
 

@@ -49,6 +49,18 @@
 
       <!-- Reusable actions — shared by the desktop rail and the mobile header row -->
       <ng-template #actionButtons>
+        <button type="button" (click)="toggleLike()" [disabled]="likeLoading()"
+          [attr.aria-label]="liked() ? 'Unlike this story' : 'Like this story'"
+          [title]="liked() ? 'Liked — tap to remove' : 'Like this story'"
+          [style.color]="liked() ? 'var(--clay)' : null"
+          class="icon-btn btn-press disabled:opacity-40 !w-auto px-2.5 gap-1.5">
+          <svg class="w-[18px] h-[18px]" [attr.fill]="liked() ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+          @if (likeCount() > 0) {
+            <span class="text-xs font-semibold tabular-nums">{{ likeCount() }}</span>
+          }
+        </button>
         <button type="button" (click)="toggleBookmark()" [disabled]="bookmarkLoading()"
           aria-label="Bookmark"
           [title]="bookmarked() ? 'Saved — tap to remove' : 'Save to bookmarks'"
@@ -67,6 +79,22 @@
           <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
           </svg>
+        </button>
+        <button type="button" (click)="toggleReadAloud()"
+          [attr.aria-label]="speaking() ? 'Stop reading aloud' : 'Read this story aloud'"
+          [title]="speaking() ? 'Stop reading' : 'Read aloud'"
+          [style.color]="speaking() ? 'var(--clay)' : null"
+          class="icon-btn btn-press">
+          @if (speaking()) {
+            <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="6" y="6" width="12" height="12" rx="1.5"/>
+            </svg>
+          } @else {
+            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H2v6h4l5 4V5z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
+            </svg>
+          }
         </button>
         @if (isOwner()) {
           <a [routerLink]="['/edit', blog().id]" title="Edit story" aria-label="Edit story" class="icon-btn btn-press">
@@ -261,13 +289,24 @@
             @if (blog().user?.bio) {
               <p class="font-reading text-[1.02rem] text-gray-600 mt-2 leading-relaxed">{{ blog().user.bio }}</p>
             }
-            <a [routerLink]="['/author', blog().user?.id ?? blog().userId]"
-               class="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-gray-900 no-underline group">
-              <span class="link-underline">View profile</span>
-              <svg class="w-3.5 h-3.5 text-clay group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-            </a>
+            <div class="flex flex-wrap items-center gap-4 mt-4">
+              <a [routerLink]="['/author', blog().user?.id ?? blog().userId]"
+                 class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900 no-underline group">
+                <span class="link-underline">View profile</span>
+                <svg class="w-3.5 h-3.5 text-clay group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
+              @if (blog().user?.tippingEnabled && blog().user?.tipUrl && !isOwner()) {
+                <a [href]="blog().user.tipUrl" target="_blank" rel="noopener nofollow"
+                   class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full btn-clay btn-press no-underline">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+                  </svg>
+                  Support this writer
+                </a>
+              }
+            </div>
           </div>
         </div>
       </div>

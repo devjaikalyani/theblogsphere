@@ -82,6 +82,19 @@ export class BlogService {
     return this.http.delete(`/api/bookmarks/${blogId}`, { withCredentials: true });
   }
 
+  // Likes
+  checkLike(blogId: number): Observable<{ liked: boolean; count: number }> {
+    return this.http.get<{ liked: boolean; count: number }>(`/api/likes/check/${blogId}`, { withCredentials: true });
+  }
+
+  likePost(blogId: number): Observable<{ liked: boolean; count: number }> {
+    return this.http.post<{ liked: boolean; count: number }>(`/api/likes/${blogId}`, {}, { withCredentials: true });
+  }
+
+  unlikePost(blogId: number): Observable<{ liked: boolean; count: number }> {
+    return this.http.delete<{ liked: boolean; count: number }>(`/api/likes/${blogId}`, { withCredentials: true });
+  }
+
   // Comments
   getComments(blogId: number): Observable<any[]> {
     return this.http.get<any[]>(`/api/blogs/${blogId}/comments`);

@@ -78,7 +78,7 @@ export class BlogService {
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
       include: {
-        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, bio: true } },
+        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, bio: true, tippingEnabled: true, tipUrl: true } },
         tags: { include: { tag: true } },
       },
     });
@@ -98,7 +98,7 @@ export class BlogService {
     const blog = await this.prisma.blog.findFirst({
       where: { slug: idOrSlug, deletedAt: null },
       include: {
-        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, bio: true } },
+        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, bio: true, tippingEnabled: true, tipUrl: true } },
         tags: { include: { tag: true } },
       },
     });
@@ -246,7 +246,7 @@ export class BlogService {
         views: true,
         user: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
         tags: { include: { tag: true } },
-        _count: { select: { comments: true, bookmarks: true } },
+        _count: { select: { comments: true, bookmarks: true, likes: true } },
       },
     });
 
@@ -255,17 +255,18 @@ export class BlogService {
     const scored = candidates.map((b) => {
       const comments = b._count.comments;
       const bookmarks = b._count.bookmarks;
+      const likes = b._count.likes;
       const ageDays = Math.max(0, (now - new Date(b.publishDate ?? b.createdAt).getTime()) / DAY);
       const recencyWeight = 1 / (1 + ageDays / 45);
-      const score = (b.views + comments * 4 + bookmarks * 6 + 1) * recencyWeight;
-      return { blog: b, comments, bookmarks, score };
+      const score = (b.views + likes * 5 + comments * 4 + bookmarks * 6 + 1) * recencyWeight;
+      return { blog: b, comments, bookmarks, likes, score };
     });
 
     scored.sort((a, b) => b.score - a.score || b.blog.views - a.blog.views);
 
-    const top = scored.slice(0, 100).map(({ blog, comments, bookmarks }, i) => {
+    const top = scored.slice(0, 100).map(({ blog, comments, bookmarks, likes }, i) => {
       const { _count, createdAt, ...rest } = blog;
-      return { ...rest, commentCount: comments, bookmarkCount: bookmarks, rank: i + 1 };
+      return { ...rest, commentCount: comments, bookmarkCount: bookmarks, likeCount: likes, rank: i + 1 };
     });
 
     this.cache.set(cacheKey, top, 120);

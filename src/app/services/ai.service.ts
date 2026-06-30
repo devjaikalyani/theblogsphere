@@ -10,7 +10,15 @@ export class AiService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),
       }).then(async (response) => {
-        const reader = response.body!.getReader();
+        // Non-streaming error (e.g. 429 AI quota exceeded) — surface the JSON
+        // payload so the UI can prompt an upgrade instead of silently stalling.
+        if (!response.ok || !response.body) {
+          let body: any = null;
+          try { body = await response.json(); } catch {}
+          subscriber.error({ status: response.status, ...(body ?? {}) });
+          return;
+        }
+        const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
         while (true) {

@@ -10,9 +10,11 @@ import { AiModule } from './ai/ai.module';
 import { UploadModule } from './upload/upload.module';
 import { UserModule } from './user/user.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
+import { LikeModule } from './like/like.module';
 import { CommentModule } from './comment/comment.module';
 import { FollowModule } from './follow/follow.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { BillingModule } from './billing/billing.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -26,9 +28,11 @@ import { HealthModule } from './health/health.module';
     UploadModule,
     UserModule,
     BookmarkModule,
+    LikeModule,
     CommentModule,
     FollowModule,
     AnalyticsModule,
+    BillingModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

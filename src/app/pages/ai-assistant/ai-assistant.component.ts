@@ -1,15 +1,17 @@
-import { Component, ElementRef, Inject, PLATFORM_ID, ViewChild, signal } from '@angular/core';
+import { Component, ElementRef, Inject, OnInit, PLATFORM_ID, ViewChild, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { AiService } from '../../services/ai.service';
+import { BillingService, PlanStatus } from '../../services/billing.service';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
 @Component({
   selector: 'app-ai-assistant',
-  imports: [FormsModule, MarkdownPipe],
+  imports: [FormsModule, RouterLink, MarkdownPipe],
   templateUrl: './ai-assistant.component.html',
 })
-export class AiAssistantComponent {
+export class AiAssistantComponent implements OnInit {
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef<HTMLElement>;
 
   prompt = '';
@@ -17,10 +19,29 @@ export class AiAssistantComponent {
   loading = signal(false);
   history = signal<{ prompt: string; response: string }[]>([]);
 
+  plan = signal<PlanStatus | null>(null);
+  quotaReached = signal(false);
+  quotaMessage = signal('');
+
   constructor(
     private aiService: AiService,
+    private billing: BillingService,
     @Inject(PLATFORM_ID) private platformId: object,
   ) {}
+
+  ngOnInit() {
+    this.refreshPlan();
+  }
+
+  private refreshPlan() {
+    this.billing.status().subscribe({
+      next: (s) => {
+        this.plan.set(s);
+        if (!s.pro && s.ai.remaining !== null && s.ai.remaining <= 0) this.quotaReached.set(true);
+      },
+      error: () => {},
+    });
+  }
 
   private scrollToBottom() {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -31,7 +52,7 @@ export class AiAssistantComponent {
 
   generate(prefill?: string) {
     const text = prefill ?? this.prompt;
-    if (!text.trim() || this.loading()) return;
+    if (!text.trim() || this.loading() || this.quotaReached()) return;
     this.output.set('');
     this.loading.set(true);
     if (!prefill) this.prompt = '';
@@ -41,12 +62,20 @@ export class AiAssistantComponent {
         this.output.update(v => v + chunk);
         this.scrollToBottom();
       },
-      error: () => this.loading.set(false),
+      error: (e) => {
+        this.loading.set(false);
+        if (e?.status === 429 || e?.error === 'ai_quota_exceeded') {
+          this.quotaReached.set(true);
+          this.quotaMessage.set(e?.message || 'You have reached your free AI limit this month.');
+          this.refreshPlan();
+        }
+      },
       complete: () => {
         this.history.update(h => [...h, { prompt: text, response: this.output() }]);
         this.output.set('');
         this.loading.set(false);
         this.scrollToBottom();
+        this.refreshPlan();
       },
     });
   }

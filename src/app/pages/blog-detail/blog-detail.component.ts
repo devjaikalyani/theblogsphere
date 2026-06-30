@@ -31,6 +31,13 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   bookmarked = signal(false);
   bookmarkLoading = signal(false);
 
+  liked = signal(false);
+  likeCount = signal(0);
+  likeLoading = signal(false);
+
+  /** Browser read-aloud (Web Speech API) — purely client-side, no cost. */
+  speaking = signal(false);
+
   comments = signal<any[]>([]);
   commentsLoading = signal(true);
   commentText = '';
@@ -112,6 +119,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     // old article body (and its stale TOC + "enhanced" markers) via the
     // template's @if guards, so the next article enhances from a clean slate.
     this.teardownScrollSpy();
+    this.cancelSpeech();
     this.loading.set(true);
     this.notFound.set(false);
     this.blog.set(null);
@@ -123,6 +131,8 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     this.comments.set([]);
     this.commentsLoading.set(true);
     this.bookmarked.set(false);
+    this.liked.set(false);
+    this.likeCount.set(0);
     this.following.set(false);
     this.followers.set(0);
     this.commentText = '';
@@ -152,6 +162,11 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
           if (this.auth.session()) {
             this.blogService.checkBookmark(id).subscribe(r => this.bookmarked.set(r.bookmarked));
           }
+          // Like state + count (works for anonymous readers too — just count).
+          this.blogService.checkLike(id).subscribe({
+            next: (r) => { this.liked.set(r.liked); this.likeCount.set(r.count); },
+            error: () => {},
+          });
           this.loadComments(id);
           this.loadExtras(id, b);
           if (isPlatformBrowser(this.platformId)) {
@@ -260,6 +275,59 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
         error: () => this.bookmarkLoading.set(false),
       });
     }
+  }
+
+  toggleLike() {
+    if (!this.auth.session()) { this.toast.show('Sign in to like stories.', 'info'); return; }
+    const id = this.blog()?.id;
+    if (!id || this.likeLoading()) return;
+    this.likeLoading.set(true);
+    const req = this.liked() ? this.blogService.unlikePost(id) : this.blogService.likePost(id);
+    req.subscribe({
+      next: (r) => { this.liked.set(r.liked); this.likeCount.set(r.count); this.likeLoading.set(false); },
+      error: () => this.likeLoading.set(false),
+    });
+  }
+
+  // ── Read aloud (Web Speech API) ──────────────────────────────────────────
+  toggleReadAloud() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const synth = this.doc.defaultView?.speechSynthesis;
+    if (!synth) { this.toast.show('Read-aloud is not supported in this browser.', 'info'); return; }
+    if (this.speaking()) { this.cancelSpeech(); return; }
+
+    const blog = this.blog();
+    if (!blog) return;
+    const text = this.speechText(blog.title, blog.content);
+    if (!text) return;
+
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1;
+    utter.onend = () => this.speaking.set(false);
+    utter.onerror = () => this.speaking.set(false);
+    this.speaking.set(true);
+    synth.speak(utter);
+  }
+
+  private cancelSpeech() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.doc.defaultView?.speechSynthesis?.cancel();
+    this.speaking.set(false);
+  }
+
+  /** Strip markdown/HTML to clean prose for the speech synthesiser, capped so a
+   *  very long article doesn't queue a runaway utterance. */
+  private speechText(title: string, content: string): string {
+    const body = (content ?? '')
+      .replace(/```[\s\S]*?```/g, ' ')          // fenced code
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')     // images
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')   // links -> link text
+      .replace(/<[^>]+>/g, ' ')                  // html tags
+      .replace(/[#>*_`~|]+/g, ' ')               // md punctuation
+      .replace(/\s+/g, ' ')
+      .trim();
+    return `${title}. ${body}`.slice(0, 8000);
   }
 
   submitComment() {
@@ -450,6 +518,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.routeSub?.unsubscribe();
     this.teardownScrollSpy();
+    this.cancelSpeech();
   }
 
   wordCount(content: string): number {

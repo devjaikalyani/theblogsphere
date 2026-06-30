@@ -18,19 +18,54 @@
       </div>
     } @else if (data()) {
       <!-- Stats row -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
         @for (stat of [
           { label: 'Total views', value: data().totalViews },
-          { label: 'Published', value: data().publishedCount },
+          { label: 'Likes', value: data().totalLikes },
           { label: 'Comments', value: data().totalComments },
-          { label: 'Bookmarks', value: data().totalBookmarks }
+          { label: 'Bookmarks', value: data().totalBookmarks },
+          { label: 'Published', value: data().publishedCount }
         ]; track stat.label) {
           <div class="bg-raised rounded-2xl border border-gray-200 p-5">
             <p class="eyebrow !text-[11px] mb-2">{{ stat.label }}</p>
-            <p class="font-display text-4xl text-gray-900 font-semibold tracking-[-0.02em]">{{ stat.value.toLocaleString() }}</p>
+            <p class="font-display text-4xl text-gray-900 font-semibold tracking-[-0.02em]">{{ (stat.value ?? 0).toLocaleString() }}</p>
           </div>
         }
       </div>
+
+      <!-- Premium insights (Pro) -->
+      @if (data().pro && data().premium) {
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div class="bg-raised rounded-2xl border border-gray-200 p-5">
+            <p class="eyebrow !text-[11px] mb-2">Followers</p>
+            <p class="font-display text-4xl text-gray-900 font-semibold tracking-[-0.02em]">{{ data().premium.followers.toLocaleString() }}</p>
+          </div>
+          <div class="bg-raised rounded-2xl border border-gray-200 p-5">
+            <p class="eyebrow !text-[11px] mb-2">Engagement rate</p>
+            <p class="font-display text-4xl text-gray-900 font-semibold tracking-[-0.02em]">{{ (data().premium.engagementRate * 100).toFixed(1) }}%</p>
+          </div>
+          <div class="bg-raised rounded-2xl border border-gray-200 p-5">
+            <p class="eyebrow !text-[11px] mb-2">Interactions</p>
+            <p class="font-display text-4xl text-gray-900 font-semibold tracking-[-0.02em]">{{ data().premium.interactions.toLocaleString() }}</p>
+          </div>
+        </div>
+      } @else if (!data().pro) {
+        <div class="bg-featured-panel rounded-2xl p-6 mb-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            <div>
+              <p class="font-display text-[#F3EFE7] text-base mb-0.5">Unlock premium analytics</p>
+              <p class="text-sm text-[#A39B8D]">See follower growth, engagement rate, and a full year of history with Writer Pro.</p>
+            </div>
+          </div>
+          <a routerLink="/pricing"
+            class="shrink-0 inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors no-underline">
+            Upgrade to Pro
+          </a>
+        </div>
+      }
 
       <!-- Monthly views bar chart -->
       <div class="bg-raised rounded-2xl border border-gray-200 p-6 mb-6">
@@ -66,6 +101,7 @@
                 </div>
                 <div class="hidden sm:flex items-center gap-4 text-xs text-gray-500 shrink-0">
                   <span><strong class="text-gray-900 font-semibold">{{ post.views }}</strong> views</span>
+                  <span><strong class="text-gray-900 font-semibold">{{ post.likes ?? 0 }}</strong> likes</span>
                   <span><strong class="text-gray-900 font-semibold">{{ post.comments }}</strong> comments</span>
                   <span><strong class="text-gray-900 font-semibold">{{ post.bookmarks }}</strong> saves</span>
                 </div>

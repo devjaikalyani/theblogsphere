@@ -23,6 +23,15 @@ model User {
   writingStyle   String?
   tippingEnabled Boolean  @default(false)
   tipUrl         String?
+
+  // Monetization — platform subscription (Writer Pro) + AI usage metering
+  plan                 String    @default("free") // "free" | "pro"
+  planRenewsAt         DateTime?
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?
+  aiUsageCount         Int       @default(0)
+  aiUsagePeriodStart   DateTime?
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   blogs          Blog[]
@@ -30,6 +39,7 @@ model User {
   accounts       Account[]
   bookmarks      Bookmark[]
   comments       Comment[]
+  likes          Like[]
   following      Follow[]  @relation("Follower")
   followers      Follow[]  @relation("Following")
 }
@@ -51,6 +61,7 @@ model Blog {
   tags        BlogTag[]
   bookmarks   Bookmark[]
   comments    Comment[]
+  likes       Like[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -86,6 +97,17 @@ model Bookmark {
 
   @@id([userId, blogId])
   @@index([userId])
+}
+
+model Like {
+  userId    String
+  blogId    Int
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blog      Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@id([userId, blogId])
+  @@index([blogId])
 }
 
 model Comment {

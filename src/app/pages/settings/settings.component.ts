@@ -1,13 +1,15 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BlogService } from '../../services/blog.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
+import { BillingService, PlanStatus } from '../../services/billing.service';
 import { RevealDirective } from '../../directives/reveal.directive';
 
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule, RevealDirective],
+  imports: [FormsModule, RouterLink, RevealDirective],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent implements OnInit {
@@ -20,10 +22,15 @@ export class SettingsComponent implements OnInit {
   tipUrl = '';
   saving = signal(false);
 
+  plan = signal<PlanStatus | null>(null);
+  billingLoading = signal(false);
+
   constructor(
     private blogService: BlogService,
     readonly auth: AuthService,
     private toast: ToastService,
+    private billing: BillingService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
@@ -43,6 +50,37 @@ export class SettingsComponent implements OnInit {
       .then(r => r.json())
       .then(d => { this.writingStyle = d.writingStyle ?? ''; })
       .catch(() => {});
+
+    this.loadPlan();
+    // Returning from a successful Stripe Checkout.
+    if (this.route.snapshot.queryParamMap.get('upgrade') === 'success') {
+      this.toast.show('Welcome to Pro! Your upgrade is active.', 'success');
+    }
+  }
+
+  private loadPlan() {
+    this.billing.status().subscribe({ next: (s) => this.plan.set(s), error: () => {} });
+  }
+
+  upgrade() {
+    this.billingLoading.set(true);
+    this.billing.checkout().subscribe({
+      next: (r) => { if (r.url) window.location.href = r.url; else this.billingFail(); },
+      error: (e) => this.billingFail(e),
+    });
+  }
+
+  manageBilling() {
+    this.billingLoading.set(true);
+    this.billing.portal().subscribe({
+      next: (r) => { if (r.url) window.location.href = r.url; else this.billingFail(); },
+      error: (e) => this.billingFail(e),
+    });
+  }
+
+  private billingFail(e?: any) {
+    this.billingLoading.set(false);
+    this.toast.show(e?.error?.message || 'Billing is not available yet.', 'error');
   }
 
   save() {

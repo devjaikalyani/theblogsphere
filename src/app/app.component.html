@@ -156,6 +156,8 @@
            class="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Explore</a>
         <a routerLink="/trending" (click)="menuOpen.set(false)"
            class="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Trending</a>
+        <a routerLink="/pricing" (click)="menuOpen.set(false)"
+           class="block px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Pricing</a>
         @if (auth.session()?.user) {
           <div class="flex items-center gap-3 px-3 py-3 border-y border-gray-100 my-1">
             <div class="w-9 h-9 rounded-full bg-avatar text-white flex items-center justify-center text-xs font-semibold shrink-0">
@@ -220,6 +222,7 @@
           <a routerLink="/trending" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">Trending</a>
           <a routerLink="/create" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">Write a post</a>
           <a routerLink="/ai-assistant" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">Writing assistant</a>
+          <a routerLink="/pricing" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">Pricing</a>
           <a routerLink="/about" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">About</a>
           <a routerLink="/faq" class="block text-sm text-[#C9C2B5] hover:text-[#FAF8F3] transition-colors">FAQ</a>
         </div>

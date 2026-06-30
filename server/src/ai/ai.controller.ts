@@ -5,12 +5,14 @@ import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth.config';
 import { AiService } from './ai.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { BillingService } from '../billing/billing.service';
 
 @Controller('api/ai')
 export class AiController {
   constructor(
     @Inject(AiService) private aiService: AiService,
     @Inject(PrismaService) private prisma: PrismaService,
+    @Inject(BillingService) private billing: BillingService,
   ) {}
 
   // Public by design, but each call spends Groq budget — cap it tighter than
@@ -27,6 +29,16 @@ export class AiController {
     let writingStyle: string | undefined;
     const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
     if (session) {
+      // Meter signed-in users against their plan's quota (Pro is unlimited).
+      // Using @Res() bypasses the global exception filter, so translate the
+      // quota error into a clean JSON response here.
+      try {
+        await this.billing.consumeAiCredit(session.user.id);
+      } catch (e: any) {
+        const status = e?.getStatus?.() ?? 429;
+        const payload = e?.getResponse?.() ?? { error: 'ai_quota_exceeded', message: 'AI limit reached.' };
+        return res.status(status).json(payload);
+      }
       const user = await this.prisma.user.findUnique({
         where: { id: session.user.id },
         select: { writingStyle: true },
