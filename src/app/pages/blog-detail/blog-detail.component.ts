@@ -1,5 +1,6 @@
 import { Component, Inject, OnInit, OnDestroy, PLATFORM_ID, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { DOCUMENT, DatePipe, NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Title, Meta } from '@angular/platform-browser';
@@ -25,6 +26,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   readProgress = signal(0);
   private headings: HTMLElement[] = [];
   private onScroll?: () => void;
+  private routeSub?: Subscription;
 
   bookmarked = signal(false);
   bookmarkLoading = signal(false);
@@ -93,8 +95,40 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    const param = this.route.snapshot.paramMap.get('id') ?? '';
-    if (!param) { this.router.navigate(['/explore']); return; }
+    // The router REUSES this component when navigating between two /blog/:id
+    // URLs (same route config), so ngOnInit only ever fires once. Subscribe to
+    // the param map so every navigation — e.g. clicking a "Read next" card —
+    // reloads the article instead of leaving the old one on screen.
+    this.routeSub = this.route.paramMap.subscribe((params) => {
+      const param = params.get('id') ?? '';
+      if (!param) { this.router.navigate(['/explore']); return; }
+      this.loadBlog(param);
+    });
+  }
+
+  private loadBlog(param: string) {
+    // Reset every per-article signal — the instance is shared across articles,
+    // so nothing is cleared for us. Flipping loading/blog also tears down the
+    // old article body (and its stale TOC + "enhanced" markers) via the
+    // template's @if guards, so the next article enhances from a clean slate.
+    this.teardownScrollSpy();
+    this.loading.set(true);
+    this.notFound.set(false);
+    this.blog.set(null);
+    this.toc.set([]);
+    this.readProgress.set(0);
+    this.related.set([]);
+    this.summary.set([]);
+    this.summaryLoading.set(false);
+    this.comments.set([]);
+    this.commentsLoading.set(true);
+    this.bookmarked.set(false);
+    this.following.set(false);
+    this.followers.set(0);
+    this.commentText = '';
+    if (isPlatformBrowser(this.platformId)) {
+      this.doc.defaultView?.scrollTo({ top: 0, behavior: 'auto' });
+    }
 
     this.blogService.getBlog(param).subscribe({
       next: (b) => {
@@ -403,8 +437,19 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Detach the scroll-spy listener and drop stale heading refs. Called on every
+   *  article load (the instance is reused) and on destroy. */
+  private teardownScrollSpy() {
+    if (this.onScroll) {
+      this.doc.defaultView?.removeEventListener('scroll', this.onScroll);
+      this.onScroll = undefined;
+    }
+    this.headings = [];
+  }
+
   ngOnDestroy() {
-    if (this.onScroll) this.doc.defaultView?.removeEventListener('scroll', this.onScroll);
+    this.routeSub?.unsubscribe();
+    this.teardownScrollSpy();
   }
 
   wordCount(content: string): number {
