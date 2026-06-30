@@ -325,6 +325,7 @@ TheBlogSphere/
 │   └── manifest.webmanifest     # PWA manifest
 ├── deploy/                      # Caddyfile, nginx.conf, ecosystem.config.cjs (PM2)
 ├── vercel.json                  # Same-origin /api rewrite (Vercel frontend + managed backend)
+├── railway.json                 # Railway backend service (Prisma generate + SWC start, no Angular build)
 ├── .github/workflows/ci.yml     # CI: install, prisma generate, build, test
 ├── DEPLOYMENT.md                # Full production deploy guide
 ├── .env.example                 # Environment variable template
@@ -353,6 +354,10 @@ Postgres).
    - Health check path: `/api/health`
    - One-off, once the DB is connected:
      `npx prisma db push && npm run db:trigram && npm run backfill:slugs`
+   - **Railway:** [`railway.json`](railway.json) already sets the build, start, and
+     health check. Just add a **PostgreSQL** plugin (it provides `DATABASE_URL`),
+     set the env below, and optionally `NIXPACKS_NODE_VERSION=22`. Run the one-off
+     DB commands once via the Railway shell (or `railway run …`).
 2. **Same-origin glue** → [`vercel.json`](vercel.json) proxies `/api/*` on the
    Vercel domain to the backend. Replace `REPLACE-WITH-BACKEND-HOST` with your
    backend's URL, then redeploy the frontend.

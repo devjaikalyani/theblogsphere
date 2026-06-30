@@ -1,0 +1,15 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "comment": "Override the default build so Nixpacks does NOT run `npm run build` (that's the Angular SSR build, not the API). The backend runs server/src directly via the SWC loader, so the only build step is generating the Prisma client. --include=dev is required because the `prisma` CLI is a devDependency.",
+    "buildCommand": "npm ci --include=dev && npx prisma generate"
+  },
+  "deploy": {
+    "startCommand": "npm run server:start",
+    "healthcheckPath": "/api/health",
+    "healthcheckTimeout": 120,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
