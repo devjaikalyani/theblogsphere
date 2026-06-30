@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "comment": "Same-origin glue: proxy /api/* on the Vercel domain to the NestJS backend so auth cookies + Google OAuth work. Replace the destination host with your deployed backend URL (Render/Railway/Fly).",
   "rewrites": [
     {
       "source": "/api/:path*",
