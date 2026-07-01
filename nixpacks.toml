@@ -7,12 +7,13 @@
 # known npm optional-deps lockfile bug, not a broken lock. `npm install`
 # reconciles the lock in place instead of failing.
 #
-# BUILD PHASE — we deliberately skip `npm run build` (the Angular SSR build).
-# The API runs server/src directly through the SWC loader, so the only build
-# step is generating the Prisma client.
+# BUILD PHASE — generate the Prisma client, then build the Angular SSR bundle
+# (`build:ssr` = `ng build --configuration production,ssr`). The NestJS process
+# (server/src/main.ts via the SWC loader) mounts that bundle at startup, so one
+# Railway service serves both /api and the server-rendered app at one origin.
 
 [phases.install]
 cmds = ["npm install --include=dev --no-audit --no-fund"]
 
 [phases.build]
-cmds = ["npx prisma generate"]
+cmds = ["npx prisma generate", "npm run build:ssr"]

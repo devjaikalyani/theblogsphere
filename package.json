@@ -6,6 +6,7 @@
     "ng": "ng",
     "start": "ng serve --host 0.0.0.0",
     "build": "ng build",
+    "build:ssr": "ng build --configuration production,ssr",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:TheBlogSphere": "node dist/the-blog-sphere/server/server.mjs",

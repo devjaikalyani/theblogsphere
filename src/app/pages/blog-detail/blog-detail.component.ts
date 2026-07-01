@@ -162,7 +162,10 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
           const canonical = this.doc.querySelector('link[rel="canonical"]');
           if (canonical && this.doc.location) canonical.setAttribute('href', this.doc.location.href);
           this.setArticleJsonLd(b, description, author);
-          this.blogService.incrementViews(id).subscribe();
+          // Count a view only from a real browser — otherwise every SSR render
+          // (and every crawler/social-bot fetch) would inflate the count, and
+          // it would double-count alongside the client after hydration.
+          if (isPlatformBrowser(this.platformId)) this.blogService.incrementViews(id).subscribe();
           if (this.auth.session()) {
             this.blogService.checkBookmark(id).subscribe(r => this.bookmarked.set(r.bookmarked));
           }

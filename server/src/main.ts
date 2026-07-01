@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
+import { existsSync } from 'fs';
 import { dirname, resolve } from 'path';
 import * as dotenv from 'dotenv';
 
@@ -10,7 +11,7 @@ dotenv.config({ path: resolve(__dirname, '../../.env') });
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { authRateLimit } from './auth/auth-rate-limit.middleware';
 
@@ -68,9 +69,32 @@ async function bootstrap() {
     next();
   });
 
+  // Mount the Angular SSR app as the fallback for non-/api routes. Same origin
+  // → no CORS, no proxy, and auth cookies just work. If the Angular bundle
+  // isn't built (API-only dev) this is a no-op and the server still serves /api.
+  await mountAngularSsr(app);
+
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  console.log(`NestJS server running on http://localhost:${port}`);
+  console.log(`Server running on http://localhost:${port}`);
+}
+
+/** Mount the built Angular SSR Express app (static assets + server-rendered
+ *  routes). It is registered BEFORE Nest's router (which adds its own 404
+ *  handler during init that would otherwise win) and passes `/api/*` straight
+ *  through to the controllers. */
+async function mountAngularSsr(app: INestApplication) {
+  const ssrEntry = resolve(__dirname, '../../dist/the-blog-sphere/server/server.mjs');
+  if (!existsSync(ssrEntry)) {
+    console.warn('[SSR] Angular bundle not found — run `npm run build:ssr`. Serving API only.');
+    return;
+  }
+  const { ssrApp } = await import(pathToFileURL(ssrEntry).href);
+  app.getHttpAdapter().getInstance().use((req: any, res: any, next: any) => {
+    if (req.path === '/api' || req.path.startsWith('/api/')) return next();
+    return ssrApp(req, res, next);
+  });
+  console.log('[SSR] Angular SSR mounted — non-/api routes are server-rendered.');
 }
 
 bootstrap();

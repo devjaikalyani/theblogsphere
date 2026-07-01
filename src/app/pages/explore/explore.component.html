@@ -131,7 +131,7 @@
 
               <!-- Title + excerpt -->
               <h3 class="text-card-title mb-2.5 group-hover:text-indigo-700 transition-colors line-clamp-2">
-                {{ blog.title }}
+                <a [routerLink]="['/blog', blog.slug || blog.id]" (click)="$event.stopPropagation()">{{ blog.title }}</a>
               </h3>
               <p class="font-reading text-gray-600 text-[0.98rem] leading-relaxed line-clamp-3">{{ excerpt(blog.content) }}</p>
 

@@ -154,7 +154,7 @@
                   <span class="ml-auto eyebrow !text-[11px]">{{ readTime(blogs()[0].content) }} min read</span>
                 </div>
                 <h2 class="text-featured-title mb-3.5 group-hover:text-indigo-700 transition-colors line-clamp-2">
-                  {{ blogs()[0].title }}
+                  <a [routerLink]="['/blog', blogs()[0].slug || blogs()[0].id]" (click)="$event.stopPropagation()">{{ blogs()[0].title }}</a>
                 </h2>
                 <p class="font-reading text-gray-600 text-[1.05rem] leading-relaxed line-clamp-3">{{ excerpt(blogs()[0].content, 220) }}</p>
               </div>
@@ -192,7 +192,7 @@
                 </div>
               </div>
               <h3 class="text-card-title mb-2.5 group-hover:text-indigo-700 transition-colors line-clamp-2">
-                {{ blog.title }}
+                <a [routerLink]="['/blog', blog.slug || blog.id]" (click)="$event.stopPropagation()">{{ blog.title }}</a>
               </h3>
               <p class="font-reading text-gray-600 text-[0.98rem] leading-relaxed line-clamp-3">{{ excerpt(blog.content) }}</p>
             </div>
