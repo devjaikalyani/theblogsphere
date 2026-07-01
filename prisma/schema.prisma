@@ -35,6 +35,7 @@ model User {
   razorpaySubscriptionId String?
   aiUsageCount           Int       @default(0)
   aiUsagePeriodStart     DateTime?
+  narrationCount         Int       @default(0) // lifetime neural-narration uses (free tier: 5, then Pro)
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

@@ -47,7 +47,7 @@ export class MyStoriesComponent implements OnInit {
   }
 
   private stripHtml(content: string): string {
-    return (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    return (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&(#\d+|#x[0-9a-fA-F]+|[a-z]+);/gi, ' ').replace(/\s+/g, ' ').trim();
   }
 
   wordCount(content: string): number {

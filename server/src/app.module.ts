@@ -15,6 +15,7 @@ import { CommentModule } from './comment/comment.module';
 import { FollowModule } from './follow/follow.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { BillingModule } from './billing/billing.module';
+import { TtsModule } from './tts/tts.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -33,6 +34,7 @@ import { HealthModule } from './health/health.module';
     FollowModule,
     AnalyticsModule,
     BillingModule,
+    TtsModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

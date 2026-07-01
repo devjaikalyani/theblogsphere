@@ -87,7 +87,7 @@ export class ExploreComponent implements OnInit {
   excerpt(content: string) {
     const plain = (content ?? '')
       .replace(/<[^>]+>/g, ' ')
-      .replace(/&[a-z]+;/gi, ' ')
+      .replace(/&(#\d+|#x[0-9a-fA-F]+|[a-z]+);/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim();
     return plain.length > 150 ? plain.slice(0, 150) + '...' : plain;

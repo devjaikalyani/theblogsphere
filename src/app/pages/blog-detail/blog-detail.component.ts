@@ -35,8 +35,16 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   likeCount = signal(0);
   likeLoading = signal(false);
 
-  /** Browser read-aloud (Web Speech API) — purely client-side, no cost. */
+  /** Read-aloud: premium neural narration for signed-in readers (metered),
+   *  with the on-device browser voice as a universal fallback. `speaking` is
+   *  true for either engine. */
   speaking = signal(false);
+  narrationLoading = signal(false);
+  narrationsLeft = signal<number | null>(null);
+  private audio?: HTMLAudioElement;
+  private speechQueue: string[] = [];
+  private speechIndex = 0;
+  private preferredVoice: SpeechSynthesisVoice | null = null;
 
   /** Data-URL QR for the author's UPI tip (India), generated client-side. */
   upiQr = signal('');
@@ -122,7 +130,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     // old article body (and its stale TOC + "enhanced" markers) via the
     // template's @if guards, so the next article enhances from a clean slate.
     this.teardownScrollSpy();
-    this.cancelSpeech();
+    this.stopNarration();
     this.loading.set(true);
     this.notFound.set(false);
     this.blog.set(null);
@@ -179,6 +187,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
           if (isPlatformBrowser(this.platformId)) {
             // Enhance the body (promote pseudo-headings) and index it once painted.
             this.enhanceArticle();
+            this.ensureVoices();
             if (b.user?.upiId) this.buildUpiQr(b.user.upiId, b.author);
           }
         }
@@ -318,31 +327,147 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── Read aloud (Web Speech API) ──────────────────────────────────────────
+  // ── Read aloud ───────────────────────────────────────────────────────────
   toggleReadAloud() {
     if (!isPlatformBrowser(this.platformId)) return;
-    const synth = this.doc.defaultView?.speechSynthesis;
-    if (!synth) { this.toast.show('Read-aloud is not supported in this browser.', 'info'); return; }
-    if (this.speaking()) { this.cancelSpeech(); return; }
-
+    if (this.speaking() || this.narrationLoading()) { this.stopNarration(); return; }
     const blog = this.blog();
     if (!blog) return;
+    // Signed-in readers get the premium neural voice (metered, 5 free then Pro);
+    // anonymous readers — and any neural failure — use the on-device voice.
+    if (this.auth.session()) {
+      this.playNeuralNarration(blog.id);
+    } else {
+      this.playBrowserNarration();
+    }
+  }
+
+  /** Human-quality narration (OpenAI). On quota exhaustion (402) we send the
+   *  reader to Pricing; on any other failure we fall back to the browser voice
+   *  so read-aloud never just "does nothing". */
+  private playNeuralNarration(blogId: number) {
+    this.narrationLoading.set(true);
+    this.blogService.narrate(blogId).subscribe({
+      next: (res) => {
+        this.narrationLoading.set(false);
+        this.narrationsLeft.set(res.pro ? null : res.remaining);
+        const audio = new Audio(res.url);
+        this.audio = audio;
+        audio.onended = () => this.speaking.set(false);
+        audio.onerror = () => { this.speaking.set(false); this.toast.show('Could not play the narration.', 'error'); };
+        this.speaking.set(true);
+        audio.play().catch(() => this.speaking.set(false));
+      },
+      error: (err) => {
+        this.narrationLoading.set(false);
+        if (err?.status === 402) {
+          this.toast.show(err?.error?.message ?? 'Upgrade to Pro for unlimited narration.', 'info');
+          this.router.navigate(['/pricing']);
+        } else {
+          this.playBrowserNarration();
+        }
+      },
+    });
+  }
+
+  /** On-device Web Speech fallback: best available female voice, read
+   *  sentence-by-sentence so the whole article plays and Chrome's ~15s
+   *  truncation bug is avoided (the gaps also read as natural breaths). */
+  private playBrowserNarration() {
+    const synth = this.doc.defaultView?.speechSynthesis;
+    const blog = this.blog();
+    if (!synth || !blog) { this.toast.show('Read-aloud is not supported in this browser.', 'info'); return; }
     const text = this.speechText(blog.title, blog.content);
     if (!text) return;
-
-    synth.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 1;
-    utter.onend = () => this.speaking.set(false);
-    utter.onerror = () => this.speaking.set(false);
+    if (!this.preferredVoice) this.preferredVoice = this.pickFemaleVoice(synth.getVoices());
+    this.speechQueue = this.splitForSpeech(text);
+    this.speechIndex = 0;
     this.speaking.set(true);
+    synth.cancel();
+    this.speakNext();
+  }
+
+  /** Stop whichever narration engine is active (and cancel a pending fetch). */
+  private stopNarration() {
+    this.narrationLoading.set(false);
+    if (this.audio) { this.audio.pause(); this.audio.src = ''; this.audio = undefined; }
+    this.cancelSpeech();
+  }
+
+  private speakNext() {
+    const synth = this.doc.defaultView?.speechSynthesis;
+    if (!synth || !this.speaking()) return;
+    if (this.speechIndex >= this.speechQueue.length) { this.speaking.set(false); return; }
+    const utter = new SpeechSynthesisUtterance(this.speechQueue[this.speechIndex]);
+    if (this.preferredVoice) { utter.voice = this.preferredVoice; utter.lang = this.preferredVoice.lang; }
+    utter.rate = 0.96;   // a hair under default → measured, unhurried reading
+    utter.pitch = 1.0;
+    utter.volume = 1;
+    utter.onend = () => { this.speechIndex++; this.speakNext(); };
+    utter.onerror = () => { this.speechIndex++; this.speakNext(); };
     synth.speak(utter);
   }
 
   private cancelSpeech() {
     if (!isPlatformBrowser(this.platformId)) return;
+    this.speechQueue = [];
+    this.speechIndex = 0;
     this.doc.defaultView?.speechSynthesis?.cancel();
     this.speaking.set(false);
+  }
+
+  /** Warm up the voice list (loads async in most browsers) and choose the best
+   *  available English female voice, so read-aloud is ready by the first tap. */
+  private ensureVoices() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const synth = this.doc.defaultView?.speechSynthesis;
+    if (!synth) return;
+    const load = () => { this.preferredVoice = this.pickFemaleVoice(synth.getVoices()); };
+    load();
+    synth.onvoiceschanged = load;
+  }
+
+  /** Rank the device's voices toward the most natural female narrators
+   *  (neural/online first, then platform premium), falling back gracefully. */
+  private pickFemaleVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+    if (!voices?.length) return null;
+    const en = voices.filter(v => /^en[-_]?/i.test(v.lang));
+    const pool = en.length ? en : voices;
+    const ranked = [
+      // Neural / online (best quality)
+      'Google UK English Female', 'Google US English',
+      'Microsoft Aria', 'Microsoft Jenny', 'Microsoft Michelle', 'Microsoft Sonia', 'Microsoft Libby',
+      'Natural', 'Online',
+      // Apple premium / enhanced
+      'Ava', 'Samantha', 'Allison', 'Susan', 'Serena', 'Zoe', 'Karen', 'Moira', 'Tessa', 'Fiona', 'Zira',
+    ];
+    for (const name of ranked) {
+      const hit = pool.find(v => v.name.toLowerCase().includes(name.toLowerCase()));
+      if (hit) return hit;
+    }
+    const female = pool.find(v =>
+      /(female|woman|aria|jenny|samantha|ava|karen|moira|serena|tessa|fiona|susan|allison|zira|joanna|salli|kimberly|amy|emma)/i.test(v.name));
+    return female ?? pool[0] ?? null;
+  }
+
+  /** Split clean prose into speakable chunks: one per sentence, and long
+   *  sentences broken further on clause boundaries so no utterance is long
+   *  enough to hit the browser's mid-speech cutoff. */
+  private splitForSpeech(text: string): string[] {
+    const sentences = text.match(/[^.!?]+[.!?]+(?:["')\]]+)?|\S[^.!?]*$/g) ?? [text];
+    const out: string[] = [];
+    for (let s of sentences) {
+      s = s.trim();
+      while (s.length > 220) {
+        let cut = s.lastIndexOf(',', 220);
+        if (cut < 120) cut = s.lastIndexOf(' ', 220);
+        if (cut < 60) cut = 220;
+        out.push(s.slice(0, cut + 1).trim());
+        s = s.slice(cut + 1).trim();
+      }
+      if (s) out.push(s);
+    }
+    return out;
   }
 
   /** Strip markdown/HTML to clean prose for the speech synthesiser, capped so a
@@ -356,7 +481,10 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
       .replace(/[#>*_`~|]+/g, ' ')               // md punctuation
       .replace(/\s+/g, ' ')
       .trim();
-    return `${title}. ${body}`.slice(0, 8000);
+    // No hard length cap — the narrator chunks by sentence, so full articles
+    // read start to finish. A generous ceiling only guards against pathological
+    // input.
+    return `${title}. ${body}`.slice(0, 40000);
   }
 
   submitComment() {
@@ -384,7 +512,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   }
 
   readTime(content: string): number {
-    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&(#\d+|#x[0-9a-fA-F]+|[a-z]+);/gi, ' ').replace(/\s+/g, ' ').trim();
     return Math.max(1, Math.ceil(plain.split(/\s+/).length / 200));
   }
 
@@ -547,11 +675,11 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.routeSub?.unsubscribe();
     this.teardownScrollSpy();
-    this.cancelSpeech();
+    this.stopNarration();
   }
 
   wordCount(content: string): number {
-    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&(#\d+|#x[0-9a-fA-F]+|[a-z]+);/gi, ' ').replace(/\s+/g, ' ').trim();
     return plain ? plain.split(/\s+/).length : 0;
   }
 

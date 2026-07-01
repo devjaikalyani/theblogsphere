@@ -42,6 +42,14 @@ export class BlogService {
     return this.http.post(`/api/blogs/${id}/view`, {});
   }
 
+  /** Request a human-quality neural narration. Returns the audio URL plus the
+   *  reader's remaining free narrations (402 when the free tier is exhausted). */
+  narrate(id: number): Observable<{ url: string; pro: boolean; remaining: number | null }> {
+    return this.http.post<{ url: string; pro: boolean; remaining: number | null }>(
+      `/api/tts/${id}`, {}, { withCredentials: true },
+    );
+  }
+
   getTags(): Observable<any[]> {
     return this.http.get<any[]>('/api/blogs/tags');
   }

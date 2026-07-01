@@ -87,7 +87,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   excerpt(content: string, len = 140) {
-    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&(#\d+|#x[0-9a-fA-F]+|[a-z]+);/gi, ' ').replace(/\s+/g, ' ').trim();
     return plain.length > len ? plain.slice(0, len) + '...' : plain;
   }
 
@@ -96,7 +96,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   readTime(content: string): number {
-    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&(#\d+|#x[0-9a-fA-F]+|[a-z]+);/gi, ' ').replace(/\s+/g, ' ').trim();
     return Math.max(1, Math.ceil(plain.split(/\s+/).length / 200));
   }
 

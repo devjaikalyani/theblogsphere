@@ -37,12 +37,12 @@ export class BookmarksComponent implements OnInit {
   }
 
   excerpt(content: string): string {
-    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&(#\d+|#x[0-9a-fA-F]+|[a-z]+);/gi, ' ').replace(/\s+/g, ' ').trim();
     return plain.length > 140 ? plain.slice(0, 140) + '...' : plain;
   }
 
   readTime(content: string): number {
-    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    const plain = (content ?? '').replace(/<[^>]+>/g, ' ').replace(/&(#\d+|#x[0-9a-fA-F]+|[a-z]+);/gi, ' ').replace(/\s+/g, ' ').trim();
     return Math.max(1, Math.ceil(plain.split(/\s+/).length / 200));
   }
 

@@ -8,6 +8,9 @@ import { PrismaService } from '../prisma/prisma.service';
  *  unlimited. Tuned to be generous enough for a hobby writer but to make a
  *  serious one feel the ceiling. */
 export const FREE_AI_MONTHLY_LIMIT = 25;
+/** Free readers get this many human-quality (neural) narrations, lifetime —
+ *  a taste of the premium feature before the Pro paywall. Pro is unlimited. */
+export const FREE_NARRATION_LIMIT = 5;
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Injectable()
@@ -41,12 +44,13 @@ export class BillingService {
   async getStatus(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { plan: true, planRenewsAt: true, billingProvider: true, aiUsageCount: true, aiUsagePeriodStart: true },
+      select: { plan: true, planRenewsAt: true, billingProvider: true, aiUsageCount: true, aiUsagePeriodStart: true, narrationCount: true },
     });
     const pro = this.isPro(user?.plan);
     const expired = this.periodExpired(user?.aiUsagePeriodStart ?? null);
     const used = expired ? 0 : user?.aiUsageCount ?? 0;
     const resetsAt = this.periodEnd(user?.aiUsagePeriodStart ?? null, expired);
+    const narrationsUsed = user?.narrationCount ?? 0;
 
     return {
       plan: user?.plan ?? 'free',
@@ -62,7 +66,42 @@ export class BillingService {
         remaining: pro ? null : Math.max(0, FREE_AI_MONTHLY_LIMIT - used),
         resetsAt: pro ? null : resetsAt,
       },
+      narration: {
+        limit: pro ? null : FREE_NARRATION_LIMIT,
+        remaining: pro ? null : Math.max(0, FREE_NARRATION_LIMIT - narrationsUsed),
+      },
     };
+  }
+
+  /** Gate a neural narration BEFORE spending provider credits: Pro is
+   *  unlimited, free readers get FREE_NARRATION_LIMIT lifetime. Throws 402 when
+   *  exhausted so the client can surface the upgrade prompt. Returns the
+   *  pre-use remaining count (null for Pro). */
+  async assertNarrationAllowed(userId: string): Promise<{ pro: boolean; remaining: number | null }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true, narrationCount: true },
+    });
+    if (!user) throw new HttpException({ error: 'unauthorized' }, HttpStatus.UNAUTHORIZED);
+    if (this.isPro(user.plan)) return { pro: true, remaining: null };
+    if (user.narrationCount >= FREE_NARRATION_LIMIT) {
+      throw new HttpException(
+        {
+          error: 'narration_quota_exceeded',
+          message: `You've used all ${FREE_NARRATION_LIMIT} free narrations. Upgrade to Pro for unlimited human-quality read-aloud.`,
+        },
+        HttpStatus.PAYMENT_REQUIRED,
+      );
+    }
+    return { pro: false, remaining: FREE_NARRATION_LIMIT - user.narrationCount };
+  }
+
+  /** Bill one narration against the free tier — only after the audio was
+   *  actually delivered. Pro users are never charged. */
+  async recordNarration(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { plan: true } });
+    if (!user || this.isPro(user.plan)) return;
+    await this.prisma.user.update({ where: { id: userId }, data: { narrationCount: { increment: 1 } } });
   }
 
   /** Spend one AI credit. Pro is unlimited; free users draw from a rolling

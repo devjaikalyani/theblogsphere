@@ -81,11 +81,17 @@
           </svg>
         </button>
         <button type="button" (click)="toggleReadAloud()"
-          [attr.aria-label]="speaking() ? 'Stop reading aloud' : 'Read this story aloud'"
-          [title]="speaking() ? 'Stop reading' : 'Read aloud'"
-          [style.color]="speaking() ? 'var(--clay)' : null"
+          [disabled]="narrationLoading()"
+          [attr.aria-label]="speaking() ? 'Stop narration' : 'Listen to this story'"
+          [title]="narrationLoading() ? 'Preparing narration…' : (speaking() ? 'Stop' : 'Listen')"
+          [style.color]="(speaking() || narrationLoading()) ? 'var(--clay)' : null"
           class="icon-btn btn-press">
-          @if (speaking()) {
+          @if (narrationLoading()) {
+            <svg class="w-[18px] h-[18px] animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-opacity="0.25"/>
+              <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          } @else if (speaking()) {
             <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <rect x="6" y="6" width="12" height="12" rx="1.5"/>
             </svg>

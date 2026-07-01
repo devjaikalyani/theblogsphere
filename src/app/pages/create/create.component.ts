@@ -50,7 +50,7 @@ export class CreateComponent implements AfterViewInit {
   ) {}
 
   wordCount(): number {
-    const plain = this.content.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    const plain = this.content.replace(/<[^>]+>/g, ' ').replace(/&(#\d+|#x[0-9a-fA-F]+|[a-z]+);/gi, ' ').replace(/\s+/g, ' ').trim();
     return plain ? plain.split(/\s+/).length : 0;
   }
 
