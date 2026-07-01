@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { TutorialService } from '../../services/tutorial.service';
 
 @Component({
   selector: 'app-signup',
@@ -16,7 +17,7 @@ export class SignupComponent {
   error = signal('');
   loading = signal(false);
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private tutorial: TutorialService) {}
 
   get passwordChecks() {
     const p = this.password;
@@ -58,7 +59,10 @@ export class SignupComponent {
     const lastName = parts.slice(1).join(' ') || firstName;
     this.auth.signup({ name: this.name.trim(), email: this.email, password: this.password, firstName, lastName }).subscribe({
       next: () => {
-        this.auth.refreshSession().subscribe(() => this.router.navigate(['/']));
+        this.auth.refreshSession().subscribe(() => {
+          this.router.navigate(['/']);
+          this.tutorial.maybeStart();
+        });
       },
       error: (e) => {
         this.error.set(e?.error?.message ?? 'Could not create account.');

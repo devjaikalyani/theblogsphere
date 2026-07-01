@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { TutorialService } from '../../services/tutorial.service';
 
 @Component({
   selector: 'app-login',
@@ -14,14 +15,17 @@ export class LoginComponent {
   error = signal('');
   loading = signal(false);
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private tutorial: TutorialService) {}
 
   submit() {
     this.error.set('');
     this.loading.set(true);
     this.auth.login({ email: this.email, password: this.password }).subscribe({
       next: () => {
-        this.auth.refreshSession().subscribe(() => this.router.navigate(['/']));
+        this.auth.refreshSession().subscribe(() => {
+          this.router.navigate(['/']);
+          this.tutorial.maybeStart();
+        });
       },
       error: (e) => {
         this.error.set(e?.error?.message ?? 'Invalid email or password.');

@@ -7,10 +7,11 @@ import { ToastService } from './services/toast.service';
 import { I18nService } from './services/i18n.service';
 import { PageTransitionDirective } from './directives/page-transition.directive';
 import { CookieConsentComponent } from './components/cookie-consent/cookie-consent.component';
+import { TutorialComponent } from './components/tutorial/tutorial.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, PageTransitionDirective, CookieConsentComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, PageTransitionDirective, CookieConsentComponent, TutorialComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
