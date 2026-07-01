@@ -19,15 +19,15 @@ import { SeoService } from '../../services/seo.service';
 
       <div class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          This Privacy Policy explains how TheBlogSphere ("we", "us"), operated by [your legal entity / proprietor name],
-          [registered address, Nagpur, Maharashtra, India], collects, uses, and protects your personal data. We handle
+          This Privacy Policy explains how TheBlogSphere ("we", "us"), operated by Dev Jaikalyani (sole proprietor),
+          524, Sindhi Colony, Khamla, Nagpur, Maharashtra, India, collects, uses, and protects your personal data. We handle
           personal data in line with India's Digital Personal Data Protection Act, 2023 ("DPDP Act"), and, for users in the
           EU/UK, the GDPR. By using the Platform you acknowledge this Policy.
         </p>
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">1. Who is responsible for your data</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          [Your legal entity / proprietor name] is the data fiduciary/controller. For any privacy question or to exercise
+          Dev Jaikalyani (sole proprietor) is the data fiduciary/controller. For any privacy question or to exercise
           your rights, contact our Grievance Officer via the <a routerLink="/contact" class="link-underline text-gray-800 font-medium">Contact</a> page.
         </p>
 

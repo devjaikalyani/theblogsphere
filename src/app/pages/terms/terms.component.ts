@@ -20,8 +20,8 @@ import { SeoService } from '../../services/seo.service';
       <div class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
           These Terms of Service ("Terms") govern your access to and use of TheBlogSphere
-          (the "Platform"), operated by [your legal entity / proprietor name], [registered address, Nagpur,
-          Maharashtra, India] ("we", "us", "our"). By creating an account, or by accessing or using the
+          (the "Platform"), operated by Dev Jaikalyani (sole proprietor), 524, Sindhi Colony, Khamla, Nagpur,
+          Maharashtra, India ("we", "us", "our"). By creating an account, or by accessing or using the
           Platform, you agree to be bound by these Terms and by our
           <a routerLink="/privacy" class="link-underline text-gray-800 font-medium">Privacy Policy</a>. If you do not
           agree, please do not use the Platform.
@@ -126,7 +126,7 @@ import { SeoService } from '../../services/seo.service';
           To the maximum extent permitted by law, we will not be liable for any indirect, incidental, special, or
           consequential damages, or for loss of data, profits, or goodwill. Our total liability for any claim relating to
           the Platform will not exceed the greater of the amounts you paid us in the twelve months before the claim or
-          [INR 1,000].
+          INR 1,000.
         </p>
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">13. Indemnity</h2>
@@ -143,7 +143,7 @@ import { SeoService } from '../../services/seo.service';
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">15. Governing law</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          These Terms are governed by the laws of India. The courts at [Nagpur, Maharashtra] will have exclusive
+          These Terms are governed by the laws of India. The courts at Nagpur, Maharashtra will have exclusive
           jurisdiction, subject to any mandatory consumer-protection rights available to you where you live.
         </p>
 

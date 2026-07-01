@@ -58,7 +58,7 @@ import { SeoService } from '../../services/seo.service';
           we do not provide pro-rated refunds for the unused part of a billing period after cancellation. However, we will
           issue a refund where required by applicable law, or in cases of a clear duplicate charge, a technical billing
           error on our side, or a charge you did not authorise. Approved refunds are made to your original payment method,
-          typically within [5–7] business days (bank timelines may vary).
+          typically within 5–7 business days (bank timelines may vary).
         </p>
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">6. Failed payments</h2>
@@ -83,7 +83,7 @@ import { SeoService } from '../../services/seo.service';
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">9. How to request a refund</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
           To request a refund or ask a billing question, contact us via the <a routerLink="/contact" class="link-underline text-gray-800 font-medium">Contact</a> page with your
-          account email and the charge details. We aim to acknowledge requests within [48 hours] and resolve them promptly.
+          account email and the charge details. We aim to acknowledge requests within 48 hours and resolve them promptly.
         </p>
       </div>
     </div>
