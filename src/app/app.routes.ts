@@ -59,6 +59,22 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/faqs/faqs.component').then(m => m.FaqsComponent),
   },
   {
+    path: 'terms',
+    loadComponent: () => import('./pages/terms/terms.component').then(m => m.TermsComponent),
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./pages/privacy/privacy.component').then(m => m.PrivacyComponent),
+  },
+  {
+    path: 'refund',
+    loadComponent: () => import('./pages/refund/refund.component').then(m => m.RefundComponent),
+  },
+  {
+    path: 'contact',
+    loadComponent: () => import('./pages/contact/contact.component').then(m => m.ContactComponent),
+  },
+  {
     path: 'bookmarks',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/bookmarks/bookmarks.component').then(m => m.BookmarksComponent),

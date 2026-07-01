@@ -1,4 +1,5 @@
 import { Component, Inject, PLATFORM_ID, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 
 const CONSENT_KEY = 'tbs-cookie-consent';
@@ -13,6 +14,7 @@ const CONSENT_KEY = 'tbs-cookie-consent';
 @Component({
   selector: 'app-cookie-consent',
   standalone: true,
+  imports: [RouterLink],
   template: `
     @if (visible()) {
       <div class="fixed inset-x-0 bottom-0 z-[60] p-3 sm:p-4" role="region" aria-label="Cookie notice">
@@ -21,6 +23,7 @@ const CONSENT_KEY = 'tbs-cookie-consent';
           <p class="flex-1 text-sm font-reading text-gray-600 leading-relaxed">
             We use essential cookies to keep you signed in and remember your preferences — never for
             advertising or tracking.
+            <a routerLink="/privacy" class="link-underline text-gray-800 font-medium">Learn more</a>.
           </p>
           <button type="button" (click)="accept()"
             class="shrink-0 self-start sm:self-auto px-6 py-2 text-sm font-semibold rounded-full btn-ink btn-press">

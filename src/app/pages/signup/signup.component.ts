@@ -12,6 +12,7 @@ export class SignupComponent {
   name = '';
   email = '';
   password = '';
+  consent = false;
   error = signal('');
   loading = signal(false);
 
@@ -43,6 +44,10 @@ export class SignupComponent {
 
   submit() {
     this.error.set('');
+    if (!this.consent) {
+      this.error.set('Please accept the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
     if (this.passwordScore < 4) {
       this.error.set('Password is too weak. Please meet all requirements below.');
       return;
