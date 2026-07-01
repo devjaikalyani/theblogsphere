@@ -6,10 +6,11 @@ import { AuthService } from './services/auth.service';
 import { ToastService } from './services/toast.service';
 import { I18nService } from './services/i18n.service';
 import { PageTransitionDirective } from './directives/page-transition.directive';
+import { CookieConsentComponent } from './components/cookie-consent/cookie-consent.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, PageTransitionDirective],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, PageTransitionDirective, CookieConsentComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
