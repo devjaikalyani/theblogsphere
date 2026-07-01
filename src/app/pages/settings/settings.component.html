@@ -143,5 +143,53 @@
         @if (saving()) { Saving&hellip; } @else { Save changes }
       </button>
     </div>
+
+    <!-- Your data -->
+    <div class="bg-raised rounded-2xl border border-gray-200 p-7">
+      <h2 class="font-display text-lg text-gray-900 mb-1">Your data</h2>
+      <p class="text-sm text-gray-500 mb-5">
+        Download a machine-readable copy of your account, stories, comments, bookmarks, and likes.
+        See how we handle your data in our <a routerLink="/privacy" class="link-underline text-gray-700 font-medium">Privacy Policy</a>.
+      </p>
+      <button type="button" (click)="exportData()" [disabled]="exporting()"
+        class="text-sm font-semibold px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 transition-colors disabled:opacity-50">
+        {{ exporting() ? 'Preparing…' : 'Export my data' }}
+      </button>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="rounded-2xl border p-7" style="border-color: #E4C7BE; background: #FBF3F0">
+      <h2 class="font-display text-lg mb-1" style="color: #8F2F1B">Delete account</h2>
+      <p class="text-sm text-gray-600 mb-4 max-w-prose">
+        Permanently delete your account and everything tied to it — your stories, comments, bookmarks,
+        likes, and follows. This cannot be undone. If you have an active Pro subscription, cancel it first
+        so it does not renew.
+      </p>
+      @if (!showDelete()) {
+        <button type="button" (click)="showDelete.set(true)"
+          class="text-sm font-semibold px-5 py-2.5 rounded-full border transition-colors"
+          style="border-color: #D6A594; color: #8F2F1B">
+          Delete my account
+        </button>
+      } @else {
+        <div class="space-y-3 max-w-sm">
+          <label class="block text-sm text-gray-600">Type <span class="font-semibold" style="color: #8F2F1B">DELETE</span> to confirm.</label>
+          <input type="text" [(ngModel)]="deleteConfirm" placeholder="DELETE" autocomplete="off"
+            class="w-full text-sm text-gray-800 border rounded-xl px-3.5 py-2.5 focus:outline-none bg-white transition-colors"
+            style="border-color: #D6A594"/>
+          <div class="flex items-center gap-3">
+            <button type="button" (click)="deleteAccount()" [disabled]="deleting()"
+              class="text-sm font-semibold px-5 py-2.5 rounded-full text-white transition-colors disabled:opacity-50"
+              style="background: #8F2F1B">
+              {{ deleting() ? 'Deleting…' : 'Permanently delete' }}
+            </button>
+            <button type="button" (click)="showDelete.set(false); deleteConfirm = ''"
+              class="text-sm font-semibold px-5 py-2.5 rounded-full border border-gray-300 text-gray-600 hover:border-gray-400 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      }
+    </div>
   </div>
 </div>

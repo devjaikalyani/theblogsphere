@@ -75,6 +75,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/contact/contact.component').then(m => m.ContactComponent),
   },
   {
+    path: 'content-policy',
+    loadComponent: () => import('./pages/content-policy/content-policy.component').then(m => m.ContentPolicyComponent),
+  },
+  {
     path: 'bookmarks',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/bookmarks/bookmarks.component').then(m => m.BookmarksComponent),

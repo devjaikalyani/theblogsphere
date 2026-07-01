@@ -73,7 +73,14 @@ import { SeoService } from '../../services/seo.service';
           party to those payments.
         </p>
 
-        <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">8. How to request a refund</h2>
+        <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">8. Taxes</h2>
+        <p class="font-reading text-gray-600 leading-relaxed mb-4">
+          Prices are stated inclusive of applicable taxes (including Goods and Services Tax, GST) where such taxes apply.
+          A payment receipt is issued for every charge, and a tax invoice is provided where we are required to do so.
+          You are responsible for any taxes that apply to you personally.
+        </p>
+
+        <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">9. How to request a refund</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
           To request a refund or ask a billing question, contact us via the <a routerLink="/contact" class="link-underline text-gray-800 font-medium">Contact</a> page with your
           account email and the charge details. We aim to acknowledge requests within [48 hours] and resolve them promptly.

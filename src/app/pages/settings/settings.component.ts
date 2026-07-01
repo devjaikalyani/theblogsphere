@@ -1,6 +1,7 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, Inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { BlogService } from '../../services/blog.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
@@ -26,12 +27,19 @@ export class SettingsComponent implements OnInit {
   plan = signal<PlanStatus | null>(null);
   billingLoading = signal(false);
 
+  exporting = signal(false);
+  showDelete = signal(false);
+  deleteConfirm = '';
+  deleting = signal(false);
+
   constructor(
     private blogService: BlogService,
     readonly auth: AuthService,
     private toast: ToastService,
     private billing: BillingService,
     private route: ActivatedRoute,
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: object,
   ) {}
 
   ngOnInit() {
@@ -98,6 +106,49 @@ export class SettingsComponent implements OnInit {
     }).subscribe({
       next: () => { this.saving.set(false); this.toast.show('Settings saved.', 'success'); },
       error: () => { this.saving.set(false); this.toast.show('Could not save settings.', 'error'); },
+    });
+  }
+
+  // Download a machine-readable copy of everything we hold (DPDP/GDPR portability).
+  async exportData() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.exporting.set(true);
+    try {
+      const res = await fetch('/api/users/me/export', { credentials: 'include' });
+      if (!res.ok) throw new Error('export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `theblogsphere-data-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.toast.show('Your data export has downloaded.', 'success');
+    } catch {
+      this.toast.show('Could not export your data. Please try again.', 'error');
+    } finally {
+      this.exporting.set(false);
+    }
+  }
+
+  deleteAccount() {
+    if (this.deleteConfirm.trim().toUpperCase() !== 'DELETE') {
+      this.toast.show('Type DELETE to confirm.', 'error');
+      return;
+    }
+    this.deleting.set(true);
+    this.auth.deleteAccount().subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.toast.show('Your account and all your data have been deleted.', 'success');
+        this.router.navigate(['/']);
+      },
+      error: () => {
+        this.deleting.set(false);
+        this.toast.show('Could not delete your account. Please contact support.', 'error');
+      },
     });
   }
 }

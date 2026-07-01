@@ -170,6 +170,23 @@ model Account {
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// In-app content reports / DMCA & abuse takedown requests (IT Rules 2021).
+// Kept as plain columns (no FKs) so a report survives as a moderation-log entry
+// even after the reported post or the reporter's account is deleted.
+model Report {
+  id            Int      @id @default(autoincrement())
+  blogId        Int?     // the reported story, if applicable
+  reporterId    String?  // set when the reporter was signed in
+  reporterEmail String?  // required when the reporter was anonymous
+  reason        String   // spam | harassment | copyright | illegal | misinformation | other
+  details       String?
+  status        String   @default("open") // open | reviewing | actioned | dismissed
+  createdAt     DateTime @default(now())
+
+  @@index([status])
+  @@index([blogId])
+}
+
 model Verification {
   id         String   @id
   identifier String

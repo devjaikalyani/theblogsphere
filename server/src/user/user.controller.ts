@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, Req, Res, UseGuards, Inject } from '@nestjs/common';
+import { Controller, Get, Patch, Delete, Param, Body, Req, Res, UseGuards, Inject } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth.config';
@@ -103,5 +103,73 @@ export class UserController {
       select: { writingStyle: true },
     });
     return { writingStyle: user?.writingStyle ?? '' };
+  }
+
+  // DPDP Act 2023 / GDPR data-portability: hand the user a machine-readable copy
+  // of everything we hold about them. Excludes secrets (password hashes, OAuth
+  // tokens, session tokens) — those are auth-internal, not personal data to port.
+  @Get('me/export')
+  @UseGuards(AuthGuard)
+  async exportData(@CurrentUser('id') userId: string, @Res() res: Response) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true, name: true, firstName: true, lastName: true, email: true,
+        emailVerified: true, image: true, profilePicture: true, bio: true,
+        website: true, writingStyle: true, tippingEnabled: true, tipUrl: true,
+        upiId: true, plan: true, planRenewsAt: true, billingProvider: true,
+        aiUsageCount: true, narrationCount: true, createdAt: true, updatedAt: true,
+        blogs: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true, title: true, slug: true, content: true, visibility: true,
+            status: true, coverImage: true, views: true, publishDate: true,
+            createdAt: true, updatedAt: true, deletedAt: true,
+            tags: { select: { tag: { select: { name: true } } } },
+          },
+        },
+        comments: {
+          orderBy: { createdAt: 'desc' },
+          select: { id: true, content: true, blogId: true, createdAt: true },
+        },
+        bookmarks: { select: { blogId: true, createdAt: true } },
+        likes: { select: { blogId: true, createdAt: true } },
+        following: { select: { followingId: true, createdAt: true } },
+        followers: { select: { followerId: true, createdAt: true } },
+      },
+    });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      note: 'This is a copy of the personal data TheBlogSphere holds about your account.',
+      account: {
+        ...user,
+        blogs: user.blogs.map((b) => ({ ...b, tags: b.tags.map((t) => t.tag.name) })),
+      },
+    };
+
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="theblogsphere-data-export.json"');
+    return res.send(JSON.stringify(payload, null, 2));
+  }
+
+  // DPDP Act 2023 / GDPR right to erasure. Every relation on User is
+  // `onDelete: Cascade` in the schema (blogs, comments, bookmarks, likes,
+  // follows, sessions, accounts), so a single delete removes the whole graph.
+  @Delete('me')
+  @UseGuards(AuthGuard)
+  async deleteAccount(@CurrentUser('id') userId: string, @Res() res: Response) {
+    try {
+      await this.prisma.user.delete({ where: { id: userId } });
+      // The user's posts vanish from public listings — drop cached pages.
+      this.blogCache.invalidate('blogs:');
+      // The session row was cascade-deleted, so the cookie is now inert; clear it.
+      res.clearCookie('better-auth.session_token', { path: '/' });
+      return res.json({ ok: true });
+    } catch (e: any) {
+      console.error('[DELETE /users/me] error:', e?.message ?? e);
+      return res.status(500).json({ error: 'Could not delete account' });
+    }
   }
 }

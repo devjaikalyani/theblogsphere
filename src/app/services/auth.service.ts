@@ -34,4 +34,10 @@ export class AuthService {
   getSession(): Observable<any> {
     return this.http.get('/api/auth/get-session', { withCredentials: true });
   }
+
+  deleteAccount(): Observable<any> {
+    return this.http.delete('/api/users/me', { withCredentials: true }).pipe(
+      tap(() => this.session.set(null)),
+    );
+  }
 }
