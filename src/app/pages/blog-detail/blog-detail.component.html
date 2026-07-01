@@ -102,6 +102,14 @@
             </svg>
           }
         </button>
+        @if (narrationsLeft() !== null) {
+          <a routerLink="/pricing"
+             [title]="(narrationsLeft() ?? 0) > 0 ? 'Free neural narrations left — go Pro for unlimited' : 'Upgrade to Pro for unlimited narration'"
+             class="self-center px-1.5 text-[11px] font-semibold whitespace-nowrap hover:underline"
+             [style.color]="(narrationsLeft() ?? 0) > 0 ? 'var(--ink-muted)' : 'var(--clay)'">
+            {{ (narrationsLeft() ?? 0) > 0 ? narrationsLeft() + ' free left' : 'Go Pro' }}
+          </a>
+        }
         @if (isOwner()) {
           <a [routerLink]="['/edit', blog().id]" title="Edit story" aria-label="Edit story" class="icon-btn btn-press">
             <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

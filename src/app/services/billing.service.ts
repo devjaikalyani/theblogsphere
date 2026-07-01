@@ -18,6 +18,10 @@ export interface PlanStatus {
     remaining: number | null;
     resetsAt: string | null;
   };
+  narration: {
+    limit: number | null;
+    remaining: number | null;
+  };
 }
 
 @Injectable({ providedIn: 'root' })
