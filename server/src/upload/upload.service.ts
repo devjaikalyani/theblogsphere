@@ -78,6 +78,42 @@ export class UploadService {
 
   async deleteFile(url: string) {
     const key = url.replace(`${this.publicUrl}/`, '');
-    await this.s3.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+    await this.deleteKey(key);
+  }
+
+  /**
+   * Best-effort deletion of several objects by their public URLs. Never throws —
+   * orphan cleanup must not block the operation that triggered it (e.g. account
+   * erasure). Only URLs that belong to our bucket are touched; anything else
+   * (the default avatar, external links) is skipped.
+   */
+  async deleteFiles(urls: (string | null | undefined)[]) {
+    if (!this.publicUrl) return;
+    const prefix = `${this.publicUrl}/`;
+    const keys = urls
+      .filter((u): u is string => !!u && u.startsWith(prefix))
+      .map((u) => u.slice(prefix.length));
+    await Promise.all(
+      keys.map((key) =>
+        this.deleteKey(key).catch((e) =>
+          console.error('[R2 cleanup] failed to delete', key, e?.message ?? e),
+        ),
+      ),
+    );
+  }
+
+  // Presigned DELETE + fetch — the same undici path uploads use, which sidesteps
+  // the OpenSSL-3/Node-20 handshake failure in the SDK's own HTTP transport.
+  // A 404 is treated as success (the object is already gone).
+  private async deleteKey(key: string) {
+    const presignedUrl = await getSignedUrl(
+      this.s3,
+      new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
+      { expiresIn: 60 },
+    );
+    const res = await fetch(presignedUrl, { method: 'DELETE' });
+    if (!res.ok && res.status !== 404) {
+      throw new Error(`R2 delete failed: ${res.status} ${res.statusText}`);
+    }
   }
 }

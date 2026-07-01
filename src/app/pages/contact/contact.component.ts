@@ -70,9 +70,10 @@ import { SeoService } from '../../services/seo.service';
   `,
 })
 export class ContactComponent {
-  // ── Fill these in with your real details before launch ──
-  supportEmail = 'support@your-domain.com';
-  grievanceEmail = 'grievance@your-domain.com';
+  // ── Interim contact (free Gmail) — swap to support@theblogsphere.ai once the
+  //    domain email is live. Still fill in grievanceName + address before launch. ──
+  supportEmail = 'theblogsphere.support@gmail.com';
+  grievanceEmail = 'theblogsphere.support@gmail.com';
   grievanceName = '[Grievance Officer name]';
   address = '[registered address, Nagpur, Maharashtra, India]';
 

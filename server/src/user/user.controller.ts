@@ -4,6 +4,7 @@ import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth.config';
 import { PrismaService } from '../prisma/prisma.service';
 import { BlogCacheService } from '../blog/blog.cache.service';
+import { UploadService } from '../upload/upload.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 
@@ -12,6 +13,7 @@ export class UserController {
   constructor(
     @Inject(PrismaService) private prisma: PrismaService,
     @Inject(BlogCacheService) private blogCache: BlogCacheService,
+    @Inject(UploadService) private uploads: UploadService,
   ) {}
 
   // Optional auth: `isFollowing` is computed only when a session is present.
@@ -161,11 +163,25 @@ export class UserController {
   @UseGuards(AuthGuard)
   async deleteAccount(@CurrentUser('id') userId: string, @Res() res: Response) {
     try {
+      // Collect the R2 objects this user owns BEFORE the cascade wipes the rows,
+      // so we can purge them from the bucket (DB delete doesn't touch storage).
+      const owned = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { profilePicture: true, blogs: { select: { coverImage: true } } },
+      });
+
       await this.prisma.user.delete({ where: { id: userId } });
       // The user's posts vanish from public listings — drop cached pages.
       this.blogCache.invalidate('blogs:');
       // The session row was cascade-deleted, so the cookie is now inert; clear it.
       res.clearCookie('better-auth.session_token', { path: '/' });
+
+      // Best-effort orphan cleanup — never blocks/fails the erasure.
+      if (owned) {
+        const urls = [owned.profilePicture, ...owned.blogs.map((b) => b.coverImage)];
+        await this.uploads.deleteFiles(urls).catch(() => {});
+      }
+
       return res.json({ ok: true });
     } catch (e: any) {
       console.error('[DELETE /users/me] error:', e?.message ?? e);
