@@ -63,7 +63,9 @@ export class PricingComponent implements OnInit {
     }
     // Keys-only Razorpay runs as a one-time Standard Checkout modal; with a
     // subscription plan configured it redirects to the hosted page instead.
-    if (provider === 'razorpay' && this.status()?.razorpayMode === 'checkout') {
+    // Checkout is the default — the status request may still be in flight on a
+    // fresh page load, and only an explicit 'subscription' should redirect.
+    if (provider === 'razorpay' && this.status()?.razorpayMode !== 'subscription') {
       this.loading.set(true);
       this.billing.createOrder().subscribe({
         next: (order) => this.openCheckout(order),
