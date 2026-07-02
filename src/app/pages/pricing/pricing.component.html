@@ -88,10 +88,16 @@
         </ul>
         <div class="mt-8 space-y-2.5">
           @if (isPro) {
-            <button type="button" (click)="manage()" [disabled]="loading()"
-              class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
-              {{ loading() ? 'Working…' : (status()?.provider === 'razorpay' ? 'Cancel subscription' : 'Manage billing') }}
-            </button>
+            @if (status()?.provider === 'razorpay_onetime') {
+              <span class="block w-full text-center px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714]">
+                Writer Pro active
+              </span>
+            } @else {
+              <button type="button" (click)="manage()" [disabled]="loading()"
+                class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
+                {{ loading() ? 'Working…' : (status()?.provider === 'razorpay' ? 'Cancel subscription' : 'Manage billing') }}
+              </button>
+            }
           } @else {
             @if (!status() || status()?.razorpayEnabled) {
               <button type="button" (click)="upgrade('razorpay')" [disabled]="loading()"
@@ -112,7 +118,8 @@
 
     @if (isPro && status()?.renewsAt) {
       <p class="text-center text-xs text-gray-500 mt-6">
-        Your Pro plan renews on {{ status()?.renewsAt | date:'mediumDate' }}.
+        {{ status()?.provider === 'razorpay_onetime' ? 'Your Pro access lasts until' : 'Your Pro plan renews on' }}
+        {{ status()?.renewsAt | date:'mediumDate' }}.
       </p>
     }
 

@@ -1,7 +1,7 @@
-import { Component, Inject, OnInit, OnDestroy, PLATFORM_ID, signal, computed } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, PLATFORM_ID, signal, computed, DOCUMENT } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { DOCUMENT, DatePipe, NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
+import { DatePipe, NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Title, Meta } from '@angular/platform-browser';
 import { BlogService } from '../../services/blog.service';

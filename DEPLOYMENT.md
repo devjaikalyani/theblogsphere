@@ -82,3 +82,39 @@ These were intentionally **not** auto-installed to avoid disturbing the working
   specs for sign-in, publish, and read flows.
 - **Full-text search** beyond trigram: consider a `tsvector` column +
   `websearch_to_tsquery` for ranked relevance if search volume grows.
+
+## 5. Enable billing — Razorpay (India, INR/UPI)
+
+Two modes; partial config fails boot on purpose.
+
+**Checkout mode (default — API keys only).** Set just:
+
+```
+RAZORPAY_KEY_ID=rzp_test_... (or rzp_live_...)
+RAZORPAY_KEY_SECRET=...
+```
+
+The pricing page's "Pay in INR — UPI / Cards" button opens the Razorpay
+Standard Checkout modal for a one-time ₹199 payment that grants 30 days of
+Writer Pro. The server creates the order (`POST /api/billing/razorpay/order`)
+and verifies the returned payment signature (`POST /api/billing/razorpay/verify`,
+HMAC-SHA256 of `order_id|payment_id`) — synchronous, no webhook required.
+Replayed payment ids are ignored via the BillingEvent ledger, and expiry is
+applied lazily on the next billing read.
+
+**Subscription mode (auto-renewing).** Additionally set:
+
+```
+RAZORPAY_PLAN_PRO=plan_...        (Subscriptions -> Plans: monthly, INR 199)
+RAZORPAY_WEBHOOK_SECRET=...       (Webhooks: <domain>/api/billing/razorpay-webhook,
+                                   subscribe to the subscription.* events)
+```
+
+The same button then redirects to Razorpay's hosted subscription page and Pro
+is granted/revoked by the webhook. Subscriptions must be enabled on the
+Razorpay account (new accounts may need to request activation) and live
+payments require completed KYC.
+
+**Verify** — `/api/billing/status` returns `razorpayEnabled: true` plus
+`razorpayMode: "checkout" | "subscription"`; complete a test-mode payment and
+confirm the user's `plan` flips to `pro`.

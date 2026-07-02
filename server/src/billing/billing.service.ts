@@ -1,5 +1,5 @@
 import { Injectable, Inject, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import Stripe from 'stripe';
 import Razorpay from 'razorpay';
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,6 +12,11 @@ export const FREE_AI_MONTHLY_LIMIT = 25;
  *  a taste of the premium feature before the Pro paywall. Pro is unlimited. */
 export const FREE_NARRATION_LIMIT = 5;
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
+/** One-time Standard Checkout price (₹199 in paise) and the Pro window it
+ *  buys. Used when only the Razorpay API keys are configured (no subscription
+ *  plan/webhook) — the modal flow verifies synchronously by signature. */
+const PRO_ONE_TIME_PAISE = 19900;
+const PRO_ONE_TIME_DAYS = 30;
 
 @Injectable()
 export class BillingService {
@@ -35,17 +40,56 @@ export class BillingService {
   }
   get stripeEnabled(): boolean { return !!this.stripe; }
   get razorpayEnabled(): boolean { return !!this.razorpay; }
+  /** 'subscription' when a plan id is configured (hosted page + webhook),
+   *  'checkout' when only API keys are (one-time modal), null when disabled. */
+  get razorpayMode(): 'subscription' | 'checkout' | null {
+    if (!this.razorpay) return null;
+    return process.env.RAZORPAY_PLAN_PRO ? 'subscription' : 'checkout';
+  }
 
   isPro(plan?: string | null): boolean {
     return plan === 'pro';
   }
 
+  /** A one-time purchase has no webhook to end it, so its expiry is applied
+   *  lazily on the next billing-aware read. Subscriptions are untouched — their
+   *  planRenewsAt routinely passes while the gateway confirms renewal. */
+  private oneTimeExpired(u: { plan: string | null; billingProvider: string | null; planRenewsAt: Date | null }): boolean {
+    return (
+      u.plan === 'pro' &&
+      u.billingProvider === 'razorpay_onetime' &&
+      !!u.planRenewsAt &&
+      new Date(u.planRenewsAt).getTime() < Date.now()
+    );
+  }
+
+  /** The user's effective plan, downgrading an expired one-time purchase. */
+  async currentPlan(userId: string): Promise<'free' | 'pro'> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true, billingProvider: true, planRenewsAt: true },
+    });
+    if (!user) return 'free';
+    if (this.oneTimeExpired(user)) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { plan: 'free', planRenewsAt: null },
+      });
+      return 'free';
+    }
+    return this.isPro(user.plan) ? 'pro' : 'free';
+  }
+
   /** Plan + AI-quota snapshot for the settings / pricing / assistant screens. */
   async getStatus(userId: string) {
-    const user = await this.prisma.user.findUnique({
+    let user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { plan: true, planRenewsAt: true, billingProvider: true, aiUsageCount: true, aiUsagePeriodStart: true, narrationCount: true },
     });
+    if (user && this.oneTimeExpired(user)) {
+      await this.prisma.user.update({ where: { id: userId }, data: { plan: 'free', planRenewsAt: null } });
+      user = { ...user, plan: 'free', planRenewsAt: null };
+    }
     const pro = this.isPro(user?.plan);
     const expired = this.periodExpired(user?.aiUsagePeriodStart ?? null);
     const used = expired ? 0 : user?.aiUsageCount ?? 0;
@@ -60,6 +104,7 @@ export class BillingService {
       billingEnabled: this.enabled,
       stripeEnabled: this.stripeEnabled,
       razorpayEnabled: this.razorpayEnabled,
+      razorpayMode: this.razorpayMode,
       ai: {
         used: pro ? 0 : used,
         limit: pro ? null : FREE_AI_MONTHLY_LIMIT,
@@ -83,7 +128,7 @@ export class BillingService {
       select: { plan: true, narrationCount: true },
     });
     if (!user) throw new HttpException({ error: 'unauthorized' }, HttpStatus.UNAUTHORIZED);
-    if (this.isPro(user.plan)) return { pro: true, remaining: null };
+    if (this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro') return { pro: true, remaining: null };
     if (user.narrationCount >= FREE_NARRATION_LIMIT) {
       throw new HttpException(
         {
@@ -112,7 +157,8 @@ export class BillingService {
       where: { id: userId },
       select: { plan: true, aiUsageCount: true, aiUsagePeriodStart: true },
     });
-    if (!user || this.isPro(user.plan)) return; // unknown user or Pro: no limit
+    if (!user) return; // unknown user: no limit to apply
+    if (this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro') return; // Pro: unlimited
 
     const expired = this.periodExpired(user.aiUsagePeriodStart);
     const used = expired ? 0 : user.aiUsageCount;
@@ -198,6 +244,20 @@ export class BillingService {
     ).trim();
   }
 
+  /** Idempotency ledger: true the first time this id is seen, false on a
+   *  replay (gateway webhook retries, double-submitted verifies). Ids without
+   *  a value can't be deduped and are processed normally. */
+  private async firstTime(id: string | null | undefined, provider: string, kind: string): Promise<boolean> {
+    if (!id) return true;
+    try {
+      await this.prisma.billingEvent.create({ data: { id, provider, kind } });
+      return true;
+    } catch (e: any) {
+      if (e?.code === 'P2002') return false;
+      throw e;
+    }
+  }
+
   // ── Stripe webhook ──────────────────────────────────────────────────────
   /** Verify the signature and reconcile user.plan with the subscription state. */
   async handleWebhook(rawBody: Buffer, signature: string) {
@@ -211,6 +271,8 @@ export class BillingService {
     } catch (e: any) {
       throw new BadRequestException(`Webhook signature verification failed: ${e?.message}`);
     }
+
+    if (!(await this.firstTime(event.id, 'stripe', 'webhook'))) return { received: true };
 
     switch (event.type) {
       case 'checkout.session.completed':
@@ -275,6 +337,68 @@ export class BillingService {
     return { url: sub.short_url as string };
   }
 
+  // ── Razorpay Standard Checkout (one-time, keys-only mode) ──────────────
+  /** Create an order for one Pro window. The client opens the Checkout modal
+   *  with this order id; keyId is the publishable half of the key pair. */
+  async createRazorpayOrder(userId: string) {
+    if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
+    const order: any = await this.razorpay.orders.create({
+      amount: PRO_ONE_TIME_PAISE,
+      currency: 'INR',
+      receipt: `pro-${Date.now().toString(36)}`,
+      notes: { userId, purpose: `writer-pro-${PRO_ONE_TIME_DAYS}d` },
+    });
+    return {
+      orderId: order.id as string,
+      amount: order.amount as number,
+      currency: order.currency as string,
+      keyId: process.env.RAZORPAY_KEY_ID!,
+      days: PRO_ONE_TIME_DAYS,
+    };
+  }
+
+  /** Verify a Checkout payment and grant Pro. The signature —
+   *  HMAC-SHA256(order_id|payment_id, key secret) — only Razorpay can produce;
+   *  the order fetch then binds it to this user at the Pro price, and the
+   *  BillingEvent ledger makes replays a no-op instead of a free extension. */
+  async verifyRazorpayPayment(
+    userId: string,
+    dto: { orderId?: string; paymentId?: string; signature?: string },
+  ) {
+    if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
+    const { orderId, paymentId, signature } = dto;
+    if (!orderId || !paymentId || !signature) {
+      throw new BadRequestException('orderId, paymentId and signature are required.');
+    }
+
+    const expected = createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+      .update(`${orderId}|${paymentId}`)
+      .digest();
+    const given = Buffer.from(signature, 'hex');
+    if (given.length !== expected.length || !timingSafeEqual(expected, given)) {
+      throw new BadRequestException('Payment signature verification failed.');
+    }
+
+    const order: any = await this.razorpay.orders.fetch(orderId);
+    if (order?.notes?.userId !== userId) {
+      throw new BadRequestException('This payment belongs to a different account.');
+    }
+    if (Number(order?.amount) !== PRO_ONE_TIME_PAISE) {
+      throw new BadRequestException('Unexpected order amount.');
+    }
+
+    if (!(await this.firstTime(paymentId, 'razorpay', 'payment'))) {
+      return { ok: true, alreadyProcessed: true }; // replayed verify — no free extension
+    }
+
+    const proUntil = new Date(Date.now() + PRO_ONE_TIME_DAYS * 24 * 60 * 60 * 1000);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { plan: 'pro', billingProvider: 'razorpay_onetime', planRenewsAt: proUntil },
+    });
+    return { ok: true, plan: 'pro', proUntil };
+  }
+
   /** Cancel the user's subscription. Stripe users get the billing portal;
    *  Razorpay users are cancelled at cycle end (they keep Pro until then). */
   async manageOrCancel(userId: string) {
@@ -284,6 +408,11 @@ export class BillingService {
     });
     if (!user) throw new BadRequestException('No account.');
 
+    if (user.billingProvider === 'razorpay_onetime') {
+      throw new BadRequestException(
+        'Writer Pro was a one-time purchase — there is nothing to cancel. Pro simply ends on the expiry date.',
+      );
+    }
     if (user.billingProvider === 'razorpay') {
       if (!this.razorpay || !user.razorpaySubscriptionId) throw new BadRequestException('No active subscription.');
       await this.razorpay.subscriptions.cancel(user.razorpaySubscriptionId, true); // at cycle end
@@ -294,13 +423,18 @@ export class BillingService {
   }
 
   /** Verify (HMAC-SHA256) + apply a Razorpay webhook. */
-  async handleRazorpayWebhook(rawBody: Buffer, signature: string) {
+  async handleRazorpayWebhook(rawBody: Buffer, signature: string, eventId?: string) {
     if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
     if (!secret) throw new BadRequestException('RAZORPAY_WEBHOOK_SECRET is not set.');
 
-    const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
-    if (expected !== signature) throw new BadRequestException('Invalid Razorpay webhook signature.');
+    const expected = createHmac('sha256', secret).update(rawBody).digest();
+    const given = Buffer.from(signature ?? '', 'hex');
+    if (given.length !== expected.length || !timingSafeEqual(expected, given)) {
+      throw new BadRequestException('Invalid Razorpay webhook signature.');
+    }
+
+    if (!(await this.firstTime(eventId, 'razorpay', 'webhook'))) return { received: true };
 
     const event = JSON.parse(rawBody.toString());
     const sub = event?.payload?.subscription?.entity;

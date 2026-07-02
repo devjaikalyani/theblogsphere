@@ -34,4 +34,3 @@ jobs:
       # Unit tests run in headless Chrome (provided on the GitHub runner).
       - name: Test
         run: npm test -- --watch=false --browsers=ChromeHeadless
-        continue-on-error: true

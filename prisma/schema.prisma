@@ -195,3 +195,13 @@ model Verification {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
+
+// Billing idempotency ledger: payment ids and webhook event ids that were
+// already applied, so gateway retries and double-submitted verifies can't
+// double-grant (or extend) Pro. The @id unique constraint IS the lock.
+model BillingEvent {
+  id        String   @id // gateway payment id or webhook event id
+  provider  String   // "razorpay" | "stripe"
+  kind      String   // "payment" | "webhook"
+  createdAt DateTime @default(now())
+}

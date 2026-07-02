@@ -210,8 +210,9 @@ export class BlogService {
   }
 
   async incrementViews(id: number) {
-    await this.prisma.blog.update({
-      where: { id },
+    // updateMany: a view ping for a missing/deleted story is a no-op, not a 500.
+    await this.prisma.blog.updateMany({
+      where: { id, deletedAt: null },
       data: { views: { increment: 1 } },
     });
     this.cache.invalidate(`blogs:id:${id}`);

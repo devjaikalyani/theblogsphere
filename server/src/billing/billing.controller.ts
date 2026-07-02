@@ -25,6 +25,25 @@ export class BillingController {
     return this.billing.createCheckoutSession(user.id, user.email);
   }
 
+  // Razorpay Standard Checkout (keys-only mode): create an order for one Pro
+  // window; the client opens the Checkout modal with it...
+  @Post('razorpay/order')
+  @UseGuards(AuthGuard)
+  async razorpayOrder(@CurrentUser('id') userId: string) {
+    return this.billing.createRazorpayOrder(userId);
+  }
+
+  // ...then posts the modal's payment id + signature here. Signature (HMAC)
+  // verification grants Pro synchronously — no webhook round-trip.
+  @Post('razorpay/verify')
+  @UseGuards(AuthGuard)
+  async razorpayVerify(
+    @CurrentUser('id') userId: string,
+    @Body() body: { orderId?: string; paymentId?: string; signature?: string },
+  ) {
+    return this.billing.verifyRazorpayPayment(userId, body);
+  }
+
   // Stripe -> hosted billing portal URL; Razorpay -> cancels at cycle end.
   @Post('manage')
   @UseGuards(AuthGuard)
@@ -48,7 +67,8 @@ export class BillingController {
   async razorpayWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('x-razorpay-signature') signature: string,
+    @Headers('x-razorpay-event-id') eventId?: string,
   ) {
-    return this.billing.handleRazorpayWebhook(req.rawBody as Buffer, signature);
+    return this.billing.handleRazorpayWebhook(req.rawBody as Buffer, signature, eventId);
   }
 }

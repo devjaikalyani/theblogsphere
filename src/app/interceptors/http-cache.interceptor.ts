@@ -1,15 +1,29 @@
 import { HttpInterceptorFn, HttpResponse } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { HttpHandlerFn, HttpRequest } from '@angular/common/http';
 import { of, tap } from 'rxjs';
 
 const cache = new Map<string, { response: HttpResponse<any>; expiresAt: number }>();
 const CACHE_TTL_MS = 60_000;
-const CACHEABLE_PATHS = ['/api/blogs'];
+
+/** Drop everything cached — called on login/logout/account deletion so a
+ *  response fetched under one session can never be replayed into another. */
+export function clearHttpCache() {
+  cache.clear();
+}
+
+/** Only public, session-independent blog reads are cacheable. A substring
+ *  match would also catch `/api/blogs/my` (the signed-in user's stories) and
+ *  leak them across accounts sharing this browser — or across visitors during
+ *  SSR, where this module-level map is shared by every request. */
+function isPublicBlogUrl(url: string): boolean {
+  const path = url.replace(/^https?:\/\/[^/]+/, '').split('?')[0];
+  if (path === '/api/blogs') return true;
+  if (!path.startsWith('/api/blogs/')) return false;
+  const rest = path.slice('/api/blogs/'.length);
+  return rest !== 'my' && !rest.startsWith('my/');
+}
 
 export const httpCacheInterceptor: HttpInterceptorFn = (req, next) => {
-  const isCacheable = req.method === 'GET' &&
-    CACHEABLE_PATHS.some((p) => req.url.includes(p));
+  const isCacheable = req.method === 'GET' && isPublicBlogUrl(req.url);
 
   if (!isCacheable) return next(req);
 

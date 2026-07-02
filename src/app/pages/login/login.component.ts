@@ -14,8 +14,23 @@ export class LoginComponent {
   password = '';
   error = signal('');
   loading = signal(false);
+  resetSent = signal(false);
 
   constructor(private auth: AuthService, private router: Router, private tutorial: TutorialService) {}
+
+  requestReset() {
+    if (!this.email) {
+      this.error.set('Enter your email address first, then tap "Forgot password?" again.');
+      return;
+    }
+    this.error.set('');
+    this.loading.set(true);
+    // Same response whether or not the account exists — no email enumeration.
+    this.auth.forgetPassword(this.email).subscribe({
+      next: () => { this.loading.set(false); this.resetSent.set(true); },
+      error: () => { this.loading.set(false); this.resetSent.set(true); },
+    });
+  }
 
   submit() {
     this.error.set('');

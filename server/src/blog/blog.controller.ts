@@ -20,7 +20,9 @@ export class BlogController {
     @Query('q') q?: string,
     @Query('tag') tag?: string,
   ) {
-    return this.blogService.findPaginated(parseInt(page), q, tag);
+    // Garbage page values (?page=abc, ?page=-3) fall back to 1 instead of
+    // reaching Prisma as NaN and 500ing.
+    return this.blogService.findPaginated(Math.max(1, parseInt(page, 10) || 1), q, tag);
   }
 
   @Get('my')

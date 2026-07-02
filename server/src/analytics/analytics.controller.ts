@@ -14,8 +14,8 @@ export class AnalyticsController {
   @Get('my')
   @UseGuards(AuthGuard)
   async myAnalytics(@CurrentUser() user: any) {
-    const [account, blogs] = await Promise.all([
-      this.prisma.user.findUnique({ where: { id: user.id }, select: { plan: true } }),
+    const [plan, blogs] = await Promise.all([
+      this.billing.currentPlan(user.id),
       this.prisma.blog.findMany({
         where: { userId: user.id },
         select: {
@@ -31,7 +31,7 @@ export class AnalyticsController {
       }),
     ]);
 
-    const isPro = this.billing.isPro(account?.plan);
+    const isPro = this.billing.isPro(plan);
     const published = blogs.filter(b => b.status === 'published');
     const totalViews = blogs.reduce((s, b) => s + b.views, 0);
     const totalComments = blogs.reduce((s, b) => s + b._count.comments, 0);

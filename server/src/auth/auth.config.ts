@@ -14,6 +14,34 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+    // Reset mails go out via Resend's REST API (no SDK needed). Env-gated:
+    // without RESEND_API_KEY the request still answers 200 (no account
+    // enumeration) but logs loudly that nothing was sent.
+    sendResetPassword: async ({ user, url }) => {
+      const apiKey = process.env.RESEND_API_KEY;
+      const from = process.env.EMAIL_FROM || 'TheBlogSphere <onboarding@resend.dev>';
+      if (!apiKey) {
+        console.warn('[AUTH] RESEND_API_KEY is not set — password reset email NOT sent to', user.email);
+        return;
+      }
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from,
+          to: user.email,
+          subject: 'Reset your TheBlogSphere password',
+          text:
+            `Hi ${user.name ?? 'there'},\n\n` +
+            `Someone (hopefully you) asked to reset the password for this account. ` +
+            `Open the link below to choose a new one — it expires in one hour.\n\n${url}\n\n` +
+            `If you didn't request this, you can safely ignore this email.`,
+        }),
+      });
+      if (!res.ok) {
+        console.error('[AUTH] Password reset email failed:', res.status, await res.text().catch(() => ''));
+      }
+    },
   },
 
   socialProviders: {

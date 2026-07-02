@@ -4,14 +4,23 @@ import { Observable } from 'rxjs';
 
 export type BillingProvider = 'razorpay' | 'stripe';
 
+export interface RazorpayOrder {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  days: number;
+}
+
 export interface PlanStatus {
   plan: string;
   pro: boolean;
   renewsAt: string | null;
-  provider: BillingProvider | null;
+  provider: BillingProvider | 'razorpay_onetime' | null;
   billingEnabled: boolean;
   stripeEnabled: boolean;
   razorpayEnabled: boolean;
+  razorpayMode: 'subscription' | 'checkout' | null;
   ai: {
     used: number;
     limit: number | null;
@@ -43,5 +52,17 @@ export class BillingService {
    *  { cancelled: true } (cancels at cycle end). */
   manage(): Observable<{ url?: string; cancelled?: boolean }> {
     return this.http.post<{ url?: string; cancelled?: boolean }>('/api/billing/manage', {}, { withCredentials: true });
+  }
+
+  /** Razorpay Standard Checkout (keys-only mode): create a one-time Pro order
+   *  for the Checkout modal to collect. */
+  createOrder(): Observable<RazorpayOrder> {
+    return this.http.post<RazorpayOrder>('/api/billing/razorpay/order', {}, { withCredentials: true });
+  }
+
+  /** Hand the modal's payment result to the server for signature verification;
+   *  Pro is granted synchronously on success. */
+  verifyPayment(payload: { orderId: string; paymentId: string; signature: string }): Observable<{ ok: boolean; proUntil?: string }> {
+    return this.http.post<{ ok: boolean; proUntil?: string }>('/api/billing/razorpay/verify', payload, { withCredentials: true });
   }
 }

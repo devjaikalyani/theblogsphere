@@ -38,7 +38,7 @@ export class UserController {
             select: { followers: true, following: true },
           },
           blogs: {
-            where: { status: 'published' },
+            where: { status: 'published', deletedAt: null },
             orderBy: { publishDate: 'desc' },
             include: { tags: { include: { tag: true } } },
           },

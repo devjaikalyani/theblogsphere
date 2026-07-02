@@ -1,6 +1,6 @@
-import { Component, Inject, signal } from '@angular/core';
+import { Component, Inject, signal, DOCUMENT } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DOCUMENT } from '@angular/common';
+
 import { SeoService } from '../../services/seo.service';
 import { RevealDirective } from '../../directives/reveal.directive';
 

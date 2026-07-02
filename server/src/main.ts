@@ -32,17 +32,19 @@ async function bootstrap() {
     ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
     : ['http://localhost:4200', 'http://localhost:3000'];
 
+  // scriptSrc: no 'unsafe-eval' — production Angular doesn't need it, and the
+  // Razorpay Checkout script + modal iframe need their origins allowed.
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://checkout.razorpay.com'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
-        connectSrc: ["'self'", ...allowedOrigins],
-        frameSrc: ["'none'"],
+        connectSrc: ["'self'", ...allowedOrigins, 'https://api.razorpay.com', 'https://lumberjack.razorpay.com'],
+        frameSrc: ['https://api.razorpay.com', 'https://checkout.razorpay.com'],
         frameAncestors: ["'none'"],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
