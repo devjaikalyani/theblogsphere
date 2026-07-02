@@ -346,8 +346,12 @@ export class BillingService {
       amount: PRO_ONE_TIME_PAISE,
       currency: 'INR',
       receipt: `pro-${Date.now().toString(36)}`,
+      // Capture immediately on success — without this, accounts set to manual
+      // capture leave the payment "authorized" and it auto-refunds in 5 days
+      // even though Pro was already granted.
+      payment_capture: 1,
       notes: { userId, purpose: `writer-pro-${PRO_ONE_TIME_DAYS}d` },
-    });
+    } as any);
     return {
       orderId: order.id as string,
       amount: order.amount as number,
