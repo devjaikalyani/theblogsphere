@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from './services/auth.service';
 import { ToastService } from './services/toast.service';
 import { I18nService } from './services/i18n.service';
+import { TutorialService } from './services/tutorial.service';
 import { PageTransitionDirective } from './directives/page-transition.directive';
 import { CookieConsentComponent } from './components/cookie-consent/cookie-consent.component';
 import { TutorialComponent } from './components/tutorial/tutorial.component';
@@ -32,6 +33,7 @@ export class AppComponent implements OnInit {
     private router: Router,
     readonly toast: ToastService,
     readonly i18n: I18nService,
+    readonly tour: TutorialService,
     @Inject(PLATFORM_ID) private platformId: object,
   ) {
     if (isPlatformBrowser(this.platformId)) {
