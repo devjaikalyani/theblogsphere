@@ -115,6 +115,20 @@ is granted/revoked by the webhook. Subscriptions must be enabled on the
 Razorpay account (new accounts may need to request activation) and live
 payments require completed KYC.
 
+**International cards (USD).** Razorpay declines non-Indian cards until
+International payments are approved on the account: Account & Settings ->
+Payment methods -> International (needs a fully activated/KYC'd account;
+approval can take a few days, and international transactions carry a higher
+fee, ~3% + currency conversion). Once approved, set:
+
+```
+RAZORPAY_INTERNATIONAL=true
+```
+
+The pricing page then shows "Pay with international card ($3.99)", which cuts a
+USD order through the same checkout modal and verify flow (30 days of Pro).
+When Stripe keys are configured, Stripe takes precedence for that button.
+
 **Verify** — `/api/billing/status` returns `razorpayEnabled: true` plus
-`razorpayMode: "checkout" | "subscription"`; complete a test-mode payment and
-confirm the user's `plan` flips to `pro`.
+`razorpayMode: "checkout" | "subscription"` and `razorpayInternational`;
+complete a test-mode payment and confirm the user's `plan` flips to `pro`.

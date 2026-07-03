@@ -66,16 +66,38 @@ export class PricingComponent implements OnInit {
     // Checkout is the default — the status request may still be in flight on a
     // fresh page load, and only an explicit 'subscription' should redirect.
     if (provider === 'razorpay' && this.status()?.razorpayMode !== 'subscription') {
-      this.loading.set(true);
-      this.billing.createOrder().subscribe({
-        next: (order) => this.openCheckout(order),
-        error: (e) => this.fail(e),
-      });
+      this.payWithModal('INR');
       return;
     }
     this.loading.set(true);
     this.billing.checkout(provider).subscribe({
       next: (r) => { if (r.url) window.location.href = r.url; else this.fail(); },
+      error: (e) => this.fail(e),
+    });
+  }
+
+  /** International card button: Stripe when configured, otherwise the Razorpay
+   *  USD modal (needs International approved on the Razorpay account). */
+  payInternational() {
+    if (!this.auth.session()?.user) {
+      this.toast.show('Sign in to upgrade to Pro.', 'info');
+      return;
+    }
+    if (this.status()?.stripeEnabled) {
+      this.upgrade('stripe');
+      return;
+    }
+    if (this.status()?.razorpayInternational) {
+      this.payWithModal('USD');
+      return;
+    }
+    this.toast.show('International payments are not available yet. Please try the INR option.', 'info');
+  }
+
+  private payWithModal(currency: 'INR' | 'USD') {
+    this.loading.set(true);
+    this.billing.createOrder(currency).subscribe({
+      next: (order) => this.openCheckout(order),
       error: (e) => this.fail(e),
     });
   }

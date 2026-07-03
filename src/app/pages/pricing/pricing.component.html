@@ -105,10 +105,10 @@
                 {{ loading() ? 'Redirecting…' : 'Pay in INR — UPI / Cards' }}
               </button>
             }
-            @if (!status() || status()?.stripeEnabled) {
-              <button type="button" (click)="upgrade('stripe')" [disabled]="loading()"
+            @if (!status() || status()?.stripeEnabled || status()?.razorpayInternational) {
+              <button type="button" (click)="payInternational()" [disabled]="loading()"
                 class="block w-full px-5 py-3 text-sm font-semibold rounded-full border border-[#C9C2B5]/30 text-[#E8E3DA] hover:bg-white/10 transition-colors disabled:opacity-60">
-                {{ loading() ? 'Redirecting…' : 'Pay with international card ($3.99)' }}
+                {{ loading() ? 'Working…' : 'Pay with international card ($3.99)' }}
               </button>
             }
           }

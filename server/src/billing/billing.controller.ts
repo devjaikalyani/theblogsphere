@@ -26,11 +26,12 @@ export class BillingController {
   }
 
   // Razorpay Standard Checkout (keys-only mode): create an order for one Pro
-  // window; the client opens the Checkout modal with it...
+  // window; the client opens the Checkout modal with it. currency: 'INR'
+  // (default) or 'USD' (international cards, when enabled)...
   @Post('razorpay/order')
   @UseGuards(AuthGuard)
-  async razorpayOrder(@CurrentUser('id') userId: string) {
-    return this.billing.createRazorpayOrder(userId);
+  async razorpayOrder(@CurrentUser('id') userId: string, @Body('currency') currency?: string) {
+    return this.billing.createRazorpayOrder(userId, currency ?? 'INR');
   }
 
   // ...then posts the modal's payment id + signature here. Signature (HMAC)

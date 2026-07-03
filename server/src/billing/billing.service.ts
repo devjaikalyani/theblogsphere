@@ -12,10 +12,15 @@ export const FREE_AI_MONTHLY_LIMIT = 25;
  *  a taste of the premium feature before the Pro paywall. Pro is unlimited. */
 export const FREE_NARRATION_LIMIT = 5;
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
-/** One-time Standard Checkout price (₹199 in paise) and the Pro window it
- *  buys. Used when only the Razorpay API keys are configured (no subscription
- *  plan/webhook) — the modal flow verifies synchronously by signature. */
-const PRO_ONE_TIME_PAISE = 19900;
+/** One-time Standard Checkout prices (smallest currency unit) and the Pro
+ *  window they buy. Used when only the Razorpay API keys are configured (no
+ *  subscription plan/webhook) — the modal flow verifies synchronously by
+ *  signature. USD (international cards) additionally needs International
+ *  payments approved on the Razorpay account + RAZORPAY_INTERNATIONAL=true. */
+const PRO_ONE_TIME_PRICES: Record<string, number> = {
+  INR: 19900, // ₹199 — matches the pricing page
+  USD: 399, // $3.99 — the pricing page's international price
+};
 const PRO_ONE_TIME_DAYS = 30;
 
 @Injectable()
@@ -45,6 +50,12 @@ export class BillingService {
   get razorpayMode(): 'subscription' | 'checkout' | null {
     if (!this.razorpay) return null;
     return process.env.RAZORPAY_PLAN_PRO ? 'subscription' : 'checkout';
+  }
+  /** USD checkout for international cards. Opt-in flag because it only works
+   *  once Razorpay has approved International payments on the account —
+   *  until then the button would render and every payment would decline. */
+  get razorpayInternational(): boolean {
+    return this.razorpayEnabled && process.env.RAZORPAY_INTERNATIONAL === 'true';
   }
 
   isPro(plan?: string | null): boolean {
@@ -105,6 +116,7 @@ export class BillingService {
       stripeEnabled: this.stripeEnabled,
       razorpayEnabled: this.razorpayEnabled,
       razorpayMode: this.razorpayMode,
+      razorpayInternational: this.razorpayInternational,
       ai: {
         used: pro ? 0 : used,
         limit: pro ? null : FREE_AI_MONTHLY_LIMIT,
@@ -340,11 +352,16 @@ export class BillingService {
   // ── Razorpay Standard Checkout (one-time, keys-only mode) ──────────────
   /** Create an order for one Pro window. The client opens the Checkout modal
    *  with this order id; keyId is the publishable half of the key pair. */
-  async createRazorpayOrder(userId: string) {
+  async createRazorpayOrder(userId: string, currency = 'INR') {
     if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
+    const amount = PRO_ONE_TIME_PRICES[currency];
+    if (!amount) throw new BadRequestException('Unsupported currency.');
+    if (currency !== 'INR' && !this.razorpayInternational) {
+      throw new BadRequestException('International payments are not enabled yet.');
+    }
     const order: any = await this.razorpay.orders.create({
-      amount: PRO_ONE_TIME_PAISE,
-      currency: 'INR',
+      amount,
+      currency,
       receipt: `pro-${Date.now().toString(36)}`,
       // Capture immediately on success — without this, accounts set to manual
       // capture leave the payment "authorized" and it auto-refunds in 5 days
@@ -387,7 +404,9 @@ export class BillingService {
     if (order?.notes?.userId !== userId) {
       throw new BadRequestException('This payment belongs to a different account.');
     }
-    if (Number(order?.amount) !== PRO_ONE_TIME_PAISE) {
+    // The order must be at the Pro price for whichever currency it was cut in.
+    const expectedAmount = PRO_ONE_TIME_PRICES[order?.currency as string];
+    if (!expectedAmount || Number(order?.amount) !== expectedAmount) {
       throw new BadRequestException('Unexpected order amount.');
     }
 
