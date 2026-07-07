@@ -79,3 +79,6 @@ Thumbs.db
 
 # Nested deploy clone — not part of this working tree
 theblogsphere/
+client_secret_*.json
+rzp-key.csv
+*.csv
