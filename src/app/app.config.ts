@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -11,7 +11,14 @@ import { ssrApiBaseUrlInterceptor } from './interceptors/ssr-api-base-url.interc
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes, withComponentInputBinding()),
+    // Every navigation lands at the top of the new page (fixes footer/other
+    // links opening the next page mid-scroll); back/forward still restore the
+    // previous position, and #fragment links still scroll to their anchor.
+    provideRouter(
+      routes,
+      withComponentInputBinding(),
+      withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
+    ),
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch(), withInterceptors([ssrApiBaseUrlInterceptor, httpCacheInterceptor])),
     provideAnimations(),

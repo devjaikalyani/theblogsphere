@@ -315,7 +315,7 @@
     background:
       radial-gradient(ellipse 120% 70% at 50% -8%, var(--clay-tint) 0%, transparent 58%),
       var(--paper);
-    padding: clamp(80px, 13vw, 150px) 16px clamp(56px, 8vw, 88px);
+    padding: clamp(40px, 7vw, 88px) 16px clamp(56px, 8vw, 88px);
     position: relative;
     overflow: hidden;
   }
