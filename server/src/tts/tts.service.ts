@@ -6,10 +6,24 @@ import { PrismaService } from '../prisma/prisma.service';
 
 /** The OpenAI voice used for narration — a warm, natural female reader. */
 const VOICE = 'nova';
-const MODEL = 'tts-1-hd';
+/** tts-1 (not tts-1-hd): half the price ($15 vs $30 / 1M chars) for a voice
+ *  that is still natural. Halving the per-character cost is what lets Writer
+ *  Pro's monthly narration budget stay comfortably profitable. */
+const MODEL = 'tts-1';
 /** OpenAI TTS rejects input longer than 4096 chars, so we narrate in chunks
  *  and concatenate the mp3s (mp3 frames are self-contained → plays back fine). */
 const MAX_CHUNK = 3800;
+
+/** What one narration request needs to know before spending provider credits:
+ *  the target URL/key, the exact billable text (and its character count), and
+ *  whether the audio is already cached (a free re-listen). */
+export interface NarrationPrep {
+  url: string;
+  key: string;
+  text: string;
+  chars: number;
+  cached: boolean;
+}
 
 @Injectable()
 export class TtsService {
@@ -33,9 +47,11 @@ export class TtsService {
     return !!process.env.OPENAI_API_KEY;
   }
 
-  /** Public URL of the narration mp3 for a story, generating + caching it in R2
-   *  on first request. Keyed by content hash so an edited story re-narrates. */
-  async getNarrationUrl(blogId: number): Promise<string> {
+  /** Resolve a story to its narration URL + the billable text, and report
+   *  whether the audio is already cached. Keyed by content hash so an edited
+   *  story re-narrates. Does NOT generate — the caller meters `chars` against
+   *  the plan first, then calls generateNarration only on a cache miss. */
+  async prepareNarration(blogId: number): Promise<NarrationPrep> {
     if (!this.enabled) throw new BadRequestException('Narration is not configured on this server.');
 
     const blog = await this.prisma.blog.findFirst({
@@ -51,17 +67,24 @@ export class TtsService {
     const key = `narrations/${blogId}-${hash}.mp3`;
     const url = `${this.publicUrl}/${key}`;
 
-    // Cache hit? Re-listens (by anyone) then cost nothing to generate.
+    // Cache hit? Re-listens (by anyone) cost nothing to generate, so they are
+    // free and unmetered — only a cache miss draws down the plan budget.
+    let cached = false;
     try {
       const head = await fetch(url, { method: 'HEAD' });
-      if (head.ok) return url;
+      cached = head.ok;
     } catch {
-      // Ignore and (re)generate.
+      // Treat a failed HEAD as a miss and (re)generate.
     }
 
+    return { url, key, text, chars: text.length, cached };
+  }
+
+  /** Generate the narration audio and cache it in R2. Call only after the
+   *  caller has confirmed a cache miss and charged the character budget. */
+  async generateNarration(key: string, text: string): Promise<void> {
     const audio = await this.synthesize(text);
     await this.store(key, audio);
-    return url;
   }
 
   /** Markdown/HTML → clean prose the narrator can read naturally. */

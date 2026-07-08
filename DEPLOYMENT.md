@@ -95,17 +95,28 @@ RAZORPAY_KEY_SECRET=...
 ```
 
 The pricing page's "Pay in INR — UPI / Cards" button opens the Razorpay
-Standard Checkout modal for a one-time ₹199 payment that grants 30 days of
+Standard Checkout modal for a one-time ₹399 payment that grants 30 days of
 Writer Pro. The server creates the order (`POST /api/billing/razorpay/order`)
 and verifies the returned payment signature (`POST /api/billing/razorpay/verify`,
 HMAC-SHA256 of `order_id|payment_id`) — synchronous, no webhook required.
 Replayed payment ids are ignored via the BillingEvent ledger, and expiry is
 applied lazily on the next billing read.
 
+**Narration budgets + top-up packs.** Narration is metered by characters (what
+OpenAI bills), so the cost ceiling holds regardless of article length. Free
+readers get a lifetime taste; Writer Pro gets a monthly budget (resets like the
+AI quota) then buys prepaid top-up packs. Re-listening to an already-narrated
+story is free for everyone (audio is cached), so only new generation is metered.
+A top-up is one more one-time order through the same modal + verify flow
+(`POST /api/billing/razorpay/topup`, Pro only), tagged `notes.purpose:
+"narration-topup"` so verify adds characters instead of granting Pro. Tune the
+numbers in `billing.service.ts` (`FREE_NARRATION_CHARS`, `PRO_NARRATION_CHARS`,
+`NARRATION_TOPUP_CHARS`, `NARRATION_TOPUP_PRICES`).
+
 **Subscription mode (auto-renewing).** Additionally set:
 
 ```
-RAZORPAY_PLAN_PRO=plan_...        (Subscriptions -> Plans: monthly, INR 199)
+RAZORPAY_PLAN_PRO=plan_...        (Subscriptions -> Plans: monthly, INR 399)
 RAZORPAY_WEBHOOK_SECRET=...       (Webhooks: <domain>/api/billing/razorpay-webhook,
                                    subscribe to the subscription.* events)
 ```
@@ -125,7 +136,7 @@ fee, ~3% + currency conversion). Once approved, set:
 RAZORPAY_INTERNATIONAL=true
 ```
 
-The pricing page then shows "Pay with international card ($3.99)", which cuts a
+The pricing page then shows "Pay with international card ($7.99)", which cuts a
 USD order through the same checkout modal and verify flow (30 days of Pro).
 When Stripe keys are configured, Stripe takes precedence for that button.
 

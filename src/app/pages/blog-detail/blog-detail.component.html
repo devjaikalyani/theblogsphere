@@ -104,10 +104,10 @@
         </button>
         @if (narrationsLeft() !== null) {
           <a routerLink="/pricing"
-             [title]="(narrationsLeft() ?? 0) > 0 ? 'Free neural narrations left, go Pro for unlimited' : 'Upgrade to Pro for unlimited narration'"
+             [title]="(narrationsLeft() ?? 0) > 0 ? 'New narrations left this cycle. Replaying narrated stories is always free.' : (narrationPro() ? 'Monthly narration budget used. Buy a top-up pack.' : 'Free narrations used. Upgrade to Writer Pro.')"
              class="self-center px-1.5 text-[11px] font-semibold whitespace-nowrap hover:underline"
              [style.color]="(narrationsLeft() ?? 0) > 0 ? 'var(--ink-muted)' : 'var(--clay)'">
-            {{ (narrationsLeft() ?? 0) > 0 ? narrationsLeft() + ' free left' : 'Go Pro' }}
+            {{ (narrationsLeft() ?? 0) > 0 ? narrationsLeft() + ' left' : (narrationPro() ? 'Top up' : 'Go Pro') }}
           </a>
         }
         @if (isOwner()) {

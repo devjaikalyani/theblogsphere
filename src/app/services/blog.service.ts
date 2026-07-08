@@ -42,10 +42,11 @@ export class BlogService {
     return this.http.post(`/api/blogs/${id}/view`, {});
   }
 
-  /** Request a human-quality neural narration. Returns the audio URL plus the
-   *  reader's remaining free narrations (402 when the free tier is exhausted). */
-  narrate(id: number): Observable<{ url: string; pro: boolean; remaining: number | null }> {
-    return this.http.post<{ url: string; pro: boolean; remaining: number | null }>(
+  /** Request a human-quality neural narration. Returns the audio URL, whether
+   *  it was a free cached replay, and the reader's approximate narrations left
+   *  (402 when the plan's narration budget can't cover this story). */
+  narrate(id: number): Observable<{ url: string; cached: boolean; pro: boolean; remaining: number | null }> {
+    return this.http.post<{ url: string; cached: boolean; pro: boolean; remaining: number | null }>(
       `/api/tts/${id}`, {}, { withCredentials: true },
     );
   }

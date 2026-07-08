@@ -35,7 +35,15 @@ model User {
   razorpaySubscriptionId String?
   aiUsageCount           Int       @default(0)
   aiUsagePeriodStart     DateTime?
-  narrationCount         Int       @default(0) // lifetime neural-narration uses (free tier: 5, then Pro)
+  narrationCount         Int       @default(0) // lifetime count of narrations generated (analytics only)
+  // Narration is metered by characters (what the TTS provider actually bills),
+  // so the cost ceiling holds regardless of article length. Re-listening to an
+  // already-narrated story is free for everyone (audio is cached); only new
+  // generation draws these down. Free: a lifetime taste. Pro: a monthly budget
+  // (resets like aiUsage) plus any prepaid top-up credits, spent after it.
+  narrationCharsUsed     Int       @default(0) // pro: chars generated this window; free: lifetime chars generated
+  narrationPeriodStart   DateTime?             // pro monthly narration window start (lazy reset)
+  narrationCreditChars   Int       @default(0) // prepaid top-up characters (carry over; spent after the monthly budget)
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

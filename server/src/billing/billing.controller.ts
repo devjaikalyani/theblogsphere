@@ -34,6 +34,14 @@ export class BillingController {
     return this.billing.createRazorpayOrder(userId, currency ?? 'INR');
   }
 
+  // Prepaid narration top-up pack (Pro only): same Checkout modal + verify
+  // flow, distinguished server-side by the order's notes.purpose.
+  @Post('razorpay/topup')
+  @UseGuards(AuthGuard)
+  async razorpayTopup(@CurrentUser('id') userId: string, @Body('currency') currency?: string) {
+    return this.billing.createNarrationTopupOrder(userId, currency ?? 'INR');
+  }
+
   // ...then posts the modal's payment id + signature here. Signature (HMAC)
   // verification grants Pro synchronously — no webhook round-trip.
   @Post('razorpay/verify')

@@ -11,21 +11,26 @@ export class TtsController {
     @Inject(BillingService) private billing: BillingService,
   ) {}
 
-  /** Neural narration for a story. Sign-in required (so usage can be metered);
-   *  free readers get a handful before the Pro paywall (402). The audio itself
-   *  is cached in R2, so the provider is only billed the first time. */
+  /** Neural narration for a story. Sign-in required (so usage can be metered).
+   *  The audio is cached in R2, so re-listening to an already-narrated story is
+   *  free for everyone and unmetered — only generating NEW audio (a cache miss)
+   *  draws down the character budget (402 when the plan's budget is exhausted). */
   @Post(':blogId')
   @UseGuards(AuthGuard)
   async narrate(@Param('blogId', ParseIntPipe) blogId: number, @CurrentUser('id') userId: string) {
-    // Enforce the quota BEFORE generating so over-limit users never cost money.
-    const quota = await this.billing.assertNarrationAllowed(userId);
-    const url = await this.tts.getNarrationUrl(blogId);
-    // Bill only once the audio is actually available.
-    await this.billing.recordNarration(userId);
-    return {
-      url,
-      pro: quota.pro,
-      remaining: quota.pro ? null : Math.max(0, (quota.remaining ?? 0) - 1),
-    };
+    const prep = await this.tts.prepareNarration(blogId);
+
+    // Cache hit: the audio already exists → free replay, no budget spent.
+    if (prep.cached) {
+      const state = await this.billing.narrationRemaining(userId);
+      return { url: prep.url, cached: true, pro: state.pro, remaining: state.remaining };
+    }
+
+    // Cache miss: enforce the character budget BEFORE spending provider credits,
+    // then generate and bill the exact characters we sent to the provider.
+    const gate = await this.billing.assertNarrationAllowed(userId, prep.chars);
+    await this.tts.generateNarration(prep.key, prep.text);
+    const after = await this.billing.recordNarrationChars(userId, prep.chars);
+    return { url: prep.url, cached: false, pro: gate.pro, remaining: after.remaining };
   }
 }

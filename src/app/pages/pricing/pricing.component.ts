@@ -97,12 +97,25 @@ export class PricingComponent implements OnInit {
   private payWithModal(currency: 'INR' | 'USD') {
     this.loading.set(true);
     this.billing.createOrder(currency).subscribe({
-      next: (order) => this.openCheckout(order),
+      next: (order) => this.openCheckout(order, `Writer Pro, ${order.days} days`),
       error: (e) => this.fail(e),
     });
   }
 
-  private async openCheckout(order: RazorpayOrder) {
+  /** Buy a prepaid narration top-up pack (Pro only). */
+  buyTopup() {
+    if (!this.auth.session()?.user) {
+      this.toast.show('Sign in to buy a top-up.', 'info');
+      return;
+    }
+    this.loading.set(true);
+    this.billing.createTopupOrder('INR').subscribe({
+      next: (order) => this.openCheckout(order, `Narration top-up, ${order.narrations} narrations`),
+      error: (e) => this.fail(e),
+    });
+  }
+
+  private async openCheckout(order: RazorpayOrder, description: string) {
     try {
       await loadRazorpayScript();
     } catch {
@@ -115,7 +128,7 @@ export class PricingComponent implements OnInit {
       amount: order.amount,
       currency: order.currency,
       name: 'TheBlogSphere',
-      description: `Writer Pro, ${order.days} days`,
+      description,
       prefill: { name: user?.name ?? '', email: user?.email ?? '' },
       theme: { color: '#1A1714' },
       handler: (res: any) => this.verifyPayment(res),
@@ -134,9 +147,13 @@ export class PricingComponent implements OnInit {
       paymentId: res.razorpay_payment_id,
       signature: res.razorpay_signature,
     }).subscribe({
-      next: () => {
+      next: (r) => {
         this.loading.set(false);
-        this.toast.show('Welcome to Writer Pro. Unlimited AI and narration are now unlocked.', 'success');
+        if (r?.topup) {
+          this.toast.show(`Top-up added. About ${r.addedNarrations ?? ''} more narrations this month.`, 'success');
+        } else {
+          this.toast.show('Welcome to Writer Pro. Unlimited AI and your monthly narration budget are now unlocked.', 'success');
+        }
         this.billing.status().subscribe({ next: (s) => this.status.set(s) });
       },
       error: (e) => this.fail(e),

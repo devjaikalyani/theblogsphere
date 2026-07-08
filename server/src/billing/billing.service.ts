@@ -8,9 +8,21 @@ import { PrismaService } from '../prisma/prisma.service';
  *  unlimited. Tuned to be generous enough for a hobby writer but to make a
  *  serious one feel the ceiling. */
 export const FREE_AI_MONTHLY_LIMIT = 25;
-/** Free readers get this many human-quality (neural) narrations, lifetime —
- *  a taste of the premium feature before the Pro paywall. Pro is unlimited. */
-export const FREE_NARRATION_LIMIT = 5;
+/** Narration is metered by characters — exactly what OpenAI bills ($15 / 1M on
+ *  tts-1) — so the cost ceiling holds no matter how long an article is. A
+ *  cache hit (re-listening to an already-narrated story) is free for everyone
+ *  and never counted; only generating NEW audio draws these budgets down.
+ *
+ *  Free: a lifetime taste (~7 average articles). Worst case ~₹60 one-time.
+ *  Pro:  a monthly budget (~20 average articles), then prepaid top-up packs.
+ *        Worst case ~₹175/mo against ₹399 revenue → the margin is guaranteed. */
+export const FREE_NARRATION_CHARS = 45_000;
+export const PRO_NARRATION_CHARS = 130_000;
+/** Characters added by one prepaid narration top-up pack (~15 articles). */
+export const NARRATION_TOPUP_CHARS = 100_000;
+/** Only for display: turns a character budget into a friendly "~N narrations"
+ *  count. An "average" narration is ~1000 words ≈ 6,400 characters. */
+const AVG_NARRATION_CHARS = 6_400;
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 /** One-time Standard Checkout prices (smallest currency unit) and the Pro
  *  window they buy. Used when only the Razorpay API keys are configured (no
@@ -18,10 +30,18 @@ const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
  *  signature. USD (international cards) additionally needs International
  *  payments approved on the Razorpay account + RAZORPAY_INTERNATIONAL=true. */
 const PRO_ONE_TIME_PRICES: Record<string, number> = {
-  INR: 19900, // ₹199 — matches the pricing page
-  USD: 399, // $3.99 — the pricing page's international price
+  INR: 39900, // ₹399, matches the pricing page
+  USD: 799, // $7.99, the pricing page's international price
 };
 const PRO_ONE_TIME_DAYS = 30;
+/** Prepaid narration top-up pack prices (smallest currency unit), cut through
+ *  the same Standard Checkout + verify flow as Pro (distinguished by the
+ *  order's notes.purpose). Cost of the characters is ~₹135, so both prices
+ *  clear a healthy margin. */
+const NARRATION_TOPUP_PRICES: Record<string, number> = {
+  INR: 19900, // ₹199
+  USD: 399, // $3.99
+};
 
 @Injectable()
 export class BillingService {
@@ -95,7 +115,10 @@ export class BillingService {
   async getStatus(userId: string) {
     let user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { plan: true, planRenewsAt: true, billingProvider: true, aiUsageCount: true, aiUsagePeriodStart: true, narrationCount: true },
+      select: {
+        plan: true, planRenewsAt: true, billingProvider: true, aiUsageCount: true, aiUsagePeriodStart: true,
+        narrationCharsUsed: true, narrationPeriodStart: true, narrationCreditChars: true,
+      },
     });
     if (user && this.oneTimeExpired(user)) {
       await this.prisma.user.update({ where: { id: userId }, data: { plan: 'free', planRenewsAt: null } });
@@ -105,7 +128,7 @@ export class BillingService {
     const expired = this.periodExpired(user?.aiUsagePeriodStart ?? null);
     const used = expired ? 0 : user?.aiUsageCount ?? 0;
     const resetsAt = this.periodEnd(user?.aiUsagePeriodStart ?? null, expired);
-    const narrationsUsed = user?.narrationCount ?? 0;
+    const narration = this.narrationSnapshot(user ?? null, pro);
 
     return {
       plan: user?.plan ?? 'free',
@@ -123,42 +146,149 @@ export class BillingService {
         remaining: pro ? null : Math.max(0, FREE_AI_MONTHLY_LIMIT - used),
         resetsAt: pro ? null : resetsAt,
       },
-      narration: {
-        limit: pro ? null : FREE_NARRATION_LIMIT,
-        remaining: pro ? null : Math.max(0, FREE_NARRATION_LIMIT - narrationsUsed),
-      },
+      narration,
     };
   }
 
-  /** Gate a neural narration BEFORE spending provider credits: Pro is
-   *  unlimited, free readers get FREE_NARRATION_LIMIT lifetime. Throws 402 when
-   *  exhausted so the client can surface the upgrade prompt. Returns the
-   *  pre-use remaining count (null for Pro). */
-  async assertNarrationAllowed(userId: string): Promise<{ pro: boolean; remaining: number | null }> {
+  /** Narration budget snapshot for the settings / pricing screens: character
+   *  figures (the true cost meter) plus a friendly "~N narrations" estimate. */
+  private narrationSnapshot(
+    u: { narrationCharsUsed: number; narrationPeriodStart: Date | null; narrationCreditChars: number } | null,
+    pro: boolean,
+  ) {
+    const charsUsed = u?.narrationCharsUsed ?? 0;
+    const credits = Math.max(0, u?.narrationCreditChars ?? 0);
+    if (pro) {
+      const nExpired = this.periodExpired(u?.narrationPeriodStart ?? null);
+      const usedThisPeriod = nExpired ? 0 : charsUsed;
+      const periodRemaining = Math.max(0, PRO_NARRATION_CHARS - usedThisPeriod);
+      const remainingChars = periodRemaining + credits;
+      return {
+        pro: true,
+        limitChars: PRO_NARRATION_CHARS,
+        usedChars: usedThisPeriod,
+        creditChars: credits,
+        remainingChars,
+        remaining: this.approxNarrations(remainingChars),
+        resetsAt: this.periodEnd(u?.narrationPeriodStart ?? null, nExpired),
+      };
+    }
+    const remainingChars = Math.max(0, FREE_NARRATION_CHARS - charsUsed);
+    return {
+      pro: false,
+      limitChars: FREE_NARRATION_CHARS,
+      usedChars: charsUsed,
+      creditChars: 0,
+      remainingChars,
+      remaining: this.approxNarrations(remainingChars),
+      resetsAt: null,
+    };
+  }
+
+  /** Turn a character budget into a friendly whole-narration estimate. */
+  private approxNarrations(chars: number): number {
+    return Math.floor(Math.max(0, chars) / AVG_NARRATION_CHARS);
+  }
+
+  /** Characters of narration a Pro user can still generate now: whatever is
+   *  left of the monthly budget (reset if the window lapsed) plus prepaid
+   *  top-up credits, which are spent only after the monthly budget. */
+  private proNarrationRemaining(u: { narrationCharsUsed: number; narrationPeriodStart: Date | null; narrationCreditChars: number }): number {
+    const used = this.periodExpired(u.narrationPeriodStart) ? 0 : u.narrationCharsUsed;
+    return Math.max(0, PRO_NARRATION_CHARS - used) + Math.max(0, u.narrationCreditChars);
+  }
+
+  /** Read-only narration budget for a user, as an approximate narration count.
+   *  Used on a cache hit (free replay) so the client can still show the badge
+   *  without spending anything. */
+  async narrationRemaining(userId: string): Promise<{ pro: boolean; remaining: number }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { plan: true, narrationCount: true },
+      select: { plan: true, narrationCharsUsed: true, narrationPeriodStart: true, narrationCreditChars: true },
+    });
+    if (!user) return { pro: false, remaining: 0 };
+    const pro = this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro';
+    const chars = pro ? this.proNarrationRemaining(user) : Math.max(0, FREE_NARRATION_CHARS - user.narrationCharsUsed);
+    return { pro, remaining: this.approxNarrations(chars) };
+  }
+
+  /** Gate a NEW narration BEFORE spending provider credits. Checks the exact
+   *  character count against the plan's remaining budget (Pro: monthly budget +
+   *  top-up credits; free: lifetime taste). Throws 402 when the story is too
+   *  long for the remaining budget, so the client can surface upgrade / top-up. */
+  async assertNarrationAllowed(userId: string, chars: number): Promise<{ pro: boolean; remaining: number }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true, narrationCharsUsed: true, narrationPeriodStart: true, narrationCreditChars: true },
     });
     if (!user) throw new HttpException({ error: 'unauthorized' }, HttpStatus.UNAUTHORIZED);
-    if (this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro') return { pro: true, remaining: null };
-    if (user.narrationCount >= FREE_NARRATION_LIMIT) {
+    const pro = this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro';
+
+    if (pro) {
+      const available = this.proNarrationRemaining(user);
+      if (chars > available) {
+        throw new HttpException(
+          {
+            error: 'narration_quota_exceeded',
+            topup: true,
+            message: "You've used your narration budget for this month. Grab a top-up pack to narrate more — any story that's already been narrated stays free to replay.",
+          },
+          HttpStatus.PAYMENT_REQUIRED,
+        );
+      }
+      return { pro: true, remaining: this.approxNarrations(available - chars) };
+    }
+
+    const available = Math.max(0, FREE_NARRATION_CHARS - user.narrationCharsUsed);
+    if (chars > available) {
       throw new HttpException(
         {
           error: 'narration_quota_exceeded',
-          message: `You've used all ${FREE_NARRATION_LIMIT} free narrations. Upgrade to Pro for unlimited human-quality read-aloud.`,
+          upgrade: true,
+          message: "You've used all your free narrations. Upgrade to Writer Pro to narrate more — you can still replay any story that's already been narrated.",
         },
         HttpStatus.PAYMENT_REQUIRED,
       );
     }
-    return { pro: false, remaining: FREE_NARRATION_LIMIT - user.narrationCount };
+    return { pro: false, remaining: this.approxNarrations(available - chars) };
   }
 
-  /** Bill one narration against the free tier — only after the audio was
-   *  actually delivered. Pro users are never charged. */
-  async recordNarration(userId: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { plan: true } });
-    if (!user || this.isPro(user.plan)) return;
-    await this.prisma.user.update({ where: { id: userId }, data: { narrationCount: { increment: 1 } } });
+  /** Bill a delivered narration's characters — only after the audio exists.
+   *  Free: lifetime counter. Pro: draw the monthly budget first (resetting a
+   *  lapsed window), overflow from prepaid credits. Returns the new remaining
+   *  as an approximate narration count. */
+  async recordNarrationChars(userId: string, chars: number): Promise<{ pro: boolean; remaining: number }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true, narrationCharsUsed: true, narrationPeriodStart: true, narrationCreditChars: true },
+    });
+    if (!user) return { pro: false, remaining: 0 };
+    const pro = this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro';
+
+    if (!pro) {
+      const updated = await this.prisma.user.update({
+        where: { id: userId },
+        data: { narrationCharsUsed: { increment: chars }, narrationCount: { increment: 1 } },
+        select: { narrationCharsUsed: true },
+      });
+      return { pro: false, remaining: this.approxNarrations(FREE_NARRATION_CHARS - updated.narrationCharsUsed) };
+    }
+
+    const expired = this.periodExpired(user.narrationPeriodStart);
+    const used = expired ? 0 : user.narrationCharsUsed;
+    const fromPeriod = Math.min(chars, Math.max(0, PRO_NARRATION_CHARS - used));
+    const fromCredits = chars - fromPeriod;
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        narrationCharsUsed: used + fromPeriod,
+        narrationPeriodStart: expired ? new Date() : (user.narrationPeriodStart ?? new Date()),
+        narrationCreditChars: Math.max(0, user.narrationCreditChars - fromCredits),
+        narrationCount: { increment: 1 },
+      },
+      select: { narrationCharsUsed: true, narrationPeriodStart: true, narrationCreditChars: true },
+    });
+    return { pro: true, remaining: this.approxNarrations(this.proNarrationRemaining(updated)) };
   }
 
   /** Spend one AI credit. Pro is unlimited; free users draw from a rolling
@@ -378,6 +508,36 @@ export class BillingService {
     };
   }
 
+  /** Create an order for one prepaid narration top-up pack. Pro only — top-ups
+   *  extend the Pro monthly budget, so a free user should upgrade first. Cut
+   *  through the same Checkout + verify flow, tagged by notes.purpose. */
+  async createNarrationTopupOrder(userId: string, currency = 'INR') {
+    if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
+    if ((await this.currentPlan(userId)) !== 'pro') {
+      throw new BadRequestException('Narration top-ups are for Writer Pro — upgrade to Pro first.');
+    }
+    const amount = NARRATION_TOPUP_PRICES[currency];
+    if (!amount) throw new BadRequestException('Unsupported currency.');
+    if (currency !== 'INR' && !this.razorpayInternational) {
+      throw new BadRequestException('International payments are not enabled yet.');
+    }
+    const order: any = await this.razorpay.orders.create({
+      amount,
+      currency,
+      receipt: `topup-${Date.now().toString(36)}`,
+      payment_capture: 1,
+      notes: { userId, purpose: 'narration-topup', chars: String(NARRATION_TOPUP_CHARS) },
+    } as any);
+    return {
+      orderId: order.id as string,
+      amount: order.amount as number,
+      currency: order.currency as string,
+      keyId: process.env.RAZORPAY_KEY_ID!,
+      chars: NARRATION_TOPUP_CHARS,
+      narrations: this.approxNarrations(NARRATION_TOPUP_CHARS),
+    };
+  }
+
   /** Verify a Checkout payment and grant Pro. The signature —
    *  HMAC-SHA256(order_id|payment_id, key secret) — only Razorpay can produce;
    *  the order fetch then binds it to this user at the Pro price, and the
@@ -404,8 +564,28 @@ export class BillingService {
     if (order?.notes?.userId !== userId) {
       throw new BadRequestException('This payment belongs to a different account.');
     }
-    // The order must be at the Pro price for whichever currency it was cut in.
-    const expectedAmount = PRO_ONE_TIME_PRICES[order?.currency as string];
+    const currency = order?.currency as string;
+    const purpose = order?.notes?.purpose as string | undefined;
+
+    // Narration top-up: add prepaid characters instead of granting Pro.
+    if (purpose === 'narration-topup') {
+      const expectedTopup = NARRATION_TOPUP_PRICES[currency];
+      if (!expectedTopup || Number(order?.amount) !== expectedTopup) {
+        throw new BadRequestException('Unexpected order amount.');
+      }
+      if (!(await this.firstTime(paymentId, 'razorpay', 'payment'))) {
+        return { ok: true, alreadyProcessed: true }; // replayed verify — no free credits
+      }
+      const chars = Number(order?.notes?.chars) || NARRATION_TOPUP_CHARS;
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { narrationCreditChars: { increment: chars } },
+      });
+      return { ok: true, topup: true, addedChars: chars, addedNarrations: this.approxNarrations(chars) };
+    }
+
+    // Otherwise: a Writer Pro window. The order must be at the Pro price.
+    const expectedAmount = PRO_ONE_TIME_PRICES[currency];
     if (!expectedAmount || Number(order?.amount) !== expectedAmount) {
       throw new BadRequestException('Unexpected order amount.');
     }

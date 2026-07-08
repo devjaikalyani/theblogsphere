@@ -26,8 +26,9 @@ import { SeoService } from '../../services/seo.service';
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">1. What you are paying for</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
           Writer Pro is a monthly digital subscription that unlocks features such as unlimited AI writing assistance,
-          unlimited human-quality narration, and premium analytics. Current pricing (for example, ₹199/month in India or
-          $3.99/month internationally) is shown on the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page. Applicable taxes, if any, are
+          a monthly human-quality narration allowance (with optional prepaid top-up packs), unlimited replay of
+          already-narrated stories, and premium analytics. Current pricing (for example, ₹399/month in India or
+          $7.99/month internationally) is shown on the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page. Applicable taxes, if any, are
           charged as required by law.
         </p>
 

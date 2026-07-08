@@ -9,7 +9,9 @@ export interface RazorpayOrder {
   amount: number;
   currency: string;
   keyId: string;
-  days: number;
+  days?: number;       // Pro one-time window (absent for top-ups)
+  chars?: number;      // top-up characters (absent for Pro)
+  narrations?: number; // approx narrations in a top-up (absent for Pro)
 }
 
 export interface PlanStatus {
@@ -29,8 +31,13 @@ export interface PlanStatus {
     resetsAt: string | null;
   };
   narration: {
-    limit: number | null;
-    remaining: number | null;
+    pro: boolean;
+    limitChars: number;     // budget size (monthly for Pro, lifetime for free)
+    usedChars: number;
+    creditChars: number;    // prepaid top-up characters (Pro)
+    remainingChars: number;
+    remaining: number;      // approx narrations left
+    resetsAt: string | null; // Pro monthly reset; null for free
   };
 }
 
@@ -62,9 +69,15 @@ export class BillingService {
     return this.http.post<RazorpayOrder>('/api/billing/razorpay/order', { currency }, { withCredentials: true });
   }
 
-  /** Hand the modal's payment result to the server for signature verification;
-   *  Pro is granted synchronously on success. */
-  verifyPayment(payload: { orderId: string; paymentId: string; signature: string }): Observable<{ ok: boolean; proUntil?: string }> {
-    return this.http.post<{ ok: boolean; proUntil?: string }>('/api/billing/razorpay/verify', payload, { withCredentials: true });
+  /** Prepaid narration top-up pack (Pro only): one-time order for the same
+   *  Checkout modal. Adds narration characters on successful verify. */
+  createTopupOrder(currency: 'INR' | 'USD' = 'INR'): Observable<RazorpayOrder> {
+    return this.http.post<RazorpayOrder>('/api/billing/razorpay/topup', { currency }, { withCredentials: true });
+  }
+
+  /** Hand the modal's payment result to the server for signature verification.
+   *  Pro (or top-up credits) are applied synchronously on success. */
+  verifyPayment(payload: { orderId: string; paymentId: string; signature: string }): Observable<{ ok: boolean; proUntil?: string; topup?: boolean; addedNarrations?: number }> {
+    return this.http.post<{ ok: boolean; proUntil?: string; topup?: boolean; addedNarrations?: number }>('/api/billing/razorpay/verify', payload, { withCredentials: true });
   }
 }

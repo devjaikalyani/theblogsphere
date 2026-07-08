@@ -42,6 +42,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   speaking = signal(false);
   narrationLoading = signal(false);
   narrationsLeft = signal<number | null>(null);
+  narrationPro = signal(false);
   private audio?: HTMLAudioElement;
   private speechQueue: string[] = [];
   private speechIndex = 0;
@@ -351,7 +352,8 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     this.blogService.narrate(blogId).subscribe({
       next: (res) => {
         this.narrationLoading.set(false);
-        this.narrationsLeft.set(res.pro ? null : res.remaining);
+        this.narrationPro.set(res.pro);
+        this.narrationsLeft.set(res.remaining);
         const audio = new Audio(res.url);
         this.audio = audio;
         audio.onended = () => this.speaking.set(false);
