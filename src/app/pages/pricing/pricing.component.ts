@@ -6,7 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SeoService } from '../../services/seo.service';
 
-// checkout.js is loaded on first use (pricing page only), never during SSR —
+// checkout.js is loaded on first use (pricing page only), never during SSR,
 // the promise is module-scoped so repeat purchases don't re-inject the tag.
 let checkoutScript: Promise<void> | null = null;
 function loadRazorpayScript(): Promise<void> {
@@ -63,7 +63,7 @@ export class PricingComponent implements OnInit {
     }
     // Keys-only Razorpay runs as a one-time Standard Checkout modal; with a
     // subscription plan configured it redirects to the hosted page instead.
-    // Checkout is the default — the status request may still be in flight on a
+    // Checkout is the default, the status request may still be in flight on a
     // fresh page load, and only an explicit 'subscription' should redirect.
     if (provider === 'razorpay' && this.status()?.razorpayMode !== 'subscription') {
       this.payWithModal('INR');
@@ -115,7 +115,7 @@ export class PricingComponent implements OnInit {
       amount: order.amount,
       currency: order.currency,
       name: 'TheBlogSphere',
-      description: `Writer Pro — ${order.days} days`,
+      description: `Writer Pro, ${order.days} days`,
       prefill: { name: user?.name ?? '', email: user?.email ?? '' },
       theme: { color: '#1A1714' },
       handler: (res: any) => this.verifyPayment(res),

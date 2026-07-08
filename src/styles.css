@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 /* ════════════════════════════════════════════════════════════════
-   TheBlogSphere — "Refined Editorial" design system  ·  v2
+   TheBlogSphere, "Refined Editorial" design system  ·  v2
    A quiet-luxury reading experience: warm paper, ink type, a serif
    display (Fraunces), a serif reading body (Newsreader), clean sans
    chrome (Inter), and a single restrained clay accent.
 
    v2 elevation:
-   · A semantic CSS-variable token layer — components reference `--ink`,
+   · A semantic CSS-variable token layer, components reference `--ink`,
      `--paper`, `--clay`, etc. so the palette stays consistent everywhere.
    · A layered, warm elevation (shadow) scale for genuine depth.
    · A unified motion language + full reduced-motion support.
@@ -21,7 +21,7 @@
   --font-sans:  'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
 
-  /* Warm stone neutrals (remap of gray-*) — light theme defaults */
+  /* Warm stone neutrals (remap of gray-*), light theme defaults */
   --color-gray-50:  #FAF8F3;
   --color-gray-100: #F3EFE7;
   --color-gray-200: #E7E2D8;
@@ -33,7 +33,7 @@
   --color-gray-800: #2E2A24;
   --color-gray-900: #1A1714;
 
-  /* Clay accent (remap of indigo-*) — used sparingly */
+  /* Clay accent (remap of indigo-*), used sparingly */
   --color-indigo-50:  #FBF2EC;
   --color-indigo-100: #F6E2D7;
   --color-indigo-200: #EDC7B4;
@@ -86,7 +86,7 @@
   --inverse-text-muted: #A39B8D;
   --inverse-hairline:   rgba(231, 226, 216, 0.10);
 
-  /* Primary ("ink") button — inverts vs. the page */
+  /* Primary ("ink") button, inverts vs. the page */
   --btn-ink-bg:    #1A1714;
   --btn-ink-fg:    #FAF8F3;
   --btn-ink-hover: #322C25;
@@ -203,7 +203,7 @@
   .font-display { font-family: var(--font-serif); }
   .font-reading { font-family: 'Newsreader', Georgia, serif; }
 
-  /* Italic serif emphasis — the editorial "accent" gesture */
+  /* Italic serif emphasis, the editorial "accent" gesture */
   .text-gradient {
     font-family: var(--font-serif);
     font-style: italic;
@@ -264,7 +264,7 @@
     line-height: 1.62;
   }
 
-  /* Small uppercase tracked label — meta, eyebrows, kickers */
+  /* Small uppercase tracked label, meta, eyebrows, kickers */
   .eyebrow {
     font-family: var(--font-sans);
     font-size: 0.72rem;
@@ -323,7 +323,7 @@
     position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
     background: linear-gradient(90deg, transparent, var(--hairline-strong) 30%, var(--hairline-strong) 70%, transparent);
   }
-  /* legacy decorative glow hooks — neutralised for the calm aesthetic */
+  /* legacy decorative glow hooks, neutralised for the calm aesthetic */
   .hero-glow-tl, .hero-glow-tr, .hero-glow-center,
   .bg-hero-blob-indigo, .bg-hero-blob-purple, .bg-hero-glow,
   .cta-glow-center, .cta-glow-tl, .cta-glow-br,
@@ -337,14 +337,14 @@
     position: relative;
   }
 
-  /* Rich dark editorial panel (featured) — deep ink, not violet */
+  /* Rich dark editorial panel (featured), deep ink, not violet */
   .bg-featured-panel {
     background: var(--inverse-surface);
     color: var(--inverse-text-soft);
   }
   .featured-pattern { background-image: none; }
 
-  /* CTA — warm ink band with clay accent */
+  /* CTA, warm ink band with clay accent */
   .bg-cta-section {
     padding: clamp(80px, 11vw, 128px) 16px;
     background:
@@ -354,7 +354,7 @@
     overflow: hidden;
   }
 
-  /* Auth split panel — deep ink editorial */
+  /* Auth split panel, deep ink editorial */
   .bg-auth-panel {
     background: var(--inverse-surface);
     position: relative;
@@ -455,7 +455,7 @@
   .card-interactive:hover .zoom-img,
   .zoom-wrap:hover .zoom-img { transform: scale(1.045); }
 
-  /* Editorial link — underline that grows from the left */
+  /* Editorial link, underline that grows from the left */
   .link-underline {
     background-image: linear-gradient(var(--clay), var(--clay));
     background-size: 0% 1px;
@@ -471,7 +471,7 @@
      (home · explore · article) so the site reads as one publication:
      running index numerals, a masthead rail, and a strong section rule. */
 
-  /* Masthead rail — a centered label flanked by fading hairlines. Frames a
+  /* Masthead rail, a centered label flanked by fading hairlines. Frames a
      hero or section the way a printed page frames a running head. */
   .masthead-rail {
     display: flex; align-items: center; gap: 1.1rem;
@@ -490,7 +490,7 @@
     background: linear-gradient(90deg, var(--hairline-strong), transparent);
   }
 
-  /* Section rule — a single ink hairline the heading sits above. The classic
+  /* Section rule, a single ink hairline the heading sits above. The classic
      newspaper section divider, restated in warm ink: confident but thin (1px),
      so it reads as intentional structure, not a heavy table border. */
   .section-rule {
@@ -506,7 +506,7 @@
     color: var(--ink-soft);
   }
 
-  /* Card running head — the thin "filed under" line at the top of an
+  /* Card running head, the thin "filed under" line at the top of an
      editorial card: an index numeral, a hairline, then meta. */
   .card-index {
     display: inline-flex; align-items: center; gap: 0.5rem;
@@ -612,7 +612,7 @@
     animation: caret-blink 1.05s step-end infinite;
   }
 
-  /* Cursor glow hook — disabled for the calm aesthetic */
+  /* Cursor glow hook, disabled for the calm aesthetic */
   .cursor-glow { display: none; }
 
   /* Inline keyboard hint */
@@ -678,7 +678,7 @@
     letter-spacing: -0.003em;
     counter-reset: section;
   }
-  /* Standfirst / deck — promoted from the opening bold line. Bridges the
+  /* Standfirst / deck, promoted from the opening bold line. Bridges the
      title and the body with a calm, larger serif and a closing hairline. */
   .article-prose > .article-deck {
     font-size: 1.42rem;
@@ -733,7 +733,7 @@
   .article-prose h3 { font-size: 1.32rem; margin-top: 1.9rem; }
   .article-prose h4 { font-size: 1.12rem; }
 
-  /* AI key-takeaways panel — a soft clay-tinted aside above the article body. */
+  /* AI key-takeaways panel, a soft clay-tinted aside above the article body. */
   .takeaways {
     background: rgba(193, 92, 61, 0.05);
     border: 1px solid var(--hairline);

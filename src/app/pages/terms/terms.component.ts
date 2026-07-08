@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SeoService } from '../../services/seo.service';
 
-// DRAFT TEMPLATE — starting point only. Have a qualified lawyer review before
+// DRAFT TEMPLATE, starting point only. Have a qualified lawyer review before
 // launch, and replace every [bracketed] placeholder with your real details.
 @Component({
   selector: 'app-terms',
@@ -73,7 +73,7 @@ import { SeoService } from '../../services/seo.service';
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
           The Platform offers AI writing assistance and AI narration. When you use these, the text you submit is sent to
           third-party AI providers (currently Groq for text and OpenAI for narration) to generate a result. AI output can
-          be inaccurate, incomplete, or biased &mdash; you are responsible for reviewing and verifying it before you rely on or
+          be inaccurate, incomplete, or biased, you are responsible for reviewing and verifying it before you rely on or
           publish it. You are responsible for ensuring your use of AI output complies with applicable law and does not
           infringe third-party rights. See our <a routerLink="/privacy" class="link-underline text-gray-800 font-medium">Privacy Policy</a> for how this data is handled.
         </p>
@@ -164,7 +164,7 @@ import { SeoService } from '../../services/seo.service';
 export class TermsComponent {
   constructor(seo: SeoService) {
     seo.set({
-      title: 'Terms of Service — TheBlogSphere',
+      title: 'Terms of Service, TheBlogSphere',
       description: 'The terms that govern your use of TheBlogSphere.',
       canonicalPath: '/terms',
     });

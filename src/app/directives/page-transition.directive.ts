@@ -7,7 +7,7 @@ import { filter } from 'rxjs/operators';
 /**
  * Route transition: fades + rises the routed content into view on each
  * client-side navigation. Uses the native Web Animations API (zero bundle
- * cost) since this directive ships in the eager root bundle — Motion is
+ * cost) since this directive ships in the eager root bundle, Motion is
  * reserved for the lazy-loaded reveal/hover work where its springs and
  * scroll detection actually earn their weight.
  *

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SeoService } from '../../services/seo.service';
 
-// DRAFT TEMPLATE — starting point only. Have a qualified lawyer review before
+// DRAFT TEMPLATE, starting point only. Have a qualified lawyer review before
 // launch, and replace every [bracketed] placeholder with your real details.
 @Component({
   selector: 'app-privacy',
@@ -33,11 +33,11 @@ import { SeoService } from '../../services/seo.service';
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">2. What we collect</h2>
         <ul class="list-disc pl-6 space-y-1.5 font-reading text-gray-600 mb-4">
-          <li><strong class="text-gray-800">Account data</strong> — your name, email, and password (stored hashed). If you sign in with Google, we receive your name, email, and profile photo from Google.</li>
-          <li><strong class="text-gray-800">Content</strong> — the stories, comments, bio, and other material you create.</li>
-          <li><strong class="text-gray-800">Usage &amp; device data</strong> — your IP address and basic request data, used for security and rate-limiting.</li>
-          <li><strong class="text-gray-800">Payment data</strong> — if you subscribe, our payment partners process your payment. We receive confirmation and subscription status, but we do not store your full card or bank details.</li>
-          <li><strong class="text-gray-800">Optional data</strong> — a UPI ID or tip link if you choose to accept tips.</li>
+          <li><strong class="text-gray-800">Account data</strong>, your name, email, and password (stored hashed). If you sign in with Google, we receive your name, email, and profile photo from Google.</li>
+          <li><strong class="text-gray-800">Content</strong>, the stories, comments, bio, and other material you create.</li>
+          <li><strong class="text-gray-800">Usage &amp; device data</strong>, your IP address and basic request data, used for security and rate-limiting.</li>
+          <li><strong class="text-gray-800">Payment data</strong>, if you subscribe, our payment partners process your payment. We receive confirmation and subscription status, but we do not store your full card or bank details.</li>
+          <li><strong class="text-gray-800">Optional data</strong>, a UPI ID or tip link if you choose to accept tips.</li>
         </ul>
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">3. How we use your data</h2>
@@ -63,12 +63,12 @@ import { SeoService } from '../../services/seo.service';
           outside India, so your data may be processed abroad under appropriate safeguards.
         </p>
         <ul class="list-disc pl-6 space-y-1.5 font-reading text-gray-600 mb-4">
-          <li><strong class="text-gray-800">Google</strong> — sign-in (if you use it).</li>
-          <li><strong class="text-gray-800">Groq</strong> — AI text assistance. The text you submit to the assistant is sent to Groq to generate a response.</li>
-          <li><strong class="text-gray-800">OpenAI</strong> — AI narration. The story text you narrate is sent to OpenAI to generate audio.</li>
-          <li><strong class="text-gray-800">Cloudflare R2</strong> — storage of images and generated audio.</li>
-          <li><strong class="text-gray-800">Razorpay / Stripe</strong> — subscription payments.</li>
-          <li><strong class="text-gray-800">Railway</strong> — hosting of the application and database.</li>
+          <li><strong class="text-gray-800">Google</strong>, sign-in (if you use it).</li>
+          <li><strong class="text-gray-800">Groq</strong>, AI text assistance. The text you submit to the assistant is sent to Groq to generate a response.</li>
+          <li><strong class="text-gray-800">OpenAI</strong>, AI narration. The story text you narrate is sent to OpenAI to generate audio.</li>
+          <li><strong class="text-gray-800">Cloudflare R2</strong>, storage of images and generated audio.</li>
+          <li><strong class="text-gray-800">Razorpay / Stripe</strong>, subscription payments.</li>
+          <li><strong class="text-gray-800">Railway</strong>, hosting of the application and database.</li>
         </ul>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
           We do not sell your personal data, and we do not use it for advertising. We may disclose data if required by law or
@@ -77,7 +77,7 @@ import { SeoService } from '../../services/seo.service';
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">6. Cookies</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          We use only essential cookies &mdash; primarily to keep you signed in and remember basic preferences. We do not use
+          We use only essential cookies, primarily to keep you signed in and remember basic preferences. We do not use
           advertising or cross-site tracking cookies. You can clear cookies in your browser, but some features (like staying
           signed in) may then stop working.
         </p>
@@ -90,8 +90,8 @@ import { SeoService } from '../../services/seo.service';
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">8. Security</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          We use reasonable technical and organisational measures &mdash; including encrypted transport, password hashing, access
-          controls, and rate-limiting &mdash; to protect your data. No system is perfectly secure, and we cannot guarantee
+          We use reasonable technical and organisational measures, including encrypted transport, password hashing, access
+          controls, and rate-limiting, to protect your data. No system is perfectly secure, and we cannot guarantee
           absolute security.
         </p>
 
@@ -128,7 +128,7 @@ import { SeoService } from '../../services/seo.service';
 export class PrivacyComponent {
   constructor(seo: SeoService) {
     seo.set({
-      title: 'Privacy Policy — TheBlogSphere',
+      title: 'Privacy Policy, TheBlogSphere',
       description: 'How TheBlogSphere collects, uses, and protects your personal data.',
       canonicalPath: '/privacy',
     });

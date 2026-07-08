@@ -5,7 +5,7 @@ import { animate, inView, stagger } from 'motion';
 /**
  * Reveal-on-scroll, powered by Motion (the framework-agnostic engine behind
  * Framer Motion). Fades + rises the element the first time it scrolls into
- * view — or, with [revealStagger], cascades its direct children.
+ * view, or, with [revealStagger], cascades its direct children.
  *
  * Backwards-compatible: `[appReveal]="120"` still sets a 120ms delay.
  * SSR-safe and fully disabled under prefers-reduced-motion.
@@ -30,7 +30,7 @@ export class RevealDirective implements OnInit, OnDestroy {
     if (!isPlatformBrowser(this.platformId)) return;
     const host = this.el.nativeElement;
 
-    // Respect the user's motion preference — leave everything visible, no animation.
+    // Respect the user's motion preference, leave everything visible, no animation.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const delaySec = (Number(this.delay) || 0) / 1000;

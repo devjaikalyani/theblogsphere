@@ -6,11 +6,11 @@
         <div>
           <p class="eyebrow eyebrow-clay mb-2.5">Writing tools</p>
           <h1 class="text-section-title">Writing assistant</h1>
-          <p class="font-reading text-[1.05rem] text-gray-600 mt-2">Find ideas, draft passages, and shape your writing &mdash; in your voice.</p>
+          <p class="font-reading text-[1.05rem] text-gray-600 mt-2">Find ideas, draft passages, and shape your writing, in your voice.</p>
           @if (plan(); as p) {
             @if (p.pro) {
               <span class="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold px-3 py-1 rounded-full bg-sunken text-gray-700">
-                <span class="w-1.5 h-1.5 rounded-full bg-[var(--clay)]"></span> Pro &mdash; unlimited AI
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--clay)]"></span> Pro, unlimited AI
               </span>
             } @else if (p.ai.remaining !== null) {
               <span class="inline-flex items-center gap-2 mt-3 text-xs font-medium px-3 py-1 rounded-full bg-sunken text-gray-600">
@@ -85,7 +85,7 @@
       </div>
     }
 
-    <!-- History — chronological order (oldest first) -->
+    <!-- History, chronological order (oldest first) -->
     @for (item of history(); track $index) {
       <!-- User message -->
       <div class="flex justify-end gap-3 animate-float-up">
@@ -144,7 +144,7 @@
     <div #scrollAnchor></div>
   </div>
 
-  <!-- Input bar — sticky at bottom -->
+  <!-- Input bar, sticky at bottom -->
   <div class="sticky bottom-0 glass-bar border-t border-gray-200">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 py-4">
       <div class="flex gap-3 items-end">
@@ -154,7 +154,7 @@
             (keydown)="onEnter($event)"
             rows="1"
             [disabled]="loading()"
-            placeholder="Ask anything — write a post, generate ideas, draft an opening…"
+            placeholder="Ask anything, write a post, generate ideas, draft an opening…"
             class="w-full px-4 py-3.5 text-sm text-gray-800 bg-transparent resize-none focus:outline-none placeholder-gray-400 leading-relaxed max-h-32">
           </textarea>
           <div class="px-4 pb-2 flex items-center justify-between">

@@ -6,8 +6,8 @@ const CONSENT_KEY = 'tbs-cookie-consent';
 
 /**
  * Minimal, honest cookie notice. TheBlogSphere only sets essential cookies
- * (the Better Auth session + a couple of preferences) — no advertising or
- * cross-site tracking — so this is a notice-and-accept, not a full preference
+ * (the Better Auth session + a couple of preferences), no advertising or
+ * cross-site tracking, so this is a notice-and-accept, not a full preference
  * manager. It renders only in the browser (SSR-safe) and only until the visitor
  * has acknowledged it (persisted in localStorage).
  */
@@ -21,7 +21,7 @@ const CONSENT_KEY = 'tbs-cookie-consent';
         <div class="mx-auto max-w-3xl bg-raised border border-gray-200 rounded-2xl elev-3 p-4 sm:p-5
                     flex flex-col sm:flex-row sm:items-center gap-3">
           <p class="flex-1 text-sm font-reading text-gray-600 leading-relaxed">
-            We use essential cookies to keep you signed in and remember your preferences — never for
+            We use essential cookies to keep you signed in and remember your preferences, never for
             advertising or tracking.
             <a routerLink="/privacy" class="link-underline text-gray-800 font-medium">Learn more</a>.
           </p>
@@ -42,7 +42,7 @@ export class CookieConsentComponent {
       try {
         if (!localStorage.getItem(CONSENT_KEY)) this.visible.set(true);
       } catch {
-        // Private-mode / storage disabled — show the notice but don't crash.
+        // Private-mode / storage disabled, show the notice but don't crash.
         this.visible.set(true);
       }
     }

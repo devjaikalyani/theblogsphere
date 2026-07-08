@@ -10,7 +10,7 @@ export class AiService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),
       }).then(async (response) => {
-        // Non-streaming error (e.g. 429 AI quota exceeded) — surface the JSON
+        // Non-streaming error (e.g. 429 AI quota exceeded), surface the JSON
         // payload so the UI can prompt an upgrade instead of silently stalling.
         if (!response.ok || !response.body) {
           let body: any = null;

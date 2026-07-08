@@ -15,7 +15,7 @@ const app = express();
 
 /**
  * Angular 19.2's SSR has an SSRF guard that rejects any request whose Host
- * isn't in `allowedHosts` — and an empty list rejects *everything* (even
+ * isn't in `allowedHosts`, and an empty list rejects *everything* (even
  * localhost), silently falling back to client-side rendering. Behind Railway's
  * proxy the real Host arrives via `X-Forwarded-Host`, so we also trust proxy
  * headers. We derive the allow-list from the same `ALLOWED_ORIGINS` used for

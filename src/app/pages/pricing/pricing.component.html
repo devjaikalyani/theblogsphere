@@ -71,11 +71,11 @@
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span><span class="font-semibold text-[#F3EFE7]">Unlimited</span> human-quality narration — listen to any story</span>
+            <span><span class="font-semibold text-[#F3EFE7]">Unlimited</span> human-quality narration, listen to any story</span>
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            Premium analytics — followers, engagement rate, 12-month history
+            Premium analytics, followers, engagement rate, 12-month history
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -102,7 +102,7 @@
             @if (!status() || status()?.razorpayEnabled) {
               <button type="button" (click)="upgrade('razorpay')" [disabled]="loading()"
                 class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
-                {{ loading() ? 'Redirecting…' : 'Pay in INR — UPI / Cards' }}
+                {{ loading() ? 'Redirecting…' : 'Pay in INR, UPI / Cards' }}
               </button>
             }
             @if (!status() || status()?.stripeEnabled || status()?.razorpayInternational) {
@@ -133,7 +133,7 @@
     </p>
 
     <p class="text-center text-sm text-gray-500 mt-8">
-      Just here to read? <a routerLink="/explore" class="text-indigo-700 font-semibold hover:text-indigo-800 link-underline">Explore stories</a> — no account needed.
+      Just here to read? <a routerLink="/explore" class="text-indigo-700 font-semibold hover:text-indigo-800 link-underline">Explore stories</a>, no account needed.
     </p>
   </div>
 </div>

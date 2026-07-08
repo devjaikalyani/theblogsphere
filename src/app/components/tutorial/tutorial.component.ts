@@ -9,7 +9,7 @@ interface TourStep {
 }
 
 /**
- * First-run onboarding tour — a centered, step-through welcome overlay (not a
+ * First-run onboarding tour, a centered, step-through welcome overlay (not a
  * DOM-anchored coach-mark tour, so it survives navigation and SSR). Driven by
  * TutorialService; rendered once at the app root.
  */
@@ -114,7 +114,7 @@ export class TutorialComponent {
     {
       key: 'listen',
       title: 'Listen to any story',
-      body: 'Tap Read aloud to have a story narrated in a natural voice. Set your profile, writing style, and tips in Settings. That is it — enjoy.',
+      body: 'Tap Read aloud to have a story narrated in a natural voice. Set your profile, writing style, and tips in Settings. That is it, enjoy.',
     },
   ];
 

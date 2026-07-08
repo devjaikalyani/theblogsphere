@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SeoService } from '../../services/seo.service';
 
-// DRAFT TEMPLATE — starting point only. Have a lawyer review the wording and
+// DRAFT TEMPLATE, starting point only. Have a lawyer review the wording and
 // tailor the prohibited-content list to your jurisdiction before launch.
 @Component({
   selector: 'app-content-policy',
@@ -51,7 +51,7 @@ import { SeoService } from '../../services/seo.service';
           <p class="font-reading text-gray-600 leading-relaxed">
             Our writing assistant and narration features use third-party AI (see the
             <a routerLink="/privacy" class="link-underline text-gray-800 font-medium">Privacy Policy</a>). AI output can be
-            inaccurate or biased — you are responsible for reviewing, fact-checking, and standing behind anything you
+            inaccurate or biased, you are responsible for reviewing, fact-checking, and standing behind anything you
             publish with its help. Don't use AI to mass-produce low-value or deceptive content.
           </p>
         </section>
@@ -69,7 +69,7 @@ import { SeoService } from '../../services/seo.service';
           <p class="font-reading text-gray-600 leading-relaxed">
             Include the link to the content, identification of the work you own and proof of ownership, your contact
             details, and a good-faith statement that the use is unauthorised. Submitting a knowingly false claim may make
-            you liable for damages. We may remove content, notify the poster, and — where appropriate — reinstate it if a
+            you liable for damages. We may remove content, notify the poster, and, where appropriate, reinstate it if a
             valid counter-notice is received.
           </p>
         </section>
@@ -102,7 +102,7 @@ import { SeoService } from '../../services/seo.service';
 export class ContentPolicyComponent {
   constructor(seo: SeoService) {
     seo.set({
-      title: 'Content Policy — TheBlogSphere',
+      title: 'Content Policy, TheBlogSphere',
       description: 'What is and isn’t allowed on TheBlogSphere, plus how to report content and file a copyright/DMCA takedown.',
       canonicalPath: '/content-policy',
     });

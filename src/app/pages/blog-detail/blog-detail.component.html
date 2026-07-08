@@ -47,11 +47,11 @@
   @if (!loading() && blog()) {
     <div class="mx-auto max-w-2xl xl:max-w-7xl px-4 sm:px-6 xl:grid xl:grid-cols-[minmax(200px,1fr)_minmax(0,680px)_minmax(200px,1fr)] xl:gap-x-10">
 
-      <!-- Reusable actions — shared by the desktop rail and the mobile header row -->
+      <!-- Reusable actions, shared by the desktop rail and the mobile header row -->
       <ng-template #actionButtons>
         <button type="button" (click)="toggleLike()" [disabled]="likeLoading()"
           [attr.aria-label]="liked() ? 'Unlike this story' : 'Like this story'"
-          [title]="liked() ? 'Liked — tap to remove' : 'Like this story'"
+          [title]="liked() ? 'Liked, tap to remove' : 'Like this story'"
           [style.color]="liked() ? 'var(--clay)' : null"
           class="icon-btn btn-press disabled:opacity-40 !w-auto px-2.5 gap-1.5">
           <svg class="w-[18px] h-[18px]" [attr.fill]="liked() ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -63,7 +63,7 @@
         </button>
         <button type="button" (click)="toggleBookmark()" [disabled]="bookmarkLoading()"
           aria-label="Bookmark"
-          [title]="bookmarked() ? 'Saved — tap to remove' : 'Save to bookmarks'"
+          [title]="bookmarked() ? 'Saved, tap to remove' : 'Save to bookmarks'"
           [style.color]="bookmarked() ? 'var(--clay)' : null"
           class="icon-btn btn-press disabled:opacity-40">
           <svg class="w-[18px] h-[18px]" [attr.fill]="bookmarked() ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -104,7 +104,7 @@
         </button>
         @if (narrationsLeft() !== null) {
           <a routerLink="/pricing"
-             [title]="(narrationsLeft() ?? 0) > 0 ? 'Free neural narrations left — go Pro for unlimited' : 'Upgrade to Pro for unlimited narration'"
+             [title]="(narrationsLeft() ?? 0) > 0 ? 'Free neural narrations left, go Pro for unlimited' : 'Upgrade to Pro for unlimited narration'"
              class="self-center px-1.5 text-[11px] font-semibold whitespace-nowrap hover:underline"
              [style.color]="(narrationsLeft() ?? 0) > 0 ? 'var(--ink-muted)' : 'var(--clay)'">
             {{ (narrationsLeft() ?? 0) > 0 ? narrationsLeft() + ' free left' : 'Go Pro' }}
@@ -119,7 +119,7 @@
         }
       </ng-template>
 
-      <!-- Table of contents (left column, desktop) — pinned to the left margin -->
+      <!-- Table of contents (left column, desktop), pinned to the left margin -->
       <aside class="hidden xl:block w-[200px]" aria-label="On this page">
         @if (toc().length > 1) {
           <nav class="sticky top-28 toc">
@@ -479,7 +479,7 @@
       </article>
       </div>
 
-      <!-- Story panel (right column, desktop) — mirrors the contents rail so the
+      <!-- Story panel (right column, desktop), mirrors the contents rail so the
            two margins read as balanced, intentional structure, not empty bands. -->
       <aside class="hidden xl:block w-[200px] justify-self-end" aria-label="Story tools">
         <div class="sticky top-28">

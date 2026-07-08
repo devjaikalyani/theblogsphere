@@ -27,7 +27,7 @@ export class TutorialService {
     try {
       if (!localStorage.getItem(this.storageKey())) this.visible.set(true);
     } catch {
-      // Storage blocked (private mode) — show it anyway.
+      // Storage blocked (private mode), show it anyway.
       this.visible.set(true);
     }
   }

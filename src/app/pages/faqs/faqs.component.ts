@@ -27,7 +27,7 @@ export class FaqsComponent {
     queueMicrotask(() => this.setFaqJsonLd());
   }
 
-  /** FAQPage structured data — eligible for rich results in search. */
+  /** FAQPage structured data, eligible for rich results in search. */
   private setFaqJsonLd() {
     const ld = {
       '@context': 'https://schema.org',
@@ -70,7 +70,7 @@ export class FaqsComponent {
     },
     {
       q: 'Does TheBlogSphere use AI?',
-      a: 'TheBlogSphere offers an optional AI writing assistant that can help you brainstorm, draft, or expand your ideas. The assistant is a tool — your words and your voice are always what gets published.',
+      a: 'TheBlogSphere offers an optional AI writing assistant that can help you brainstorm, draft, or expand your ideas. The assistant is a tool, your words and your voice are always what gets published.',
     },
     {
       q: 'How is my reading time calculated?',

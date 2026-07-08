@@ -4,7 +4,7 @@ import { animate } from 'motion';
 
 /**
  * Springy hover/press lift, powered by Motion. Gently raises and scales the
- * element on pointer-enter and settles it back on leave — the "soft, gentle
+ * element on pointer-enter and settles it back on leave, the "soft, gentle
  * hover state" the design system calls for. Keyboard-focus triggers it too.
  * SSR-safe and disabled under prefers-reduced-motion.
  */

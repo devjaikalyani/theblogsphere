@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SeoService } from '../../services/seo.service';
 
-// DRAFT TEMPLATE — starting point only. Fill in the placeholder fields below
+// DRAFT TEMPLATE, starting point only. Fill in the placeholder fields below
 // with your real details. India's IT Rules 2021 require a named Grievance
 // Officer with contact details published on the site.
 @Component({
@@ -70,7 +70,7 @@ import { SeoService } from '../../services/seo.service';
   `,
 })
 export class ContactComponent {
-  // ── Interim contact (free Gmail) — swap to support@theblogsphere.ai once the
+  // ── Interim contact (free Gmail), swap to support@theblogsphere.ai once the
   //    domain email is live. ──
   supportEmail = 'theblogsphere.support@gmail.com';
   grievanceEmail = 'theblogsphere.support@gmail.com';
@@ -79,7 +79,7 @@ export class ContactComponent {
 
   constructor(seo: SeoService) {
     seo.set({
-      title: 'Contact & Grievances — TheBlogSphere',
+      title: 'Contact & Grievances, TheBlogSphere',
       description: 'How to reach TheBlogSphere, including our Grievance Officer for content, copyright, and privacy.',
       canonicalPath: '/contact',
     });

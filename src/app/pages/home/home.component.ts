@@ -31,7 +31,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     seo: SeoService,
   ) {
     seo.set({
-      title: 'TheBlogSphere — Write, Publish, and Discover Stories',
+      title: 'TheBlogSphere, Write, Publish, and Discover Stories',
       description: 'Discover stories from writers around the world. Use AI to write more and write better on TheBlogSphere.',
       canonicalPath: '/',
     });

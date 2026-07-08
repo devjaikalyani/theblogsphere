@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SeoService } from '../../services/seo.service';
 
-// DRAFT TEMPLATE — starting point only. Have a qualified lawyer/CA review before
+// DRAFT TEMPLATE, starting point only. Have a qualified lawyer/CA review before
 // launch, and confirm it matches what your Razorpay/Stripe accounts declare.
 @Component({
   selector: 'app-refund',
@@ -92,7 +92,7 @@ import { SeoService } from '../../services/seo.service';
 export class RefundComponent {
   constructor(seo: SeoService) {
     seo.set({
-      title: 'Refund & Cancellation Policy — TheBlogSphere',
+      title: 'Refund & Cancellation Policy, TheBlogSphere',
       description: 'How billing, cancellation, and refunds work for Writer Pro.',
       canonicalPath: '/refund',
     });

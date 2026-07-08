@@ -25,7 +25,7 @@ export class LoginComponent {
     }
     this.error.set('');
     this.loading.set(true);
-    // Same response whether or not the account exists — no email enumeration.
+    // Same response whether or not the account exists, no email enumeration.
     this.auth.forgetPassword(this.email).subscribe({
       next: () => { this.loading.set(false); this.resetSent.set(true); },
       error: () => { this.loading.set(false); this.resetSent.set(true); },

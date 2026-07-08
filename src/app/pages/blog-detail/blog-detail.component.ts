@@ -78,7 +78,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   });
 
   /** Only decorate the body with a drop cap when the first block is a genuine
-   *  paragraph — never a heading, list, quote, image, or a bold pseudo-title
+   *  paragraph, never a heading, list, quote, image, or a bold pseudo-title
    *  (which is what made it look broken). */
   useDropCap = computed<boolean>(() => {
     const content = (this.blog()?.content ?? '').trim();
@@ -91,7 +91,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
 
   /** Memoised so scroll-driven change detection (reading progress + scroll-spy
    *  fire every frame) doesn't re-run the regex passes over the full article
-   *  body on each cycle — they only depend on blog(), which is set once. */
+   *  body on each cycle, they only depend on blog(), which is set once. */
   readTimeC = computed<number>(() => {
     const b = this.blog();
     return b ? this.readTime(b.content) : 0;
@@ -116,7 +116,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // The router REUSES this component when navigating between two /blog/:id
     // URLs (same route config), so ngOnInit only ever fires once. Subscribe to
-    // the param map so every navigation — e.g. clicking a "Read next" card —
+    // the param map so every navigation, e.g. clicking a "Read next" card,
     // reloads the article instead of leaving the old one on screen.
     this.routeSub = this.route.paramMap.subscribe((params) => {
       const param = params.get('id') ?? '';
@@ -126,7 +126,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   }
 
   private loadBlog(param: string) {
-    // Reset every per-article signal — the instance is shared across articles,
+    // Reset every per-article signal, the instance is shared across articles,
     // so nothing is cleared for us. Flipping loading/blog also tears down the
     // old article body (and its stale TOC + "enhanced" markers) via the
     // template's @if guards, so the next article enhances from a clean slate.
@@ -171,14 +171,14 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
           const canonical = this.doc.querySelector('link[rel="canonical"]');
           if (canonical && this.doc.location) canonical.setAttribute('href', this.doc.location.href);
           this.setArticleJsonLd(b, description, author);
-          // Count a view only from a real browser — otherwise every SSR render
+          // Count a view only from a real browser, otherwise every SSR render
           // (and every crawler/social-bot fetch) would inflate the count, and
           // it would double-count alongside the client after hydration.
           if (isPlatformBrowser(this.platformId)) this.blogService.incrementViews(id).subscribe();
           if (this.auth.session()) {
             this.blogService.checkBookmark(id).subscribe(r => this.bookmarked.set(r.bookmarked));
           }
-          // Like state + count (works for anonymous readers too — just count).
+          // Like state + count (works for anonymous readers too, just count).
           this.blogService.checkLike(id).subscribe({
             next: (r) => { this.liked.set(r.liked); this.likeCount.set(r.count); },
             error: () => {},
@@ -205,14 +205,14 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Read-next, AI takeaways, and follow status — all non-blocking. */
+  /** Read-next, AI takeaways, and follow status, all non-blocking. */
   private loadExtras(id: number, blog: any) {
     this.blogService.getRelated(id).subscribe({
       next: (r) => this.related.set(r ?? []),
       error: () => {},
     });
 
-    // AI summary is browser-only — never block SSR prerender on a Groq call.
+    // AI summary is browser-only, never block SSR prerender on a Groq call.
     if (isPlatformBrowser(this.platformId)) {
       this.summaryLoading.set(true);
       this.blogService.getSummary(id).subscribe({
@@ -242,7 +242,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
         this.following.set(now);
         this.followers.update((n) => Math.max(0, n + (now ? 1 : -1)));
         this.followLoading.set(false);
-        if (now) this.toast.show('Following — new stories will appear in your feed.', 'success');
+        if (now) this.toast.show('Following, new stories will appear in your feed.', 'success');
       },
       error: () => this.followLoading.set(false),
     });
@@ -308,7 +308,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   }
 
   // ── UPI tipping (India) ──────────────────────────────────────────────────
-  /** `upi://pay` deep link — opens the reader's UPI app (mobile) prefilled to
+  /** `upi://pay` deep link, opens the reader's UPI app (mobile) prefilled to
    *  pay the author. Receive-only; cannot debit the author. */
   upiLink(): string {
     const u = this.blog()?.user;
@@ -324,7 +324,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
       const QRCode = (await import('qrcode')).default;
       this.upiQr.set(await QRCode.toDataURL(this.upiUri(vpa, name), { margin: 1, width: 160 }));
     } catch {
-      // QR is a progressive enhancement — the link button still works without it.
+      // QR is a progressive enhancement, the link button still works without it.
     }
   }
 
@@ -335,7 +335,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     const blog = this.blog();
     if (!blog) return;
     // Signed-in readers get the premium neural voice (metered, 5 free then Pro);
-    // anonymous readers — and any neural failure — use the on-device voice.
+    // anonymous readers, and any neural failure, use the on-device voice.
     if (this.auth.session()) {
       this.playNeuralNarration(blog.id);
     } else {
@@ -482,7 +482,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
       .replace(/[#>*_`~|]+/g, ' ')               // md punctuation
       .replace(/\s+/g, ' ')
       .trim();
-    // No hard length cap — the narrator chunks by sentence, so full articles
+    // No hard length cap, the narrator chunks by sentence, so full articles
     // read start to finish. A generous ceiling only guards against pathological
     // input.
     return `${title}. ${body}`.slice(0, 40000);

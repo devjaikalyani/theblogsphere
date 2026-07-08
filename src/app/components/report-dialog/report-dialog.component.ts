@@ -46,7 +46,7 @@ import { ToastService } from '../../services/toast.service';
             </div>
 
             <div>
-              <label class="block eyebrow !text-[11px] mb-2" for="report-details">Details <span class="normal-case text-gray-400">&mdash; optional</span></label>
+              <label class="block eyebrow !text-[11px] mb-2" for="report-details">Details <span class="normal-case text-gray-400">, optional</span></label>
               <textarea id="report-details" [(ngModel)]="details" rows="3" maxlength="4000"
                 placeholder="Add anything that helps us understand the issue. For copyright, include proof you own the work."
                 class="w-full text-sm text-gray-800 border border-gray-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-clay resize-none bg-sunken transition-colors"></textarea>
@@ -80,7 +80,7 @@ import { ToastService } from '../../services/toast.service';
 export class ReportDialogComponent {
   @Input() blogId?: number;
 
-  // Placeholder held in a TS field — a literal "@" in an inline template is
+  // Placeholder held in a TS field, a literal "@" in an inline template is
   // parsed as an Angular control-flow block and breaks the build (NG5002).
   emailPlaceholder = 'you@example.com';
 
@@ -135,7 +135,7 @@ export class ReportDialogComponent {
       next: () => {
         this.submitting.set(false);
         this.close();
-        this.toast.show('Thanks — your report has been submitted.', 'success');
+        this.toast.show('Thanks, your report has been submitted.', 'success');
       },
       error: (e) => {
         this.submitting.set(false);
