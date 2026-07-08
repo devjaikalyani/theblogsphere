@@ -22,7 +22,7 @@ server. Configs are in [`deploy/`](deploy/): `Caddyfile` (auto-HTTPS, simplest),
 2. **Point OAuth + auth at the prod domain**: `GOOGLE_CALLBACK_URL`,
    `BETTER_AUTH_URL`, and `ALLOWED_ORIGINS` must be your real HTTPS origin, and
    the same callback must be whitelisted in the Google Cloud console.
-3. **Apply the schema** — it changed (slug, soft-delete, new indexes). This
+3. **Apply the schema**: it changed (slug, soft-delete, new indexes). This
    project tracks schema with `prisma db push` (there is no `prisma/migrations`
    folder), so use:
    ```bash
@@ -34,7 +34,7 @@ server. Configs are in [`deploy/`](deploy/): `Caddyfile` (auto-HTTPS, simplest),
    > baseline, `migrate dev` prints "We need to reset the public schema… All
    > data will be lost" and will WIPE the database. Always use `db push` here.
    > (Adopting migration history later means baselining against a throwaway DB
-   > first — a separate roadmap task.)
+   > first, a separate roadmap task.)
 4. **R2 bucket CORS**: allow your origin to GET the public bucket URL.
 5. **Reverse proxy**: edit `deploy/Caddyfile` (or `nginx.conf`), replace
    `yourdomain.com`, and start it. Update `Sitemap:` host in `public/robots.txt`.
@@ -83,22 +83,22 @@ These were intentionally **not** auto-installed to avoid disturbing the working
 - **Full-text search** beyond trigram: consider a `tsvector` column +
   `websearch_to_tsquery` for ranked relevance if search volume grows.
 
-## 5. Enable billing — Razorpay (India, INR/UPI)
+## 5. Enable billing: Razorpay (India, INR/UPI)
 
 Two modes; partial config fails boot on purpose.
 
-**Checkout mode (default — API keys only).** Set just:
+**Checkout mode (default, API keys only).** Set just:
 
 ```
 RAZORPAY_KEY_ID=rzp_test_... (or rzp_live_...)
 RAZORPAY_KEY_SECRET=...
 ```
 
-The pricing page's "Pay in INR — UPI / Cards" button opens the Razorpay
+The pricing page's "Pay in INR, UPI / Cards" button opens the Razorpay
 Standard Checkout modal for a one-time ₹399 payment that grants 30 days of
 Writer Pro. The server creates the order (`POST /api/billing/razorpay/order`)
 and verifies the returned payment signature (`POST /api/billing/razorpay/verify`,
-HMAC-SHA256 of `order_id|payment_id`) — synchronous, no webhook required.
+HMAC-SHA256 of `order_id|payment_id`), synchronous, no webhook required.
 Replayed payment ids are ignored via the BillingEvent ledger, and expiry is
 applied lazily on the next billing read.
 
@@ -140,6 +140,6 @@ The pricing page then shows "Pay with international card ($7.99)", which cuts a
 USD order through the same checkout modal and verify flow (30 days of Pro).
 When Stripe keys are configured, Stripe takes precedence for that button.
 
-**Verify** — `/api/billing/status` returns `razorpayEnabled: true` plus
+**Verify**: `/api/billing/status` returns `razorpayEnabled: true` plus
 `razorpayMode: "checkout" | "subscription"` and `razorpayInternational`;
 complete a test-mode payment and confirm the user's `plan` flips to `pro`.

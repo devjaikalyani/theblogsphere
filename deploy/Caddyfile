@@ -1,4 +1,4 @@
-# TheBlogSphere — production reverse proxy (Caddy v2)
+# TheBlogSphere production reverse proxy (Caddy v2)
 # Serves the Angular SSR app and the NestJS API on the SAME ORIGIN, which is
 # required for auth cookies and Google OAuth to work. Caddy provisions and
 # renews HTTPS automatically.

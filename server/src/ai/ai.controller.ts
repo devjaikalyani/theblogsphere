@@ -15,7 +15,7 @@ export class AiController {
     @Inject(BillingService) private billing: BillingService,
   ) {}
 
-  // Public by design, but each call spends Groq budget — cap it tighter than
+  // Public by design, but each call spends Groq budget, so cap it tighter than
   // the global 30/min limit to blunt anonymous abuse.
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('generate')

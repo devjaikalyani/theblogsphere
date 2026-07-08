@@ -1,4 +1,4 @@
-// PM2 process manager config — runs the two long-lived processes.
+// PM2 process manager config: runs the two long-lived processes.
 //   pm2 start deploy/ecosystem.config.cjs
 //   pm2 save && pm2 startup    (to survive reboots)
 //

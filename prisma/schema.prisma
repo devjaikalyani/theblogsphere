@@ -25,10 +25,10 @@ model User {
   tipUrl         String?
   upiId          String?  // UPI VPA for India-native tipping (receive-only)
 
-  // Monetization — platform subscription (Writer Pro) + AI usage metering
+  // Monetization: platform subscription (Writer Pro) + AI usage metering
   plan                   String    @default("free") // "free" | "pro"
   planRenewsAt           DateTime?
-  billingProvider        String?   // "stripe" | "razorpay" — which gateway owns the sub
+  billingProvider        String?   // "stripe" | "razorpay", which gateway owns the sub
   stripeCustomerId       String?   @unique
   stripeSubscriptionId   String?
   razorpayCustomerId     String?

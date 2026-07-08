@@ -21,7 +21,7 @@ export const auth = betterAuth({
       const apiKey = process.env.RESEND_API_KEY;
       const from = process.env.EMAIL_FROM || 'TheBlogSphere <onboarding@resend.dev>';
       if (!apiKey) {
-        console.warn('[AUTH] RESEND_API_KEY is not set — password reset email NOT sent to', user.email);
+        console.warn('[AUTH] RESEND_API_KEY is not set; password reset email NOT sent to', user.email);
         return;
       }
       const res = await fetch('https://api.resend.com/emails', {
@@ -34,7 +34,7 @@ export const auth = betterAuth({
           text:
             `Hi ${user.name ?? 'there'},\n\n` +
             `Someone (hopefully you) asked to reset the password for this account. ` +
-            `Open the link below to choose a new one — it expires in one hour.\n\n${url}\n\n` +
+            `Open the link below to choose a new one. It expires in one hour.\n\n${url}\n\n` +
             `If you didn't request this, you can safely ignore this email.`,
         }),
       });

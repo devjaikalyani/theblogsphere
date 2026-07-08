@@ -4,7 +4,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 
-/** The OpenAI voice used for narration — a warm, natural female reader. */
+/** The OpenAI voice used for narration: a warm, natural female reader. */
 const VOICE = 'nova';
 /** tts-1 (not tts-1-hd): half the price ($15 vs $30 / 1M chars) for a voice
  *  that is still natural. Halving the per-character cost is what lets Writer
@@ -41,7 +41,7 @@ export class TtsService {
 
   constructor(@Inject(PrismaService) private prisma: PrismaService) {}
 
-  /** Narration is optional — without an OpenAI key the endpoint 400s and the
+  /** Narration is optional; without an OpenAI key the endpoint 400s and the
    *  client falls back to the on-device browser voice. */
   get enabled(): boolean {
     return !!process.env.OPENAI_API_KEY;
@@ -49,7 +49,7 @@ export class TtsService {
 
   /** Resolve a story to its narration URL + the billable text, and report
    *  whether the audio is already cached. Keyed by content hash so an edited
-   *  story re-narrates. Does NOT generate — the caller meters `chars` against
+   *  story re-narrates. Does NOT generate; the caller meters `chars` against
    *  the plan first, then calls generateNarration only on a cache miss. */
   async prepareNarration(blogId: number): Promise<NarrationPrep> {
     if (!this.enabled) throw new BadRequestException('Narration is not configured on this server.');
@@ -68,7 +68,7 @@ export class TtsService {
     const url = `${this.publicUrl}/${key}`;
 
     // Cache hit? Re-listens (by anyone) cost nothing to generate, so they are
-    // free and unmetered — only a cache miss draws down the plan budget.
+    // free and unmetered; only a cache miss draws down the plan budget.
     let cached = false;
     try {
       const head = await fetch(url, { method: 'HEAD' });
@@ -142,7 +142,7 @@ export class TtsService {
     return out;
   }
 
-  /** Store via a presigned PUT + fetch — same workaround UploadService uses to
+  /** Store via a presigned PUT + fetch, same workaround UploadService uses to
    *  dodge the OpenSSL-3/Node-20 handshake bug in the SDK's HTTP handler. */
   private async store(key: string, audio: Buffer): Promise<void> {
     const presigned = await getSignedUrl(

@@ -6,7 +6,7 @@ import { randomUUID } from 'crypto';
 
 /**
  * Verify the file is actually one of the allowed raster images by inspecting
- * its magic bytes — the multer `mimetype` comes from the client and can be
+ * its magic bytes; the multer `mimetype` comes from the client and can be
  * spoofed. Returns the canonical extension (used as the object key) or null.
  * Note: SVG is intentionally NOT accepted (it can carry script payloads).
  */
@@ -53,7 +53,7 @@ export class UploadService {
     const contentType = EXT_TO_MIME[detected];
     const key = `${folder}/${randomUUID()}.${detected}`;
 
-    // Generate presigned URL (pure crypto — no outbound connection, no TLS).
+    // Generate presigned URL (pure crypto, no outbound connection, no TLS).
     // Then upload using Node's built-in fetch (undici) which has a separate
     // socket layer from the @aws-sdk https agent, bypassing the OpenSSL 3
     // handshake failure that affects the SDK's NodeHttpHandler on Node 20.
@@ -82,7 +82,7 @@ export class UploadService {
   }
 
   /**
-   * Best-effort deletion of several objects by their public URLs. Never throws —
+   * Best-effort deletion of several objects by their public URLs. Never throws;
    * orphan cleanup must not block the operation that triggered it (e.g. account
    * erasure). Only URLs that belong to our bucket are touched; anything else
    * (the default avatar, external links) is skipped.
@@ -102,7 +102,7 @@ export class UploadService {
     );
   }
 
-  // Presigned DELETE + fetch — the same undici path uploads use, which sidesteps
+  // Presigned DELETE + fetch, the same undici path uploads use, which sidesteps
   // the OpenSSL-3/Node-20 handshake failure in the SDK's own HTTP transport.
   // A 404 is treated as success (the object is already gone).
   private async deleteKey(key: string) {

@@ -1,6 +1,6 @@
 /**
  * One-time backfill: give existing posts (created before slugs existed) a
- * stable SEO slug. Idempotent — only touches rows where slug IS NULL, and the
+ * stable SEO slug. Idempotent; only touches rows where slug IS NULL, and the
  * slug it writes is identical to what BlogService produces on create.
  *
  *   npm run backfill:slugs

@@ -3,7 +3,7 @@
 -- The Explore search uses case-insensitive `contains` (ILIKE '%term%') on
 -- Blog.title and Blog.content. Plain b-tree indexes can't serve leading
 -- wildcards, so those queries do sequential scans. pg_trgm GIN indexes make
--- them fast WITHOUT any code change — the existing Prisma query just gets
+-- them fast WITHOUT any code change; the existing Prisma query just gets
 -- quicker as the table grows.
 --
 -- Apply once, after `npx prisma migrate deploy`, against your database:

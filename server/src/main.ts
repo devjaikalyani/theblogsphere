@@ -25,14 +25,14 @@ async function bootstrap() {
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
   if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGINS) {
-    console.warn('[SECURITY] ALLOWED_ORIGINS is not set in production — CORS will be open to all localhost origins');
+    console.warn('[SECURITY] ALLOWED_ORIGINS is not set in production; CORS will be open to all localhost origins');
   }
 
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
     : ['http://localhost:4200', 'http://localhost:3000'];
 
-  // scriptSrc: no 'unsafe-eval' — production Angular doesn't need it, and the
+  // scriptSrc: no 'unsafe-eval'; production Angular doesn't need it, and the
   // Razorpay Checkout script + modal iframe need their origins allowed.
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
@@ -63,7 +63,7 @@ async function bootstrap() {
   });
 
   // Public, cacheable endpoints set their own Cache-Control; everything else
-  // (auth, data reads/writes) stays no-store — the in-memory server cache
+  // (auth, data reads/writes) stays no-store; the in-memory server cache
   // handles efficiency without risking stale data in browsers/CDNs.
   const CACHEABLE = new Set(['/api/sitemap.xml']);
   app.use((req: any, res: any, next: any) => {
@@ -88,7 +88,7 @@ async function bootstrap() {
 async function mountAngularSsr(app: INestApplication) {
   const ssrEntry = resolve(__dirname, '../../dist/the-blog-sphere/server/server.mjs');
   if (!existsSync(ssrEntry)) {
-    console.warn('[SSR] Angular bundle not found — run `npm run build:ssr`. Serving API only.');
+    console.warn('[SSR] Angular bundle not found. Run `npm run build:ssr`. Serving API only.');
     return;
   }
   const { ssrApp } = await import(pathToFileURL(ssrEntry).href);
@@ -96,7 +96,7 @@ async function mountAngularSsr(app: INestApplication) {
     if (req.path === '/api' || req.path.startsWith('/api/')) return next();
     return ssrApp(req, res, next);
   });
-  console.log('[SSR] Angular SSR mounted — non-/api routes are server-rendered.');
+  console.log('[SSR] Angular SSR mounted; non-/api routes are server-rendered.');
 }
 
 bootstrap();

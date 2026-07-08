@@ -3,7 +3,7 @@
  * misconfigured deploy crashes immediately with a clear message instead of
  * failing later at runtime (e.g. a 500 on the first upload or OAuth attempt).
  *
- * Zero dependencies — no Joi/zod needed.
+ * Zero dependencies, no Joi/zod needed.
  */
 
 const ALWAYS_REQUIRED = ['DATABASE_URL', 'BETTER_AUTH_SECRET'];
@@ -23,7 +23,7 @@ const REQUIRED_IN_PRODUCTION = [
 
 // Payment gateways are optional, but a half-configured one is worse than none:
 // the upgrade button appears and then checkout (or the webhook that grants Pro)
-// fails after the user has committed. Razorpay has two valid shapes — API keys
+// fails after the user has committed. Razorpay has two valid shapes: API keys
 // alone (one-time Standard Checkout, verified synchronously) or keys + plan +
 // webhook secret (subscriptions); a plan without its webhook would take money
 // and never grant Pro, so that pairing is enforced below.
@@ -55,7 +55,7 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
     if (set.length > 0 && set.length < keys.length) {
       const absent = keys.filter((k) => !isSet(k));
       throw new Error(
-        `${gateway} is partially configured — set all of ${keys.join(', ')} to enable it ` +
+        `${gateway} is partially configured; set all of ${keys.join(', ')} to enable it ` +
           `(missing: ${absent.join(', ')}) or unset the group entirely to keep it disabled.`,
       );
     }
@@ -64,13 +64,13 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
   const razorpayExtras = ['RAZORPAY_PLAN_PRO', 'RAZORPAY_WEBHOOK_SECRET'];
   if (razorpayExtras.some(isSet) && !GATEWAY_GROUPS['Razorpay'].every(isSet)) {
     throw new Error(
-      'RAZORPAY_PLAN_PRO / RAZORPAY_WEBHOOK_SECRET are set but the API keys are not — ' +
+      'RAZORPAY_PLAN_PRO / RAZORPAY_WEBHOOK_SECRET are set but the API keys are not; ' +
         'set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET as well.',
     );
   }
   if (isSet('RAZORPAY_PLAN_PRO') && !isSet('RAZORPAY_WEBHOOK_SECRET')) {
     throw new Error(
-      'RAZORPAY_PLAN_PRO is set without RAZORPAY_WEBHOOK_SECRET — subscriptions are granted ' +
+      'RAZORPAY_PLAN_PRO is set without RAZORPAY_WEBHOOK_SECRET; subscriptions are granted ' +
         'by the webhook, so without its secret users would pay and never receive Pro. ' +
         'Set the webhook secret, or unset the plan to fall back to one-time checkout.',
     );
@@ -81,7 +81,7 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
   }
 
   if (isProd && String(config['BETTER_AUTH_URL'] ?? '').startsWith('http://')) {
-    console.warn('[SECURITY] BETTER_AUTH_URL is not HTTPS in production — auth cookies may be rejected.');
+    console.warn('[SECURITY] BETTER_AUTH_URL is not HTTPS in production; auth cookies may be rejected.');
   }
 
   return config;

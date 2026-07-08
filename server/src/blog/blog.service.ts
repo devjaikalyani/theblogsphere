@@ -10,7 +10,7 @@ const BLOG_INCLUDE = {
   tags: { include: { tag: true } },
 };
 
-// Lean projection for "read next" cards — omits the (potentially large) body.
+// Lean projection for "read next" cards; omits the (potentially large) body.
 const RELATED_SELECT = {
   id: true,
   slug: true,
@@ -115,7 +115,7 @@ export class BlogService {
     });
   }
 
-  /** Public, published, non-deleted stories — for the sitemap. */
+  /** Public, published, non-deleted stories, for the sitemap. */
   async findAllPublicForSitemap() {
     return this.prisma.blog.findMany({
       where: { status: 'published', visibility: 'public', deletedAt: null },
@@ -222,8 +222,8 @@ export class BlogService {
     return this.prisma.tag.findMany({ orderBy: { name: 'asc' } });
   }
 
-  /** Top 100 stories by a popularity score — readership plus weighted
-   *  engagement (a comment counts more than a view, a bookmark more still) —
+  /** Top 100 stories by a popularity score: readership plus weighted
+   *  engagement (a comment counts more than a view, a bookmark more still),
    *  multiplied by a gentle recency decay so fresh hits can rise above stale
    *  ones without erasing genuinely popular older posts. Cached; invalidated
    *  whenever a story is created/updated/deleted via the `blogs:` prefix. */

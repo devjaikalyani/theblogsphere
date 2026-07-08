@@ -13,7 +13,7 @@ export class TtsController {
 
   /** Neural narration for a story. Sign-in required (so usage can be metered).
    *  The audio is cached in R2, so re-listening to an already-narrated story is
-   *  free for everyone and unmetered — only generating NEW audio (a cache miss)
+   *  free for everyone and unmetered; only generating NEW audio (a cache miss)
    *  draws down the character budget (402 when the plan's budget is exhausted). */
   @Post(':blogId')
   @UseGuards(AuthGuard)

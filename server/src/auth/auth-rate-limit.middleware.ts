@@ -7,7 +7,7 @@ import type { Request, Response, NextFunction } from 'express';
  * happens on every navigation; this middleware only touches the few POST routes
  * where an attacker hammers passwords.
  *
- * In-memory and per-process — good enough for a single instance. For a multi
+ * In-memory and per-process, good enough for a single instance. For a multi
  * instance deploy, back this with Redis (see the upgrade roadmap).
  */
 const WINDOW_MS = 5 * 60 * 1000; // 5 minutes

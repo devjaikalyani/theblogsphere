@@ -109,7 +109,7 @@ export class UserController {
 
   // DPDP Act 2023 / GDPR data-portability: hand the user a machine-readable copy
   // of everything we hold about them. Excludes secrets (password hashes, OAuth
-  // tokens, session tokens) — those are auth-internal, not personal data to port.
+  // tokens, session tokens); those are auth-internal, not personal data to port.
   @Get('me/export')
   @UseGuards(AuthGuard)
   async exportData(@CurrentUser('id') userId: string, @Res() res: Response) {
@@ -171,12 +171,12 @@ export class UserController {
       });
 
       await this.prisma.user.delete({ where: { id: userId } });
-      // The user's posts vanish from public listings — drop cached pages.
+      // The user's posts vanish from public listings, so drop cached pages.
       this.blogCache.invalidate('blogs:');
       // The session row was cascade-deleted, so the cookie is now inert; clear it.
       res.clearCookie('better-auth.session_token', { path: '/' });
 
-      // Best-effort orphan cleanup — never blocks/fails the erasure.
+      // Best-effort orphan cleanup; never blocks/fails the erasure.
       if (owned) {
         const urls = [owned.profilePicture, ...owned.blogs.map((b) => b.coverImage)];
         await this.uploads.deleteFiles(urls).catch(() => {});

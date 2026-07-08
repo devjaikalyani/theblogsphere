@@ -16,7 +16,7 @@ export class AiService {
     res.setHeader('Connection', 'keep-alive');
 
     const styleContext = writingStyle
-      ? `\n\nThe writer has described their personal writing style — match it closely:\n"${writingStyle}"`
+      ? `\n\nThe writer has described their personal writing style. Match it closely:\n"${writingStyle}"`
       : '';
 
     const result = await streamText({
@@ -53,7 +53,7 @@ export class AiService {
       maxOutputTokens: 500,
       system:
         'You distil blog posts into 3 to 5 crisp key takeaways. Return ONLY a JSON array of ' +
-        'plain-text strings — no prose, no markdown, no code fences. Each string is one short sentence.',
+        'plain-text strings, no prose, no markdown, no code fences. Each string is one short sentence.',
       prompt: `Summarise the key takeaways of this article:\n\n${plain}`,
     });
 

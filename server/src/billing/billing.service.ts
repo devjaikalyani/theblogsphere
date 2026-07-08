@@ -8,8 +8,8 @@ import { PrismaService } from '../prisma/prisma.service';
  *  unlimited. Tuned to be generous enough for a hobby writer but to make a
  *  serious one feel the ceiling. */
 export const FREE_AI_MONTHLY_LIMIT = 25;
-/** Narration is metered by characters — exactly what OpenAI bills ($15 / 1M on
- *  tts-1) — so the cost ceiling holds no matter how long an article is. A
+/** Narration is metered by characters, exactly what OpenAI bills ($15 / 1M on
+ *  tts-1), so the cost ceiling holds no matter how long an article is. A
  *  cache hit (re-listening to an already-narrated story) is free for everyone
  *  and never counted; only generating NEW audio draws these budgets down.
  *
@@ -26,7 +26,7 @@ const AVG_NARRATION_CHARS = 6_400;
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 /** One-time Standard Checkout prices (smallest currency unit) and the Pro
  *  window they buy. Used when only the Razorpay API keys are configured (no
- *  subscription plan/webhook) — the modal flow verifies synchronously by
+ *  subscription plan/webhook); the modal flow verifies synchronously by
  *  signature. USD (international cards) additionally needs International
  *  payments approved on the Razorpay account + RAZORPAY_INTERNATIONAL=true. */
 const PRO_ONE_TIME_PRICES: Record<string, number> = {
@@ -72,7 +72,7 @@ export class BillingService {
     return process.env.RAZORPAY_PLAN_PRO ? 'subscription' : 'checkout';
   }
   /** USD checkout for international cards. Opt-in flag because it only works
-   *  once Razorpay has approved International payments on the account —
+   *  once Razorpay has approved International payments on the account;
    *  until then the button would render and every payment would decline. */
   get razorpayInternational(): boolean {
     return this.razorpayEnabled && process.env.RAZORPAY_INTERNATIONAL === 'true';
@@ -83,7 +83,7 @@ export class BillingService {
   }
 
   /** A one-time purchase has no webhook to end it, so its expiry is applied
-   *  lazily on the next billing-aware read. Subscriptions are untouched — their
+   *  lazily on the next billing-aware read. Subscriptions are untouched; their
    *  planRenewsAt routinely passes while the gateway confirms renewal. */
   private oneTimeExpired(u: { plan: string | null; billingProvider: string | null; planRenewsAt: Date | null }): boolean {
     return (
@@ -231,7 +231,7 @@ export class BillingService {
           {
             error: 'narration_quota_exceeded',
             topup: true,
-            message: "You've used your narration budget for this month. Grab a top-up pack to narrate more — any story that's already been narrated stays free to replay.",
+            message: "You've used your narration budget for this month. Grab a top-up pack to narrate more; any story that's already been narrated stays free to replay.",
           },
           HttpStatus.PAYMENT_REQUIRED,
         );
@@ -245,7 +245,7 @@ export class BillingService {
         {
           error: 'narration_quota_exceeded',
           upgrade: true,
-          message: "You've used all your free narrations. Upgrade to Writer Pro to narrate more — you can still replay any story that's already been narrated.",
+          message: "You've used all your free narrations. Upgrade to Writer Pro to narrate more; you can still replay any story that's already been narrated.",
         },
         HttpStatus.PAYMENT_REQUIRED,
       );
@@ -253,7 +253,7 @@ export class BillingService {
     return { pro: false, remaining: this.approxNarrations(available - chars) };
   }
 
-  /** Bill a delivered narration's characters — only after the audio exists.
+  /** Bill a delivered narration's characters, only after the audio exists.
    *  Free: lifetime counter. Pro: draw the monthly budget first (resetting a
    *  lapsed window), overflow from prepaid credits. Returns the new remaining
    *  as an approximate narration count. */
@@ -456,9 +456,9 @@ export class BillingService {
     });
   }
 
-  // ── Razorpay (India — INR / UPI) ────────────────────────────────────────
+  // ── Razorpay (India, INR / UPI) ────────────────────────────────────────
   /** Create a Razorpay subscription and return its hosted auth/checkout URL
-   *  (short_url) for the client to redirect to — mirrors the Stripe flow. */
+   *  (short_url) for the client to redirect to, mirroring the Stripe flow. */
   async createRazorpaySubscription(userId: string, email: string) {
     if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
     const planId = process.env.RAZORPAY_PLAN_PRO;
@@ -493,7 +493,7 @@ export class BillingService {
       amount,
       currency,
       receipt: `pro-${Date.now().toString(36)}`,
-      // Capture immediately on success — without this, accounts set to manual
+      // Capture immediately on success; without this, accounts set to manual
       // capture leave the payment "authorized" and it auto-refunds in 5 days
       // even though Pro was already granted.
       payment_capture: 1,
@@ -508,13 +508,13 @@ export class BillingService {
     };
   }
 
-  /** Create an order for one prepaid narration top-up pack. Pro only — top-ups
+  /** Create an order for one prepaid narration top-up pack. Pro only; top-ups
    *  extend the Pro monthly budget, so a free user should upgrade first. Cut
    *  through the same Checkout + verify flow, tagged by notes.purpose. */
   async createNarrationTopupOrder(userId: string, currency = 'INR') {
     if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
     if ((await this.currentPlan(userId)) !== 'pro') {
-      throw new BadRequestException('Narration top-ups are for Writer Pro — upgrade to Pro first.');
+      throw new BadRequestException('Narration top-ups are for Writer Pro; upgrade to Pro first.');
     }
     const amount = NARRATION_TOPUP_PRICES[currency];
     if (!amount) throw new BadRequestException('Unsupported currency.');
@@ -538,8 +538,8 @@ export class BillingService {
     };
   }
 
-  /** Verify a Checkout payment and grant Pro. The signature —
-   *  HMAC-SHA256(order_id|payment_id, key secret) — only Razorpay can produce;
+  /** Verify a Checkout payment and grant Pro. The signature,
+   *  HMAC-SHA256(order_id|payment_id, key secret), only Razorpay can produce;
    *  the order fetch then binds it to this user at the Pro price, and the
    *  BillingEvent ledger makes replays a no-op instead of a free extension. */
   async verifyRazorpayPayment(
@@ -574,7 +574,7 @@ export class BillingService {
         throw new BadRequestException('Unexpected order amount.');
       }
       if (!(await this.firstTime(paymentId, 'razorpay', 'payment'))) {
-        return { ok: true, alreadyProcessed: true }; // replayed verify — no free credits
+        return { ok: true, alreadyProcessed: true }; // replayed verify, no free credits
       }
       const chars = Number(order?.notes?.chars) || NARRATION_TOPUP_CHARS;
       await this.prisma.user.update({
@@ -591,7 +591,7 @@ export class BillingService {
     }
 
     if (!(await this.firstTime(paymentId, 'razorpay', 'payment'))) {
-      return { ok: true, alreadyProcessed: true }; // replayed verify — no free extension
+      return { ok: true, alreadyProcessed: true }; // replayed verify, no free extension
     }
 
     const proUntil = new Date(Date.now() + PRO_ONE_TIME_DAYS * 24 * 60 * 60 * 1000);
@@ -613,7 +613,7 @@ export class BillingService {
 
     if (user.billingProvider === 'razorpay_onetime') {
       throw new BadRequestException(
-        'Writer Pro was a one-time purchase — there is nothing to cancel. Pro simply ends on the expiry date.',
+        'Writer Pro was a one-time purchase, so there is nothing to cancel. Pro simply ends on the expiry date.',
       );
     }
     if (user.billingProvider === 'razorpay') {

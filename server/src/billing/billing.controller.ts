@@ -43,7 +43,7 @@ export class BillingController {
   }
 
   // ...then posts the modal's payment id + signature here. Signature (HMAC)
-  // verification grants Pro synchronously — no webhook round-trip.
+  // verification grants Pro synchronously, no webhook round-trip.
   @Post('razorpay/verify')
   @UseGuards(AuthGuard)
   async razorpayVerify(
