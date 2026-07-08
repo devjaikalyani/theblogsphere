@@ -1,6 +1,6 @@
 # TheBlogSphere
 
-A full-stack blogging platform built with Angular 19, NestJS, PostgreSQL (Prisma), Better Auth, and AI-assisted writing.
+A full-stack blogging platform built with Angular 20, NestJS, PostgreSQL (Prisma), Better Auth, AI-assisted writing, human-quality narration, and Writer Pro billing.
 
 ---
 
@@ -8,9 +8,10 @@ A full-stack blogging platform built with Angular 19, NestJS, PostgreSQL (Prisma
 
 - Write, publish, and discover blog posts (SEO-friendly slug URLs, e.g. `/blog/my-title-123`)
 - AI writing assistant with streaming output (Groq / llama-3.3-70b)
-- AI writing memory — stores your style, uses it in every generation
-- AI "key takeaways" — a one-tap summary of any post (cached)
-- Immersive reading view — reading-progress bar, auto-built table of contents with scroll-spy, and a "Read next" related-posts rail
+- AI writing memory that stores your style and reuses it in every generation
+- AI "key takeaways": a one-tap summary of any post (cached)
+- Immersive reading view with a reading-progress bar, an auto-built table of contents with scroll-spy, and a "Read next" related-posts rail
+- Human-quality read-aloud narration (OpenAI TTS), cached in R2 so each story is synthesized at most once, with an on-device browser-voice fallback
 - Cover image upload (Cloudflare R2), with server-side magic-byte validation
 - Comments, bookmarks, follow system, and personalized feed
 - Writer analytics dashboard (views, top posts, monthly trends)
@@ -18,10 +19,17 @@ A full-stack blogging platform built with Angular 19, NestJS, PostgreSQL (Prisma
 - Google OAuth + email/password auth (Better Auth), with brute-force rate limiting
 - Soft-delete for posts (recoverable, not destroyed)
 
+### Monetization & billing
+
+- **Writer Pro** at ₹399/mo (India) or $7.99/mo (international): unlimited AI writing, premium analytics, and a monthly narration budget
+- **Razorpay** (India, UPI / cards) + **Stripe** (international): one-time Standard Checkout or auto-renewing subscription, signature-verified, with a `BillingEvent` idempotency ledger against replays
+- **Cost-based metering**: narration is metered by characters (exactly what the TTS provider bills), so re-listening to an already-narrated story is free for everyone; only new generation draws down the budget
+- **Prepaid narration top-up packs** for Pro users who exceed the monthly budget
+
 ### Design & front-end
 
-- **"Refined Editorial" design system** — warm paper/ink/clay palette; Fraunces (display), Newsreader (reading), Inter (UI)
-- **Editorial signature layer** — masthead rails, ink section rules, and running index numerals shared across home, explore, and the reading view
+- **"Refined Editorial" design system**: warm paper/ink/clay palette; Fraunces (display), Newsreader (reading), Inter (UI)
+- **Editorial signature layer**: masthead rails, ink section rules, and running index numerals shared across home, explore, and the reading view
 - Subtle **motion** throughout (scroll-reveal, hover lift, route page-transitions), all reduced-motion aware
 - **Light / dark / system theme** with a nav toggle and no flash on load (theme set before first paint)
 - Self-hosted fonts (no render-blocking third-party request), lazy-loaded images, reduced-motion support, skip-to-content link
@@ -34,6 +42,7 @@ A full-stack blogging platform built with Angular 19, NestJS, PostgreSQL (Prisma
 - Per-route title / description / Open Graph / Twitter / canonical (SSR-rendered)
 - Structured data (JSON-LD): `Article` on posts, `FAQPage` on the FAQ
 - Dynamic `sitemap.xml` and `robots.txt`
+- AI-scraper / model-training bots (GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, CCBot, etc.) disallowed in `robots.txt`
 
 ### Ops & security
 
@@ -47,22 +56,26 @@ A full-stack blogging platform built with Angular 19, NestJS, PostgreSQL (Prisma
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Angular 19 + SSR + Tailwind CSS v4 |
+| Frontend | Angular 20 + SSR + Tailwind CSS v4 |
 | Backend | NestJS (TypeScript) |
 | Database | PostgreSQL via Prisma ORM |
 | Authentication | Better Auth (email/password + Google OAuth) |
 | AI | Groq API with SSE streaming |
+| Narration | OpenAI TTS (`tts-1`), cached in R2 |
+| Billing | Razorpay (India) + Stripe (international) |
 | File Storage | Cloudflare R2 |
 
 ---
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 20.19+ (Angular 20 requirement)
 - PostgreSQL instance (local or hosted)
-- Groq API key — [console.groq.com](https://console.groq.com)
-- Cloudflare R2 bucket (for cover images and profile pictures)
+- Groq API key from [console.groq.com](https://console.groq.com)
+- Cloudflare R2 bucket (for cover images, profile pictures, and narration audio)
 - Google OAuth credentials (for social login)
+- OpenAI API key (*optional*): enables human-quality narration, falling back to the browser voice if unset
+- Razorpay keys (*optional*): enable Writer Pro billing in India (Stripe keys for international)
 
 ---
 
@@ -90,6 +103,9 @@ Key variables:
 | `R2_SECRET_ACCESS_KEY` | R2 secret key |
 | `R2_BUCKET_NAME` | R2 bucket name |
 | `R2_PUBLIC_URL` | Public URL for R2 bucket |
+| `OPENAI_API_KEY` | *Optional*, human-quality narration (browser-voice fallback if unset) |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | *Optional*, Writer Pro billing (India, UPI / cards) |
+| `STRIPE_SECRET_KEY` / `STRIPE_PRICE_PRO` | *Optional*, Writer Pro billing (international) |
 
 ---
 
@@ -101,7 +117,7 @@ Run once after cloning, and after any schema changes:
 # Generate Prisma client
 npm run prisma:generate
 
-# Apply schema to your database (dev AND production — this project uses db push)
+# Apply schema to your database (dev AND production; this project uses db push)
 npm run prisma:push
 
 # Fast-search indexes + slug backfill (no psql needed)
@@ -110,7 +126,7 @@ npm run backfill:slugs
 ```
 
 > Note: there is no `prisma/migrations` folder. Use `prisma db push`, NOT
-> `prisma migrate dev`/`migrate deploy` — `migrate dev` would reset and wipe the
+> `prisma migrate dev`/`migrate deploy`; `migrate dev` would reset and wipe the
 > database.
 
 ---
@@ -172,7 +188,7 @@ Before going live:
 - [ ] Set `BETTER_AUTH_URL` to your production domain
 - [ ] Set `ALLOWED_ORIGINS` to your production domain
 - [ ] Update `GOOGLE_CALLBACK_URL` to production OAuth callback URL
-- [ ] Apply schema on the production DB: `npx prisma db push` (NOT `migrate dev` — it would wipe data)
+- [ ] Apply schema on the production DB: `npx prisma db push` (NOT `migrate dev`; it would wipe data)
 - [ ] Run `npm run db:trigram` and `npm run backfill:slugs` on production
 - [ ] Set `NODE_ENV=production`
 - [ ] Ensure R2 bucket CORS policy allows your domain
@@ -187,12 +203,12 @@ Before going live:
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | GET | `/api/blogs?page=1&q=&tag=` | No | Paginated blog list (published, non-deleted) |
-| GET | `/api/blogs/:idOrSlug` | No | Single blog post — resolves by numeric id **or** SEO slug |
+| GET | `/api/blogs/:idOrSlug` | No | Single blog post; resolves by numeric id **or** SEO slug |
 | POST | `/api/blogs` | Yes | Create blog post (auto-generates a slug) |
 | PATCH | `/api/blogs/:id` | Yes | Update blog post |
 | DELETE | `/api/blogs/:id` | Yes | Soft-delete blog post |
 | POST | `/api/blogs/:id/view` | No | Increment view count |
-| GET | `/api/blogs/:id/related` | No | Related posts ("Read next") — shared-tag matches, topped up with recent (cached) |
+| GET | `/api/blogs/:id/related` | No | Related posts ("Read next"): shared-tag matches, topped up with recent (cached) |
 | GET | `/api/blogs/my` | Yes | Current user's blogs |
 | GET | `/api/blogs/tags` | No | All tags |
 
@@ -243,6 +259,25 @@ Before going live:
 | POST | `/api/ai/generate` | Optional | Stream AI content (SSE); uses your saved writing style when signed in. Rate-limited to 5 req/min per IP |
 | GET | `/api/ai/summary/:blogId` | No | AI "key takeaways" for a post (cached). Rate-limited to 10 req/min per IP |
 
+### Narration
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/tts/:blogId` | Yes | Neural narration URL for a story (cached in R2). Replaying an already-narrated story is free; generating new audio is metered by the plan's character budget (`402` when exhausted) |
+
+### Billing
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/api/billing/status` | Yes | Plan + AI/narration quota snapshot |
+| POST | `/api/billing/checkout` | Yes | Start a Pro subscription (Razorpay/Stripe), returns a redirect URL |
+| POST | `/api/billing/razorpay/order` | Yes | Create a one-time Pro order (Standard Checkout modal) |
+| POST | `/api/billing/razorpay/topup` | Yes | Create a prepaid narration top-up order (Pro only) |
+| POST | `/api/billing/razorpay/verify` | Yes | Verify a Checkout payment signature; grants Pro or adds top-up credits |
+| POST | `/api/billing/manage` | Yes | Manage/cancel the subscription (Stripe portal / Razorpay cancel-at-cycle-end) |
+| POST | `/api/billing/webhook` | No | Stripe webhook (signature-gated) |
+| POST | `/api/billing/razorpay-webhook` | No | Razorpay subscription webhook (signature-gated) |
+
 ### Uploads
 
 | Method | Route | Auth | Description |
@@ -271,7 +306,7 @@ rate-limited to 10 attempts / 5 min per IP to blunt brute-force attacks.
 | POST | `/api/auth/sign-in/email` | Login |
 | POST | `/api/auth/sign-out` | Logout |
 | GET | `/api/auth/get-session` | Current session |
-| POST | `/api/auth/sign-in/social` | Start Google OAuth — body `{ "provider": "google", "callbackURL": "..." }`, returns the URL to redirect to |
+| POST | `/api/auth/sign-in/social` | Start Google OAuth with body `{ "provider": "google", "callbackURL": "..." }`, returns the URL to redirect to |
 | GET | `/api/auth/callback/google` | Google OAuth callback (redirect target) |
 
 ---
@@ -297,6 +332,7 @@ TheBlogSphere/
 │       │   ├── analytics/
 │       │   ├── settings/
 │       │   ├── ai-assistant/
+│       │   ├── pricing/
 │       │   ├── about/
 │       │   └── faqs/
 │       ├── pipes/               # markdown, translate
@@ -306,6 +342,7 @@ TheBlogSphere/
 │       ├── ai/                  # Groq streaming
 │       ├── analytics/           # Writer dashboard
 │       ├── auth/                # Better Auth + brute-force rate limit
+│       ├── billing/             # Writer Pro billing + quota metering
 │       ├── blog/                # Blog CRUD + cache, sitemap, slug util
 │       ├── bookmark/            # Bookmark endpoints
 │       ├── comment/             # Comment endpoints
@@ -313,6 +350,7 @@ TheBlogSphere/
 │       ├── follow/              # Follow system + feed
 │       ├── health/              # /api/health probe
 │       ├── scripts/             # backfill-slugs, apply-trigram (psql-free)
+│       ├── tts/                 # Neural narration (OpenAI TTS) + R2 cache
 │       ├── upload/              # Cloudflare R2 uploads (magic-byte validated)
 │       ├── user/                # User profile endpoints
 │       └── prisma/              # Prisma service
@@ -340,7 +378,7 @@ This is a two-tier app (Angular SSR frontend + NestJS/Postgres backend). Auth
 cookies and Google OAuth require both to be reachable on **one origin**, so every
 deploy routes `/api/*` to the backend and everything else to the frontend.
 
-### Option A — Vercel (frontend) + managed Node host (backend)
+### Option A: Vercel (frontend) + managed Node host (backend)
 
 Recommended when the frontend lives on Vercel. The NestJS API **cannot** run on
 Vercel's serverless runtime, so host it on a platform that runs a persistent Node
@@ -350,7 +388,7 @@ Postgres).
 1. **Backend** → deploy this repo to your Node host as a web service:
    - Build: `npm ci --include=dev && npx prisma generate`
      (the `prisma` CLI is a devDependency, so `--include=dev` is required)
-   - Start: `npm run server:start` — binds to `$PORT`, serves under `/api/*`
+   - Start: `npm run server:start`, binds to `$PORT` and serves under `/api/*`
    - Health check path: `/api/health`
    - One-off, once the DB is connected:
      `npx prisma db push && npm run db:trigram && npm run backfill:slugs`
@@ -361,7 +399,7 @@ Postgres).
 2. **Same-origin glue** → [`vercel.json`](vercel.json) proxies `/api/*` on the
    Vercel domain to the backend. Replace `REPLACE-WITH-BACKEND-HOST` with your
    backend's URL, then redeploy the frontend.
-3. **Origin env** — set the public Vercel domain everywhere the browser sees it.
+3. **Origin env**: set the public Vercel domain everywhere the browser sees it.
    These go on the **backend host** (the API issues the cookies and OAuth redirect):
    ```
    BETTER_AUTH_URL=https://<your-app>.vercel.app
@@ -372,7 +410,7 @@ Postgres).
    Whitelist that callback URL (and the JS origin) in the Google Cloud console.
 4. **Verify:** `curl https://<your-app>.vercel.app/api/health` returns `200`.
 
-### Option B — Single VPS (self-hosted)
+### Option B: Single VPS (self-hosted)
 
 One box running both processes (NestJS `:3000`, Angular SSR `:4000`) behind one
 reverse proxy. See **[DEPLOYMENT.md](DEPLOYMENT.md)**; Caddy / nginx / PM2 configs
