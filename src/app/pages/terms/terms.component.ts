@@ -78,12 +78,14 @@ import { SeoService } from '../../services/seo.service';
           infringe third-party rights. See our <a routerLink="/privacy" class="link-underline text-gray-800 font-medium">Privacy Policy</a> for how this data is handled.
         </p>
 
-        <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">6. Subscriptions and payments</h2>
+        <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">6. Writer Pro and payments</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          Some features ("Writer Pro") require a paid subscription. Subscriptions are billed in advance on a recurring
-          basis through our payment partners (Razorpay for India, Stripe for international cards) and renew automatically
-          until cancelled. Prices are shown on the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page and may change with notice
-          for future billing periods. Billing, cancellation, and refunds are governed by our
+          Some features ("Writer Pro") require payment. Depending on the option you choose, Writer Pro is sold either as a
+          one-time purchase that unlocks a fixed period of access (for example, 30 days, which does not auto-renew) or as an
+          auto-renewing subscription that renews until cancelled. The exact price, duration, and whether it renews are shown
+          at checkout before you pay, through our payment partners (Razorpay for India, Stripe for international cards).
+          Prices are shown on the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page and may change with notice for future purchases. Billing,
+          cancellation, and refunds are governed by our
           <a routerLink="/refund" class="link-underline text-gray-800 font-medium">Refund &amp; Cancellation Policy</a>.
         </p>
 

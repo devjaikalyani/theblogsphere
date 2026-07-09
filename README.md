@@ -125,9 +125,10 @@ npm run db:trigram
 npm run backfill:slugs
 ```
 
-> Note: there is no `prisma/migrations` folder. Use `prisma db push`, NOT
-> `prisma migrate dev`/`migrate deploy`; `migrate dev` would reset and wipe the
-> database.
+> Note: this project applies schema with `prisma db push`, not migration
+> history. A `prisma/migrations/0_init` baseline exists only to satisfy Prisma
+> tooling and is not kept in sync, so do NOT run `prisma migrate dev`/`migrate
+> deploy`; `migrate dev` would reset and wipe the database.
 
 ---
 
@@ -355,7 +356,7 @@ TheBlogSphere/
 │       ├── user/                # User profile endpoints
 │       └── prisma/              # Prisma service
 ├── prisma/
-│   ├── schema.prisma            # Database schema (db push, no migrations folder)
+│   ├── schema.prisma            # Database schema (applied via db push; 0_init is a tooling baseline only)
 │   └── manual/                  # trigram_search.sql (run via npm run db:trigram)
 ├── public/
 │   ├── fonts/                   # Self-hosted woff2 + fonts.css

@@ -144,8 +144,13 @@
          If you are GST-registered, keep "inclusive of applicable taxes"; if not yet
          registered, this still reads correctly (no tax is "applicable" until then). -->
     <p class="text-center text-xs text-gray-400 mt-8 max-w-lg mx-auto">
-      Writer Pro renews automatically each month until you cancel. Prices are inclusive of applicable taxes (GST)
-      where required, and a payment receipt is issued for every charge. See our
+      @if (status()?.razorpayMode === 'subscription' || status()?.stripeEnabled) {
+        Writer Pro renews automatically each month until you cancel.
+      } @else {
+        Writer Pro is a one-time purchase that unlocks 30 days of access. It does not auto-renew.
+      }
+      Prices are inclusive of applicable taxes (GST) where required, and a payment receipt is issued for
+      every charge. See our
       <a routerLink="/refund" class="link-underline text-gray-500 font-medium">Refund &amp; Cancellation Policy</a>.
     </p>
 

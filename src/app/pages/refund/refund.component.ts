@@ -25,19 +25,21 @@ import { SeoService } from '../../services/seo.service';
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">1. What you are paying for</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          Writer Pro is a monthly digital subscription that unlocks features such as unlimited AI writing assistance,
+          Writer Pro is a paid upgrade to your account that unlocks features such as unlimited AI writing assistance,
           a monthly human-quality narration allowance (with optional prepaid top-up packs), unlimited replay of
-          already-narrated stories, and premium analytics. Current pricing (for example, ₹399/month in India or
-          $7.99/month internationally) is shown on the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page. Applicable taxes, if any, are
+          already-narrated stories, and premium analytics. Current pricing (for example, ₹399 in India or
+          $7.99 internationally, each for 30 days of access) is shown on the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page. Applicable taxes, if any, are
           charged as required by law.
         </p>
 
-        <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">2. Billing and auto-renewal</h2>
+        <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">2. Billing and renewal</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          Subscriptions are billed in advance and renew automatically at the end of each billing cycle through our payment
-          partners (Razorpay for India, Stripe for international cards) until you cancel. By subscribing, you authorise these
-          recurring charges. You will be charged the price in effect at the time of each renewal; we will give notice of any
-          price change before it applies to you.
+          Writer Pro is currently sold as a one-time purchase that unlocks 30 days of access. It does not auto-renew: your
+          access ends automatically when that period expires unless you choose to buy again. Payments are handled by our
+          partners (Razorpay for India, Stripe for international cards). Where an auto-renewing subscription option is
+          offered instead, its recurring terms (amount, interval, and how to cancel) are disclosed at checkout before you
+          pay, and by subscribing you authorise those recurring charges until you cancel. We will give notice of any price
+          change before it applies to a future purchase or renewal.
         </p>
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">3. Free tier</h2>
@@ -48,9 +50,10 @@ import { SeoService } from '../../services/seo.service';
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">4. Cancellation</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          You may cancel Writer Pro at any time from your account (Settings or the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page) or by
-          contacting us. When you cancel, your subscription will not renew again; you keep Pro access until the end of the
-          period you have already paid for. Cancelling stops future charges only.
+          If you bought a one-time 30-day pass, there is nothing to cancel: access simply ends on the expiry date shown in
+          your account, and you are not charged again. If you are on an auto-renewing subscription, you may cancel at any
+          time from your account (Settings or the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page) or by contacting us; cancelling stops future
+          charges, and you keep Pro access until the end of the period you have already paid for.
         </p>
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">5. Refunds</h2>
@@ -64,8 +67,9 @@ import { SeoService } from '../../services/seo.service';
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">6. Failed payments</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          If a renewal payment fails, we may retry it and may pause Pro features until payment succeeds. You will not lose
-          your account or your content.
+          If a payment does not go through, Pro is simply not activated and you are not charged; you can try again. For an
+          auto-renewing subscription, if a renewal payment fails we may retry it and may pause Pro features until payment
+          succeeds. Either way, you will not lose your account or your content.
         </p>
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">7. Tips</h2>

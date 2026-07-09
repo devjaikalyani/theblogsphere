@@ -335,8 +335,9 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     if (this.speaking() || this.narrationLoading()) { this.stopNarration(); return; }
     const blog = this.blog();
     if (!blog) return;
-    // Signed-in readers get the premium neural voice (metered, 5 free then Pro);
-    // anonymous readers, and any neural failure, use the on-device voice.
+    // Signed-in readers get the premium neural voice (metered by characters, a
+    // free taste then Writer Pro); anonymous readers, and any neural failure,
+    // use the on-device voice.
     if (this.auth.session()) {
       this.playNeuralNarration(blog.id);
     } else {
@@ -364,7 +365,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.narrationLoading.set(false);
         if (err?.status === 402) {
-          this.toast.show(err?.error?.message ?? 'Upgrade to Pro for unlimited narration.', 'info');
+          this.toast.show(err?.error?.message ?? "You've used your narration allowance. See Pricing for options.", 'info');
           this.router.navigate(['/pricing']);
         } else {
           this.playBrowserNarration();

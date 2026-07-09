@@ -23,8 +23,8 @@ server. Configs are in [`deploy/`](deploy/): `Caddyfile` (auto-HTTPS, simplest),
    `BETTER_AUTH_URL`, and `ALLOWED_ORIGINS` must be your real HTTPS origin, and
    the same callback must be whitelisted in the Google Cloud console.
 3. **Apply the schema**: it changed (slug, soft-delete, new indexes). This
-   project tracks schema with `prisma db push` (there is no `prisma/migrations`
-   folder), so use:
+   project tracks schema with `prisma db push` (a `prisma/migrations/0_init`
+   baseline exists for tooling only and is not kept in sync), so use:
    ```bash
    npx prisma db push        # additive: slug, deletedAt, indexes (no data loss)
    npm run db:trigram        # pg_trgm fast-search indexes (no psql needed)

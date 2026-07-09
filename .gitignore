@@ -58,7 +58,7 @@ node_modules/
 # dataconnect generated files
 .dataconnect
 .vercel
-# Ignore .env files (real secrets) — keep only the *.example templates
+# Ignore .env files (real secrets); keep only the *.example templates
 .env
 .env.*
 !.env.example
@@ -77,8 +77,7 @@ server/dist/
 Thumbs.db
 *.swp
 
-# Nested deploy clone — not part of this working tree
+# Nested deploy clone, not part of this working tree
 theblogsphere/
 client_secret_*.json
 rzp-key.csv
-*.csv

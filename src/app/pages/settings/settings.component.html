@@ -46,10 +46,17 @@
 
         <div class="flex flex-wrap items-center gap-4">
           @if (p.pro) {
-            <button type="button" (click)="manageBilling()" [disabled]="billingLoading()"
-              class="text-sm font-semibold px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 transition-colors disabled:opacity-50">
-              {{ billingLoading() ? 'Working…' : (p.provider === 'razorpay' ? 'Cancel subscription' : 'Manage billing') }}
-            </button>
+            @if (p.provider === 'razorpay_onetime') {
+              <a routerLink="/pricing"
+                class="text-sm font-semibold px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 transition-colors no-underline">
+                Extend Pro
+              </a>
+            } @else {
+              <button type="button" (click)="manageBilling()" [disabled]="billingLoading()"
+                class="text-sm font-semibold px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 transition-colors disabled:opacity-50">
+                {{ billingLoading() ? 'Working…' : (p.provider === 'razorpay' ? 'Cancel subscription' : 'Manage billing') }}
+              </button>
+            }
           } @else {
             <a routerLink="/pricing"
               class="btn-ink btn-press text-sm font-semibold px-5 py-2.5 rounded-full no-underline">
