@@ -22,19 +22,17 @@ server. Configs are in [`deploy/`](deploy/): `Caddyfile` (auto-HTTPS, simplest),
 2. **Point OAuth + auth at the prod domain**: `GOOGLE_CALLBACK_URL`,
    `BETTER_AUTH_URL`, and `ALLOWED_ORIGINS` must be your real HTTPS origin, and
    the same callback must be whitelisted in the Google Cloud console.
-3. **Apply the schema**: it changed (slug, soft-delete, new indexes). This
-   project tracks schema with `prisma db push` (a `prisma/migrations/0_init`
-   baseline exists for tooling only and is not kept in sync), so use:
+3. **Apply the schema** via Prisma migration history:
    ```bash
-   npx prisma db push        # additive: slug, deletedAt, indexes (no data loss)
-   npm run db:trigram        # pg_trgm fast-search indexes (no psql needed)
-   npm run backfill:slugs    # give pre-existing posts their slugs (idempotent)
+   npm run prisma:migrate:deploy   # applies prisma/migrations/* (idempotent)
+   npm run db:trigram              # pg_trgm fast-search indexes (no psql needed)
+   npm run backfill:slugs          # give pre-existing posts their slugs (idempotent)
    ```
-   > ⚠️  Do NOT run `prisma migrate dev` / `migrate deploy`. With no migration
-   > baseline, `migrate dev` prints "We need to reset the public schema… All
-   > data will be lost" and will WIPE the database. Always use `db push` here.
-   > (Adopting migration history later means baselining against a throwaway DB
-   > first, a separate roadmap task.)
+   > ⚠️  The **existing production DB was built with `db push`**, so its
+   > migration ledger is incomplete. Do the one-time reconciliation in
+   > [`prisma/MIGRATIONS.md`](prisma/MIGRATIONS.md) **before** `migrate deploy`
+   > there, or it will try to re-create existing columns and fail. Never run
+   > `prisma migrate dev` against production (it can reset/wipe the database).
 4. **R2 bucket CORS**: allow your origin to GET the public bucket URL.
 5. **Reverse proxy**: edit `deploy/Caddyfile` (or `nginx.conf`), replace
    `yourdomain.com`, and start it. Update `Sitemap:` host in `public/robots.txt`.
@@ -60,18 +58,25 @@ CI runs this on every push/PR (`.github/workflows/ci.yml`).
 - Self-hosted fonts (no render-blocking Google request), lazy-loaded images,
   PWA web manifest, `/api/health` probe, soft-delete for posts.
 
-## 4. Recommended next (need an install or external service)
+## 4. Recommended next
 
-These were intentionally **not** auto-installed to avoid disturbing the working
-`node_modules`. Each is a single command on your deploy host / better hardware:
+**Done in the reliability pass:**
 
-- **Node 22**: clears the AWS SDK `<22` warning. `engines` already allows `>=20`.
+- **Node 22** pinned for prod (`nixpacks.toml`, `.nvmrc`) to match CI.
+- **Error monitoring**: `@sentry/node` initialised in `server/src/main.ts`
+  (env-gated on `SENTRY_DSN`), with a global filter reporting unexpected 5xx.
+- **Image processing**: `sharp` re-encodes uploads to strip EXIF/GPS metadata,
+  apply orientation, and cap dimensions (`UploadService.sanitizeImage`).
+- **Server type gate**: `npm run typecheck:server` (`tsc --noEmit`) runs in CI,
+  the SWC runtime does not type-check on its own.
+- **Server tests**: `npm run test:server` (Vitest) covers the billing money
+  paths (signature verification, idempotency, char-budget metering).
+- **Pro AI fair-use backstop**: silent cap in `BillingService.consumeAiCredit`.
+
+**Still open:**
+
 - **PWA icons**: add real PNGs at `public/icons/icon-192.png`, `icon-512.png`,
   `icon-maskable-512.png` (referenced by `manifest.webmanifest`).
-- **Error monitoring**: `npm i @sentry/node @sentry/angular`, init Sentry in
-  `server/src/main.ts` (before `bootstrap`) and `src/main.ts`.
-- **Image processing** (EXIF strip + thumbnails): `npm i sharp`, then process
-  `file.buffer` in `UploadService.uploadFile` before the R2 PUT.
 - **Dynamic OG images**: `npm i satori @resvg/resvg-js`, render a per-post PNG
   from the title/author and serve it from a NestJS route; reference it in
   `blog-detail` `og:image`.

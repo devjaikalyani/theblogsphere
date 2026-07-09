@@ -9,6 +9,8 @@
     "build:ssr": "ng build --configuration production,ssr",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "typecheck:server": "tsc -p tsconfig.server.typecheck.json",
+    "test:server": "vitest run",
     "serve:ssr:TheBlogSphere": "node dist/the-blog-sphere/server/server.mjs",
     "server:dev": "node --import @swc-node/register/esm-register server/src/main.ts",
     "server:build": "npx prisma generate",
@@ -19,6 +21,8 @@
     "prisma:generate": "npx prisma generate",
     "db:push": "npx prisma db push",
     "prisma:push": "npx prisma db push",
+    "prisma:migrate": "npx prisma migrate dev",
+    "prisma:migrate:deploy": "npx prisma migrate deploy",
     "prisma:studio": "npx prisma studio"
   },
   "private": true,
@@ -46,6 +50,7 @@
     "@nestjs/platform-express": "^11.0.21",
     "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^6.9.0",
+    "@sentry/node": "^10.64.0",
     "@swc-node/register": "^1.11.1",
     "@swc/core": "^1.15.40",
     "@swc/helpers": "^0.5.23",
@@ -66,6 +71,7 @@
     "reflect-metadata": "^0.2.2",
     "rimraf": "^6.0.1",
     "rxjs": "~7.8.0",
+    "sharp": "^0.35.3",
     "stripe": "^22.3.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
@@ -94,7 +100,9 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.22.4",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "unplugin-swc": "^1.5.9",
+    "vitest": "^3.2.7"
   },
   "overrides": {
     "multer": "$multer"

@@ -111,24 +111,30 @@ Key variables:
 
 ## Database Setup
 
-Run once after cloning, and after any schema changes:
+Run once after cloning:
 
 ```bash
 # Generate Prisma client
 npm run prisma:generate
 
-# Apply schema to your database (dev AND production; this project uses db push)
-npm run prisma:push
+# Apply migration history to your database
+npm run prisma:migrate:deploy
 
 # Fast-search indexes + slug backfill (no psql needed)
 npm run db:trigram
 npm run backfill:slugs
 ```
 
-> Note: this project applies schema with `prisma db push`, not migration
-> history. A `prisma/migrations/0_init` baseline exists only to satisfy Prisma
-> tooling and is not kept in sync, so do NOT run `prisma migrate dev`/`migrate
-> deploy`; `migrate dev` would reset and wipe the database.
+To change the schema: edit `prisma/schema.prisma`, then `npm run prisma:migrate`
+(`prisma migrate dev`) to generate and apply a new migration locally, and commit
+the generated `prisma/migrations/*` folder. Deploy it with
+`npm run prisma:migrate:deploy`.
+
+> Note: this project is moving off `prisma db push` onto real migration history.
+> The **existing production database was built with `db push`**, so it needs a
+> one-time reconciliation before `migrate deploy` is safe there, see
+> [`prisma/MIGRATIONS.md`](prisma/MIGRATIONS.md). Never run `prisma migrate dev`
+> against production (it can reset/wipe).
 
 ---
 

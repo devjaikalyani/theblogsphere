@@ -1,0 +1,24 @@
+// Type-check-only config for the NestJS server (`npm run typecheck:server`).
+//
+// The server RUNS through the SWC loader (@swc-node/register), which strips
+// types without checking them, so `tsc` never runs in normal dev/prod. This
+// config lets CI type-check the server without emitting:
+//   - module/moduleResolution are relaxed from the runtime NodeNext config to
+//     classic "node" so the source's extensionless ESM imports resolve under
+//     tsc (SWC resolves them at runtime; tsc + NodeNext would not).
+//   - lib is ES2022 (no DOM) so global `fetch`/`BodyInit` come from @types/node
+//     (which accept Buffer bodies) instead of the DOM lib (which does not).
+// Nothing here changes how the app is built or run; it only gates types.
+{
+  "extends": "./server/tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "noEmit": true,
+    "incremental": false,
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": ["server/src/**/*.ts"]
+}

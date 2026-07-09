@@ -26,10 +26,17 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      # The server runs via SWC (no compile step), so tsc is the only type gate.
+      - name: Type-check server
+        run: npm run typecheck:server
+
       - name: Build (Angular SSR + client)
         run: npm run build
         env:
           NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Server unit tests
+        run: npm run test:server
 
       # Unit tests run in headless Chrome (provided on the GitHub runner).
       - name: Test

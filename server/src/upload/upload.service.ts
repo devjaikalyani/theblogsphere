@@ -3,6 +3,7 @@ import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { randomUUID } from 'crypto';
+import sharp from 'sharp';
 
 /**
  * Verify the file is actually one of the allowed raster images by inspecting
@@ -53,6 +54,10 @@ export class UploadService {
     const contentType = EXT_TO_MIME[detected];
     const key = `${folder}/${randomUUID()}.${detected}`;
 
+    // Re-encode raster images to strip EXIF (GPS/camera metadata is a privacy
+    // leak), bake in orientation, and cap runaway dimensions.
+    const body = await this.sanitizeImage(file.buffer, detected);
+
     // Generate presigned URL (pure crypto, no outbound connection, no TLS).
     // Then upload using Node's built-in fetch (undici) which has a separate
     // socket layer from the @aws-sdk https agent, bypassing the OpenSSL 3
@@ -65,7 +70,7 @@ export class UploadService {
 
     const res = await fetch(presignedUrl, {
       method: 'PUT',
-      body: file.buffer,
+      body,
       headers: { 'Content-Type': contentType },
     });
 
@@ -74,6 +79,24 @@ export class UploadService {
     }
 
     return `${this.publicUrl}/${key}`;
+  }
+
+  /** Strip metadata (EXIF, incl. GPS) by re-encoding, apply EXIF orientation,
+   *  and bound the dimensions. GIFs (often animated) rarely carry EXIF and are
+   *  costly to re-encode, so they pass through. Falls back to the original
+   *  bytes if sharp can't decode it (they are already magic-byte validated). */
+  private async sanitizeImage(buf: Buffer, type: 'jpg' | 'png' | 'gif' | 'webp'): Promise<Buffer | Uint8Array> {
+    if (type === 'gif') return buf;
+    try {
+      const pipeline = sharp(buf, { failOn: 'none' })
+        .rotate()
+        .resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true });
+      if (type === 'jpg') return await pipeline.jpeg({ quality: 82 }).toBuffer();
+      if (type === 'png') return await pipeline.png().toBuffer();
+      return await pipeline.webp({ quality: 82 }).toBuffer();
+    } catch {
+      return buf;
+    }
   }
 
   async deleteFile(url: string) {

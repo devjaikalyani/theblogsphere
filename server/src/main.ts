@@ -9,11 +9,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({ path: resolve(__dirname, '../../.env') });
 
+import * as Sentry from '@sentry/node';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { authRateLimit } from './auth/auth-rate-limit.middleware';
+import { SentryExceptionFilter } from './common/sentry.filter';
+
+// Error monitoring. No-op unless SENTRY_DSN is set, so local/dev stay silent.
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV ?? 'development',
+    tracesSampleRate: 0.1,
+  });
+}
 
 async function bootstrap() {
   // rawBody is needed so the Stripe webhook can verify its signature against
@@ -56,6 +67,9 @@ async function bootstrap() {
   app.use(authRateLimit);
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  // Report unexpected 5xx to Sentry (no-op without SENTRY_DSN).
+  app.useGlobalFilters(new SentryExceptionFilter(app.getHttpAdapter()));
 
   app.enableCors({
     origin: allowedOrigins,

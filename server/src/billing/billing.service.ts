@@ -4,10 +4,13 @@ import Stripe from 'stripe';
 import Razorpay from 'razorpay';
 import { PrismaService } from '../prisma/prisma.service';
 
-/** Free writers get this many AI actions per rolling 30-day window. Pro is
- *  unlimited. Tuned to be generous enough for a hobby writer but to make a
- *  serious one feel the ceiling. */
+/** Free writers get this many AI actions per rolling 30-day window. Tuned to be
+ *  generous enough for a hobby writer but to make a serious one feel the ceiling. */
 export const FREE_AI_MONTHLY_LIMIT = 25;
+/** Pro is "unlimited" for any human, but a scripted account could otherwise run
+ *  up Groq costs without bound. This is a silent fair-use backstop, far above
+ *  what a real writer hits, so it only ever bites abuse. Not shown in the UI. */
+export const PRO_AI_MONTHLY_LIMIT = 500;
 /** Narration is metered by characters, exactly what OpenAI bills ($15 / 1M on
  *  tts-1), so the cost ceiling holds no matter how long an article is. A
  *  cache hit (re-listening to an already-narrated story) is free for everyone
@@ -304,26 +307,34 @@ export class BillingService {
     return { pro: true, remaining: this.approxNarrations(this.proNarrationRemaining(updated)) };
   }
 
-  /** Spend one AI credit. Pro is unlimited; free users draw from a rolling
-   *  30-day quota that resets lazily. Throws 429 when exhausted so the client
-   *  can surface an upgrade prompt. */
+  /** Spend one AI credit against a rolling 30-day window that resets lazily.
+   *  Free users get FREE_AI_MONTHLY_LIMIT; Pro users get PRO_AI_MONTHLY_LIMIT,
+   *  a silent fair-use backstop that only bites scripted abuse (the UI still
+   *  shows Pro as unlimited). Throws 429 when exhausted. */
   async consumeAiCredit(userId: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { plan: true, aiUsageCount: true, aiUsagePeriodStart: true },
     });
     if (!user) return; // unknown user: no limit to apply
-    if (this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro') return; // Pro: unlimited
+
+    const pro = this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro';
+    const limit = pro ? PRO_AI_MONTHLY_LIMIT : FREE_AI_MONTHLY_LIMIT;
 
     const expired = this.periodExpired(user.aiUsagePeriodStart);
     const used = expired ? 0 : user.aiUsageCount;
 
-    if (used >= FREE_AI_MONTHLY_LIMIT) {
+    if (used >= limit) {
       throw new HttpException(
-        {
-          error: 'ai_quota_exceeded',
-          message: `You've used all ${FREE_AI_MONTHLY_LIMIT} free AI actions this month. Upgrade to Pro for unlimited assistance.`,
-        },
+        pro
+          ? {
+              error: 'ai_fair_use_exceeded',
+              message: "You've hit this month's fair-use limit for AI assistance. That's unusually high volume; contact us if you have a legitimate need.",
+            }
+          : {
+              error: 'ai_quota_exceeded',
+              message: `You've used all ${FREE_AI_MONTHLY_LIMIT} free AI actions this month. Upgrade to Pro for unlimited assistance.`,
+            },
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }

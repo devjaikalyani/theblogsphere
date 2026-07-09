@@ -12,6 +12,12 @@
 # (server/src/main.ts via the SWC loader) mounts that bundle at startup, so one
 # Railway service serves both /api and the server-rendered app at one origin.
 
+# RUNTIME: pin Node 22 so production matches CI (node-version: 22) and clears
+# the AWS SDK "<22" warning the R2 client emits on Node 20. Also lets us drop
+# the Node-20 TLS workaround in upload/tts later.
+[variables]
+NIXPACKS_NODE_VERSION = "22"
+
 [phases.install]
 cmds = ["npm install --include=dev --no-audit --no-fund"]
 
