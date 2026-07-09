@@ -14,6 +14,15 @@ export interface RazorpayOrder {
   narrations?: number; // approx narrations in a top-up (absent for Pro)
 }
 
+/** Public gateway config (no user data), for rendering pricing to anyone. */
+export interface BillingConfig {
+  billingEnabled: boolean;
+  razorpayEnabled: boolean;
+  razorpayMode: 'subscription' | 'checkout' | null;
+  stripeEnabled: boolean;
+  razorpayInternational: boolean;
+}
+
 export interface PlanStatus {
   plan: string;
   pro: boolean;
@@ -48,6 +57,12 @@ export class BillingService {
   /** Current plan + AI quota for the signed-in user. */
   status(): Observable<PlanStatus> {
     return this.http.get<PlanStatus>('/api/billing/status', { withCredentials: true });
+  }
+
+  /** Public gateway config (works signed out) so the pricing page can show the
+   *  right buttons and billing terms to everyone. */
+  config(): Observable<BillingConfig> {
+    return this.http.get<BillingConfig>('/api/billing/config', { withCredentials: true });
   }
 
   /** Start a Writer Pro subscription with the chosen gateway; returns a redirect

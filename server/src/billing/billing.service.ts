@@ -111,6 +111,19 @@ export class BillingService {
     return this.isPro(user.plan) ? 'pro' : 'free';
   }
 
+  /** Public billing config (no user data): which gateways are on and whether
+   *  Razorpay runs one-time checkout or auto-renewing subscriptions. Drives the
+   *  pricing page's buttons and billing terms for signed-out visitors too. */
+  publicConfig() {
+    return {
+      billingEnabled: this.enabled,
+      razorpayEnabled: this.razorpayEnabled,
+      razorpayMode: this.razorpayMode,
+      stripeEnabled: this.stripeEnabled,
+      razorpayInternational: this.razorpayInternational,
+    };
+  }
+
   /** Plan + AI-quota snapshot for the settings / pricing / assistant screens. */
   async getStatus(userId: string) {
     let user = await this.prisma.user.findUnique({

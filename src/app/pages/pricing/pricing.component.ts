@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { BillingService, BillingProvider, PlanStatus, RazorpayOrder } from '../../services/billing.service';
+import { BillingService, BillingProvider, BillingConfig, PlanStatus, RazorpayOrder } from '../../services/billing.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SeoService } from '../../services/seo.service';
@@ -31,6 +31,7 @@ function loadRazorpayScript(): Promise<void> {
 })
 export class PricingComponent implements OnInit {
   status = signal<PlanStatus | null>(null);
+  config = signal<BillingConfig | null>(null);
   loading = signal(false);
 
   constructor(
@@ -47,6 +48,8 @@ export class PricingComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Config is public, so load it for everyone (drives buttons + billing terms).
+    this.billing.config().subscribe({ next: (c) => this.config.set(c), error: () => {} });
     if (this.auth.session()?.user) {
       this.billing.status().subscribe({ next: (s) => this.status.set(s), error: () => {} });
     }
@@ -63,9 +66,9 @@ export class PricingComponent implements OnInit {
     }
     // Keys-only Razorpay runs as a one-time Standard Checkout modal; with a
     // subscription plan configured it redirects to the hosted page instead.
-    // Checkout is the default, the status request may still be in flight on a
+    // Checkout is the default, the config request may still be in flight on a
     // fresh page load, and only an explicit 'subscription' should redirect.
-    if (provider === 'razorpay' && this.status()?.razorpayMode !== 'subscription') {
+    if (provider === 'razorpay' && this.config()?.razorpayMode !== 'subscription') {
       this.payWithModal('INR');
       return;
     }
@@ -83,11 +86,11 @@ export class PricingComponent implements OnInit {
       this.toast.show('Sign in to upgrade to Pro.', 'info');
       return;
     }
-    if (this.status()?.stripeEnabled) {
+    if (this.config()?.stripeEnabled) {
       this.upgrade('stripe');
       return;
     }
-    if (this.status()?.razorpayInternational) {
+    if (this.config()?.razorpayInternational) {
       this.payWithModal('USD');
       return;
     }

@@ -15,6 +15,14 @@ export class BillingController {
     return this.billing.getStatus(userId);
   }
 
+  // Public (no auth): gateway availability + mode, no user data. Lets the
+  // pricing page show the correct buttons and billing terms (one-time vs
+  // auto-renewing) to logged-out visitors too.
+  @Get('config')
+  config() {
+    return this.billing.publicConfig();
+  }
+
   // provider: 'razorpay' (India/INR/UPI) or 'stripe' (international/USD).
   @Post('checkout')
   @UseGuards(AuthGuard)
