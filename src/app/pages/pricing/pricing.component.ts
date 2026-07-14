@@ -91,7 +91,7 @@ export class PricingComponent implements OnInit {
       return;
     }
     if (this.config()?.razorpayInternational) {
-      this.payWithModal('USD');
+      this.payWithModal('USD', 'monthly');
       return;
     }
     this.toast.show('International payments are not available yet. Please try the INR option.', 'info');

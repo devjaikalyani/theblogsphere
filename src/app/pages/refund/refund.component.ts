@@ -28,13 +28,14 @@ import { SeoService } from '../../services/seo.service';
           Writer Pro is a paid upgrade to your account that unlocks features such as unlimited AI writing assistance,
           a monthly human-quality narration allowance (with optional prepaid top-up packs), unlimited replay of
           already-narrated stories, and premium analytics. Current pricing (for example, ₹399 in India or
-          $7.99 internationally, each for 30 days of access) is shown on the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page. Applicable taxes, if any, are
+          $7.99 internationally, each for 30 days of access, or ₹2,999 for a 365-day annual pass) is shown on the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page. Applicable taxes, if any, are
           charged as required by law.
         </p>
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">2. Billing and renewal</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          Writer Pro is currently sold as a one-time purchase that unlocks 30 days of access. It does not auto-renew: your
+          Writer Pro is currently sold as a one-time purchase that unlocks a fixed period of access (30 days, or 365 days
+          for the annual pass). It does not auto-renew: your
           access ends automatically when that period expires unless you choose to buy again. Payments are handled by our
           partners (Razorpay for India, Stripe for international cards). Where an auto-renewing subscription option is
           offered instead, its recurring terms (amount, interval, and how to cancel) are disclosed at checkout before you
@@ -50,7 +51,7 @@ import { SeoService } from '../../services/seo.service';
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">4. Cancellation</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          If you bought a one-time 30-day pass, there is nothing to cancel: access simply ends on the expiry date shown in
+          If you bought a one-time pass (30-day or annual), there is nothing to cancel: access simply ends on the expiry date shown in
           your account, and you are not charged again. If you are on an auto-renewing subscription, you may cancel at any
           time from your account (Settings or the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page) or by contacting us; cancelling stops future
           charges, and you keep Pro access until the end of the period you have already paid for.
