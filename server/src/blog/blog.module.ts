@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { BlogController } from './blog.controller';
 import { SitemapController } from './sitemap.controller';
+import { RssController } from './rss.controller';
 import { BlogService } from './blog.service';
 import { BlogCacheService } from './blog.cache.service';
 
 @Module({
-  controllers: [BlogController, SitemapController],
+  controllers: [BlogController, SitemapController, RssController],
   providers: [BlogService, BlogCacheService],
   exports: [BlogCacheService],
 })

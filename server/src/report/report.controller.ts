@@ -3,12 +3,16 @@ import { Response, Request } from 'express';
 import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth.config';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 
 const REASONS = ['spam', 'harassment', 'copyright', 'illegal', 'misinformation', 'other'];
 
 @Controller('api/reports')
 export class ReportController {
-  constructor(@Inject(PrismaService) private prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private prisma: PrismaService,
+    @Inject(MailService) private mail: MailService,
+  ) {}
 
   // Optional auth: signed-in reporters are recorded by id; anonymous reporters
   // must leave an email so we can follow up (IT Rules 2021 grievance handling).
@@ -33,7 +37,7 @@ export class ReportController {
     const details = (body.details ?? '').trim().slice(0, 4000);
     const blogId = Number.isInteger(body.blogId) ? body.blogId! : null;
 
-    await this.prisma.report.create({
+    const report = await this.prisma.report.create({
       data: {
         blogId,
         reporterId,
@@ -42,6 +46,26 @@ export class ReportController {
         details: details || null,
       },
     });
+
+    // IT Rules grievance clocks start at receipt, so surface every report to
+    // the operator immediately (fire-and-forget; never blocks the reporter).
+    const admin = process.env.ADMIN_EMAIL;
+    if (admin) {
+      this.mail
+        .send({
+          to: admin,
+          subject: `[TheBlogSphere] New content report #${report.id}: ${reason}`,
+          text:
+            `A new report was filed.\n\n` +
+            `Report id: ${report.id}\n` +
+            `Reason: ${reason}\n` +
+            `Story id: ${blogId ?? 'n/a'}\n` +
+            `Reporter: ${reporterId ?? email}\n` +
+            `Details: ${details || '(none)'}\n\n` +
+            `Review it in the Report table (status is currently "open").`,
+        })
+        .catch((e) => console.error('[REPORT] admin alert failed:', e?.message ?? e));
+    }
 
     return res.json({ ok: true });
   }

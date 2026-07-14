@@ -152,6 +152,27 @@ describe('razorpay payment verification', () => {
     })).rejects.toThrow(/amount/i);
   });
 
+  it('grants a 365-day window for an annual-pass order at the annual price', async () => {
+    const order = { id: 'order_3', currency: 'INR', amount: 299900, notes: { userId: 'u1', purpose: 'writer-pro-365d' } };
+    const { svc, updates } = makeService({ user: freeUser(), razorpay: { orders: { fetch: vi.fn(async () => order) } } });
+    const res: any = await svc.verifyRazorpayPayment('u1', {
+      orderId: 'order_3', paymentId: 'pay_3', signature: sign('order_3', 'pay_3'),
+    });
+    expect(res.plan).toBe('pro');
+    const days = (new Date(res.proUntil).getTime() - Date.now()) / 864e5;
+    expect(days).toBeGreaterThan(364);
+    expect(days).toBeLessThanOrEqual(365);
+    expect(updates[0]).toMatchObject({ plan: 'pro', billingProvider: 'razorpay_onetime' });
+  });
+
+  it('rejects an annual-pass order paid at the monthly price', async () => {
+    const order = { id: 'order_4', currency: 'INR', amount: 39900, notes: { userId: 'u1', purpose: 'writer-pro-365d' } };
+    const { svc } = makeService({ user: freeUser(), razorpay: { orders: { fetch: vi.fn(async () => order) } } });
+    await expect(svc.verifyRazorpayPayment('u1', {
+      orderId: 'order_4', paymentId: 'pay_4', signature: sign('order_4', 'pay_4'),
+    })).rejects.toThrow(/amount/i);
+  });
+
   it('adds prepaid credits for a narration top-up order', async () => {
     const order = { id: 'order_2', currency: 'INR', amount: 19900, notes: { userId: 'u1', purpose: 'narration-topup', chars: String(NARRATION_TOPUP_CHARS) } };
     const { svc, updates } = makeService({ user: proUser(), razorpay: { orders: { fetch: vi.fn(async () => order) } } });

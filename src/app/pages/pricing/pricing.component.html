@@ -3,10 +3,11 @@
   <div class="page-header-band">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 py-14 sm:py-20 text-center">
       <p class="running-head mb-3">Pricing</p>
-      <h1 class="text-section-title mb-4">Free to read. Free to write.</h1>
+      <h1 class="text-section-title mb-4">Free to read. Free to write. Paid to you.</h1>
       <p class="font-reading text-gray-600 text-[1.1rem] leading-relaxed max-w-xl mx-auto">
-        TheBlogSphere will always be free, with no ads. Upgrade to Writer Pro when you want
-        unlimited AI, deeper analytics, and a more professional presence.
+        TheBlogSphere will always be free, with no ads. Readers tip you directly over UPI and
+        we never take a cut; that money is yours. Upgrade to Writer Pro when you want
+        unlimited AI, more narration, and deeper analytics.
       </p>
     </div>
   </div>
@@ -41,7 +42,7 @@
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            Accept reader tips
+            Accept reader tips over UPI, with zero platform cut
           </li>
         </ul>
         <div class="mt-8">
@@ -108,6 +109,12 @@
                 class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
                 {{ loading() ? 'Redirecting…' : 'Pay in INR, UPI / Cards' }}
               </button>
+              @if (config()?.razorpayMode === 'checkout') {
+                <button type="button" (click)="buyAnnual()" [disabled]="loading()"
+                  class="block w-full px-5 py-3 text-sm font-semibold rounded-full border border-[#C9C2B5]/30 text-[#E8E3DA] hover:bg-white/10 transition-colors disabled:opacity-60">
+                  {{ loading() ? 'Working…' : 'Get a year for ₹2,999 (save 37%)' }}
+                </button>
+              }
             }
             @if (!config() || config()?.stripeEnabled || config()?.razorpayInternational) {
               <button type="button" (click)="payInternational()" [disabled]="loading()"
@@ -147,7 +154,8 @@
       @if (config()?.razorpayMode === 'subscription' || config()?.stripeEnabled) {
         Writer Pro renews automatically each month until you cancel.
       } @else {
-        Writer Pro is a one-time purchase that unlocks 30 days of access. It does not auto-renew.
+        Writer Pro is a one-time purchase that unlocks 30 days (or 365 days for the annual
+        pass) of access. It does not auto-renew.
       }
       Prices are inclusive of applicable taxes (GST) where required, and a payment receipt is issued for
       every charge. See our

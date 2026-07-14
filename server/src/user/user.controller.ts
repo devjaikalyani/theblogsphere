@@ -33,6 +33,7 @@ export class UserController {
           tippingEnabled: true,
           tipUrl: true,
           upiId: true,
+          notifyFollowedPosts: true,
           createdAt: true,
           _count: {
             select: { followers: true, following: true },
@@ -54,7 +55,11 @@ export class UserController {
         isFollowing = !!follow;
       }
 
-      return res.json({ ...user, isFollowing });
+      // The notification preference is the owner's business only; the public
+      // profile view doesn't need (or get) it.
+      const { notifyFollowedPosts, ...publicUser } = user;
+      const self = session?.user?.id === id;
+      return res.json({ ...publicUser, ...(self && { notifyFollowedPosts }), isFollowing });
     } catch (e: any) {
       console.error('[GET /users/:id] error:', e?.message ?? e);
       return res.status(500).json({ error: 'Internal server error' });
@@ -64,7 +69,7 @@ export class UserController {
   @Patch('me')
   @UseGuards(AuthGuard)
   async updateProfile(
-    @Body() body: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string; upiId?: string },
+    @Body() body: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string; upiId?: string; notifyFollowedPosts?: boolean },
     @CurrentUser('id') userId: string,
   ) {
     const user = await this.prisma.user.update({
@@ -78,8 +83,9 @@ export class UserController {
         ...(body.tippingEnabled !== undefined && { tippingEnabled: body.tippingEnabled }),
         ...(body.tipUrl !== undefined && { tipUrl: body.tipUrl }),
         ...(body.upiId !== undefined && { upiId: body.upiId }),
+        ...(body.notifyFollowedPosts !== undefined && { notifyFollowedPosts: body.notifyFollowedPosts }),
       },
-      select: { id: true, firstName: true, lastName: true, bio: true, website: true, writingStyle: true, tippingEnabled: true, tipUrl: true, upiId: true },
+      select: { id: true, firstName: true, lastName: true, bio: true, website: true, writingStyle: true, tippingEnabled: true, tipUrl: true, upiId: true, notifyFollowedPosts: true },
     });
 
     // The author name is denormalised onto every Blog (`author`) and onto the

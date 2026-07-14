@@ -79,9 +79,10 @@ export class BillingService {
 
   /** Razorpay Standard Checkout (keys-only mode): create a one-time Pro order
    *  for the Checkout modal to collect. INR for India (UPI/cards); USD for
-   *  international cards where the account has International enabled. */
-  createOrder(currency: 'INR' | 'USD' = 'INR'): Observable<RazorpayOrder> {
-    return this.http.post<RazorpayOrder>('/api/billing/razorpay/order', { currency }, { withCredentials: true });
+   *  international cards where the account has International enabled.
+   *  term 'annual' buys a 365-day pass; 'monthly' (default) a 30-day one. */
+  createOrder(currency: 'INR' | 'USD' = 'INR', term: 'monthly' | 'annual' = 'monthly'): Observable<RazorpayOrder> {
+    return this.http.post<RazorpayOrder>('/api/billing/razorpay/order', { currency, term }, { withCredentials: true });
   }
 
   /** Prepaid narration top-up pack (Pro only): one-time order for the same

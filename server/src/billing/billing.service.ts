@@ -37,6 +37,15 @@ const PRO_ONE_TIME_PRICES: Record<string, number> = {
   USD: 799, // $7.99, the pricing page's international price
 };
 const PRO_ONE_TIME_DAYS = 30;
+/** Annual pass: about 7.5 monthly cycles for 12 months of Pro. Upfront cash
+ *  and no renewal friction; rides the exact same one-time Checkout + lazy
+ *  expiry path as the 30-day window, just with a longer term. */
+const PRO_ANNUAL_PRICES: Record<string, number> = {
+  INR: 299900, // ₹2,999 (about 37% off twelve months of ₹399)
+  USD: 5999, // $59.99
+};
+const PRO_ANNUAL_DAYS = 365;
+export type ProTerm = 'monthly' | 'annual';
 /** Prepaid narration top-up pack prices (smallest currency unit), cut through
  *  the same Standard Checkout + verify flow as Pro (distinguished by the
  *  order's notes.purpose). Cost of the characters is ~₹135, so both prices
@@ -506,9 +515,11 @@ export class BillingService {
   // ── Razorpay Standard Checkout (one-time, keys-only mode) ──────────────
   /** Create an order for one Pro window. The client opens the Checkout modal
    *  with this order id; keyId is the publishable half of the key pair. */
-  async createRazorpayOrder(userId: string, currency = 'INR') {
+  async createRazorpayOrder(userId: string, currency = 'INR', term: ProTerm = 'monthly') {
     if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
-    const amount = PRO_ONE_TIME_PRICES[currency];
+    const annual = term === 'annual';
+    const amount = (annual ? PRO_ANNUAL_PRICES : PRO_ONE_TIME_PRICES)[currency];
+    const days = annual ? PRO_ANNUAL_DAYS : PRO_ONE_TIME_DAYS;
     if (!amount) throw new BadRequestException('Unsupported currency.');
     if (currency !== 'INR' && !this.razorpayInternational) {
       throw new BadRequestException('International payments are not enabled yet.');
@@ -521,14 +532,14 @@ export class BillingService {
       // capture leave the payment "authorized" and it auto-refunds in 5 days
       // even though Pro was already granted.
       payment_capture: 1,
-      notes: { userId, purpose: `writer-pro-${PRO_ONE_TIME_DAYS}d` },
+      notes: { userId, purpose: `writer-pro-${days}d` },
     } as any);
     return {
       orderId: order.id as string,
       amount: order.amount as number,
       currency: order.currency as string,
       keyId: process.env.RAZORPAY_KEY_ID!,
-      days: PRO_ONE_TIME_DAYS,
+      days,
     };
   }
 
@@ -608,8 +619,11 @@ export class BillingService {
       return { ok: true, topup: true, addedChars: chars, addedNarrations: this.approxNarrations(chars) };
     }
 
-    // Otherwise: a Writer Pro window. The order must be at the Pro price.
-    const expectedAmount = PRO_ONE_TIME_PRICES[currency];
+    // Otherwise: a Writer Pro window. The term comes from the order's own
+    // purpose note (set server-side at order creation, so it can't be forged
+    // by the client), and the amount must match that term's price exactly.
+    const annual = purpose === `writer-pro-${PRO_ANNUAL_DAYS}d`;
+    const expectedAmount = (annual ? PRO_ANNUAL_PRICES : PRO_ONE_TIME_PRICES)[currency];
     if (!expectedAmount || Number(order?.amount) !== expectedAmount) {
       throw new BadRequestException('Unexpected order amount.');
     }
@@ -618,7 +632,8 @@ export class BillingService {
       return { ok: true, alreadyProcessed: true }; // replayed verify, no free extension
     }
 
-    const proUntil = new Date(Date.now() + PRO_ONE_TIME_DAYS * 24 * 60 * 60 * 1000);
+    const days = annual ? PRO_ANNUAL_DAYS : PRO_ONE_TIME_DAYS;
+    const proUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
     await this.prisma.user.update({
       where: { id: userId },
       data: { plan: 'pro', billingProvider: 'razorpay_onetime', planRenewsAt: proUntil },

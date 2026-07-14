@@ -143,6 +143,25 @@
       }
     </div>
 
+    <!-- Notifications -->
+    <div class="bg-raised rounded-2xl border border-gray-200 p-7">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="font-display text-lg text-gray-900 mb-1">New-story emails</h2>
+          <p class="text-sm text-gray-500">Get an email when a writer you follow publishes a new story. Every email has a one-click unsubscribe link.</p>
+        </div>
+        <button type="button" (click)="notifyFollowedPosts = !notifyFollowedPosts"
+          title="Toggle new-story emails"
+          class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-clay mt-1"
+          [class]="notifyFollowedPosts ? 'bg-clay' : 'bg-gray-300'"
+          [attr.aria-checked]="notifyFollowedPosts" role="switch"
+          [attr.aria-label]="notifyFollowedPosts ? 'Disable new-story emails' : 'Enable new-story emails'">
+          <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition duration-200"
+            [class]="notifyFollowedPosts ? 'translate-x-5' : 'translate-x-0'"></span>
+        </button>
+      </div>
+    </div>
+
     <!-- Save -->
     <div class="flex justify-end">
       <button type="button" (click)="save()" [disabled]="saving()"

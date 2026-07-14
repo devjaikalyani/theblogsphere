@@ -22,6 +22,7 @@ export class SettingsComponent implements OnInit {
   tippingEnabled = false;
   tipUrl = '';
   upiId = '';
+  notifyFollowedPosts = true;
   saving = signal(false);
 
   plan = signal<PlanStatus | null>(null);
@@ -54,6 +55,7 @@ export class SettingsComponent implements OnInit {
         this.tippingEnabled = p.tippingEnabled ?? false;
         this.tipUrl = p.tipUrl ?? '';
         this.upiId = p.upiId ?? '';
+        this.notifyFollowedPosts = p.notifyFollowedPosts ?? true;
       },
     });
     fetch('/api/users/me/writing-style', { credentials: 'include' })
@@ -103,6 +105,7 @@ export class SettingsComponent implements OnInit {
       tippingEnabled: this.tippingEnabled,
       tipUrl: this.tipUrl || undefined,
       upiId: this.upiId || undefined,
+      notifyFollowedPosts: this.notifyFollowedPosts,
     }).subscribe({
       next: () => { this.saving.set(false); this.toast.show('Settings saved.', 'success'); },
       error: () => { this.saving.set(false); this.toast.show('Could not save settings.', 'error'); },

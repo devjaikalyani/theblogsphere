@@ -38,8 +38,16 @@ export class BillingController {
   // (default) or 'USD' (international cards, when enabled)...
   @Post('razorpay/order')
   @UseGuards(AuthGuard)
-  async razorpayOrder(@CurrentUser('id') userId: string, @Body('currency') currency?: string) {
-    return this.billing.createRazorpayOrder(userId, currency ?? 'INR');
+  async razorpayOrder(
+    @CurrentUser('id') userId: string,
+    @Body('currency') currency?: string,
+    @Body('term') term?: string,
+  ) {
+    return this.billing.createRazorpayOrder(
+      userId,
+      currency ?? 'INR',
+      term === 'annual' ? 'annual' : 'monthly',
+    );
   }
 
   // Prepaid narration top-up pack (Pro only): same Checkout modal + verify

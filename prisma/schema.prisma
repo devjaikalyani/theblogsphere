@@ -25,6 +25,10 @@ model User {
   tipUrl         String?
   upiId          String?  // UPI VPA for India-native tipping (receive-only)
 
+  // Email me when a writer I follow publishes a new story. Off switch is a
+  // signed one-click unsubscribe link in every notification email.
+  notifyFollowedPosts Boolean @default(true)
+
   // Monetization: platform subscription (Writer Pro) + AI usage metering
   plan                   String    @default("free") // "free" | "pro"
   planRenewsAt           DateTime?

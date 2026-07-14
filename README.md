@@ -14,6 +14,9 @@ A full-stack blogging platform built with Angular 20, NestJS, PostgreSQL (Prisma
 - Human-quality read-aloud narration (OpenAI TTS), cached in R2 so each story is synthesized at most once, with an on-device browser-voice fallback
 - Cover image upload (Cloudflare R2), with server-side magic-byte validation
 - Comments, bookmarks, follow system, and personalized feed
+- Follower notifications: an email (Resend) when a writer you follow publishes, with a signed one-click unsubscribe link and a Settings toggle
+- RSS 2.0 feed of the latest public stories (`/api/rss.xml`, autodiscovery link in the page head)
+- Server-side HTML sanitization on write (defence in depth beyond the client's render-time sanitizer; also strips pasted inline styles that fight the design system)
 - Writer analytics dashboard (views, top posts, monthly trends)
 - Author profiles with tipping support (Buy Me a Coffee, Ko-fi, etc.)
 - Google OAuth + email/password auth (Better Auth), with brute-force rate limiting
@@ -22,6 +25,7 @@ A full-stack blogging platform built with Angular 20, NestJS, PostgreSQL (Prisma
 ### Monetization & billing
 
 - **Writer Pro** at ₹399/mo (India) or $7.99/mo (international): unlimited AI writing, premium analytics, and a monthly narration budget
+- **Annual pass** at ₹2,999 (365 days, about 37% off; one-time Checkout mode only), riding the same lazy-expiry path as the 30-day purchase
 - **Razorpay** (India, UPI / cards) + **Stripe** (international): one-time Standard Checkout or auto-renewing subscription, signature-verified, with a `BillingEvent` idempotency ledger against replays
 - **Cost-based metering**: narration is metered by characters (exactly what the TTS provider bills), so re-listening to an already-narrated story is free for everyone; only new generation draws down the budget
 - **Prepaid narration top-up packs** for Pro users who exceed the monthly budget
@@ -195,7 +199,11 @@ Before going live:
 - [ ] Set `BETTER_AUTH_URL` to your production domain
 - [ ] Set `ALLOWED_ORIGINS` to your production domain
 - [ ] Update `GOOGLE_CALLBACK_URL` to production OAuth callback URL
-- [ ] Apply schema on the production DB: `npx prisma db push` (NOT `migrate dev`; it would wipe data)
+- [ ] Apply schema on the production DB: `npx prisma db push` (NOT `migrate dev`; it would wipe data).
+      The follower-notification feature adds a `User.notifyFollowedPosts` column
+      (also available as migration `20260713000000_notify_followed_posts` for the
+      migrate-based path); deploy the schema BEFORE this code version boots.
+- [ ] Set `RESEND_API_KEY`, `EMAIL_FROM`, and `ADMIN_EMAIL` so publish notifications, unsubscribe, and report alerts actually send
 - [ ] Run `npm run db:trigram` and `npm run backfill:slugs` on production
 - [ ] Set `NODE_ENV=production`
 - [ ] Ensure R2 bucket CORS policy allows your domain
@@ -249,8 +257,8 @@ Before going live:
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
-| GET | `/api/users/:id` | Optional | Author profile + blogs (adds `isFollowing` when signed in) |
-| PATCH | `/api/users/me` | Yes | Update profile (bio, website, writingStyle, tippingEnabled, tipUrl) |
+| GET | `/api/users/:id` | Optional | Author profile + blogs (adds `isFollowing` when signed in; adds `notifyFollowedPosts` only for the owner) |
+| PATCH | `/api/users/me` | Yes | Update profile (bio, website, writingStyle, tippingEnabled, tipUrl, notifyFollowedPosts) |
 | GET | `/api/users/me/writing-style` | Yes | Get AI writing style |
 
 ### Analytics
@@ -278,7 +286,7 @@ Before going live:
 |--------|-------|------|-------------|
 | GET | `/api/billing/status` | Yes | Plan + AI/narration quota snapshot |
 | POST | `/api/billing/checkout` | Yes | Start a Pro subscription (Razorpay/Stripe), returns a redirect URL |
-| POST | `/api/billing/razorpay/order` | Yes | Create a one-time Pro order (Standard Checkout modal) |
+| POST | `/api/billing/razorpay/order` | Yes | Create a one-time Pro order (Standard Checkout modal); body `term: "monthly"` (30 days, default) or `"annual"` (365 days at ₹2,999) |
 | POST | `/api/billing/razorpay/topup` | Yes | Create a prepaid narration top-up order (Pro only) |
 | POST | `/api/billing/razorpay/verify` | Yes | Verify a Checkout payment signature; grants Pro or adds top-up credits |
 | POST | `/api/billing/manage` | Yes | Manage/cancel the subscription (Stripe portal / Razorpay cancel-at-cycle-end) |
@@ -301,6 +309,8 @@ Before going live:
 |--------|-------|------|-------------|
 | GET | `/api/health` | No | Liveness/readiness probe (`200` when DB is up, `503` otherwise) |
 | GET | `/api/sitemap.xml` | No | Dynamic XML sitemap (static pages + all public posts) |
+| GET | `/api/rss.xml` | No | RSS 2.0 feed of the latest 50 public stories |
+| GET | `/api/notifications/unsubscribe?u=&t=` | No (signed) | One-click opt-out from "writer you follow published" emails; `t` is an HMAC of the user id |
 
 ### Auth (Better Auth)
 

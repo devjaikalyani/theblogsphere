@@ -1,9 +1,37 @@
 import { Injectable, Inject } from '@nestjs/common';
+import sanitizeHtml from 'sanitize-html';
 import { PrismaService } from '../prisma/prisma.service';
 import { BlogCacheService } from './blog.cache.service';
+import { NotifyService } from '../mail/notify.service';
 import { slugify } from './slug.util';
 
 const BLOGS_PER_PAGE = 10;
+
+// Defence in depth + content normalisation: the Angular client sanitises at
+// render, but the API stores and re-serves this HTML to future consumers (RSS,
+// emails, mobile), so scripts/handlers must never reach the database. Inline
+// style/class are stripped on purpose: pasted content (Medium spans etc.)
+// otherwise carries foreign font sizing that fights the design system and
+// dark mode.
+const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'p', 'div', 'br', 'span', 'b', 'i', 'u', 's', 'strong', 'em', 'mark', 'sub', 'sup',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
+    'a', 'img', 'figure', 'figcaption', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+  ],
+  allowedAttributes: {
+    a: ['href', 'title', 'target', 'rel'],
+    img: ['src', 'alt', 'title', 'width', 'height', 'loading'],
+  },
+  allowedSchemes: ['http', 'https', 'mailto'],
+  allowProtocolRelative: false,
+  // Drop empty paste artifacts like <span></span> but keep intentional breaks.
+  exclusiveFilter: (frame) => frame.tag === 'span' && !frame.text.trim() && !frame.mediaChildren,
+};
+
+function sanitizeContent(html: string): string {
+  return sanitizeHtml(html, SANITIZE_OPTIONS);
+}
 
 const BLOG_INCLUDE = {
   user: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
@@ -27,6 +55,7 @@ export class BlogService {
   constructor(
     @Inject(PrismaService) private prisma: PrismaService,
     @Inject(BlogCacheService) private cache: BlogCacheService,
+    @Inject(NotifyService) private notify: NotifyService,
   ) {}
 
   async findPaginated(page: number, q?: string, tagSlug?: string) {
@@ -115,6 +144,16 @@ export class BlogService {
     });
   }
 
+  /** Latest public stories with body text, for the RSS feed. */
+  async findRecentForRss(take = 50) {
+    return this.prisma.blog.findMany({
+      where: { status: 'published', visibility: 'public', deletedAt: null },
+      select: { id: true, slug: true, title: true, content: true, author: true, publishDate: true },
+      orderBy: { publishDate: 'desc' },
+      take,
+    });
+  }
+
   /** Public, published, non-deleted stories, for the sitemap. */
   async findAllPublicForSitemap() {
     return this.prisma.blog.findMany({
@@ -138,7 +177,7 @@ export class BlogService {
     const created = await this.prisma.blog.create({
       data: {
         title: data.title,
-        content: data.content,
+        content: sanitizeContent(data.content),
         author: data.author,
         publishDate: data.status === 'published' ? new Date() : null,
         visibility: 'public',
@@ -158,6 +197,13 @@ export class BlogService {
     });
 
     this.cache.invalidate('blogs:');
+    // Fire-and-forget: followers are emailed in the background; a mail outage
+    // must never fail (or slow) the publish request itself.
+    if (blog.status === 'published' && blog.visibility === 'public') {
+      this.notify
+        .postPublished(blog)
+        .catch((e) => console.error('[NOTIFY] publish fan-out failed:', e?.message ?? e));
+    }
     return blog;
   }
 
@@ -183,7 +229,7 @@ export class BlogService {
       where: { id },
       data: {
         ...(data.title !== undefined && { title: data.title }),
-        ...(data.content !== undefined && { content: data.content }),
+        ...(data.content !== undefined && { content: sanitizeContent(data.content) }),
         ...(data.status !== undefined && { status: data.status }),
         ...(nowPublishing && { publishDate: new Date() }),
         ...(data.coverImage !== undefined && { coverImage: data.coverImage }),
@@ -196,6 +242,13 @@ export class BlogService {
     });
 
     this.cache.invalidate('blogs:');
+    // Notify followers only on the FIRST publish (draft -> published with no
+    // prior publishDate); edits and re-publishes never re-mail people.
+    if (nowPublishing && !existing.publishDate && blog.visibility === 'public') {
+      this.notify
+        .postPublished(blog)
+        .catch((e) => console.error('[NOTIFY] publish fan-out failed:', e?.message ?? e));
+    }
     return blog;
   }
 

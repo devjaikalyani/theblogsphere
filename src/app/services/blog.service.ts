@@ -140,7 +140,7 @@ export class BlogService {
   }
 
   // User profile
-  updateProfile(data: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string; upiId?: string }): Observable<any> {
+  updateProfile(data: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string; upiId?: string; notifyFollowedPosts?: boolean }): Observable<any> {
     return this.http.patch('/api/users/me', data, { withCredentials: true });
   }
 

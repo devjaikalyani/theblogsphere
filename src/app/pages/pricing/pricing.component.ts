@@ -69,7 +69,7 @@ export class PricingComponent implements OnInit {
     // Checkout is the default, the config request may still be in flight on a
     // fresh page load, and only an explicit 'subscription' should redirect.
     if (provider === 'razorpay' && this.config()?.razorpayMode !== 'subscription') {
-      this.payWithModal('INR');
+      this.payWithModal('INR', 'monthly');
       return;
     }
     this.loading.set(true);
@@ -97,12 +97,22 @@ export class PricingComponent implements OnInit {
     this.toast.show('International payments are not available yet. Please try the INR option.', 'info');
   }
 
-  private payWithModal(currency: 'INR' | 'USD') {
+  private payWithModal(currency: 'INR' | 'USD', term: 'monthly' | 'annual') {
     this.loading.set(true);
-    this.billing.createOrder(currency).subscribe({
+    this.billing.createOrder(currency, term).subscribe({
       next: (order) => this.openCheckout(order, `Writer Pro, ${order.days} days`),
       error: (e) => this.fail(e),
     });
+  }
+
+  /** Annual pass: one payment, 365 days of Pro, no renewal to remember.
+   *  Only offered on the one-time Checkout path (not subscriptions). */
+  buyAnnual() {
+    if (!this.auth.session()?.user) {
+      this.toast.show('Sign in to upgrade to Pro.', 'info');
+      return;
+    }
+    this.payWithModal('INR', 'annual');
   }
 
   /** Buy a prepaid narration top-up pack (Pro only). */

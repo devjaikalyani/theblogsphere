@@ -79,7 +79,7 @@ async function bootstrap() {
   // Public, cacheable endpoints set their own Cache-Control; everything else
   // (auth, data reads/writes) stays no-store; the in-memory server cache
   // handles efficiency without risking stale data in browsers/CDNs.
-  const CACHEABLE = new Set(['/api/sitemap.xml']);
+  const CACHEABLE = new Set(['/api/sitemap.xml', '/api/rss.xml']);
   app.use((req: any, res: any, next: any) => {
     if (!CACHEABLE.has(req.path)) res.setHeader('Cache-Control', 'no-store');
     next();
