@@ -98,12 +98,17 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         @for (blog of blogs(); track blog.id; let i = $index) {
           <article [appReveal]="i * 50" [routerLink]="['/blog', blog.slug || blog.id]"
-            appHover class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden group cursor-pointer flex flex-col">
+            [appAmbient]="blog.coverImage" [ambSeed]="blog.id" [ambTitle]="blog.title"
+            appHover class="card-interactive amb-card amb-scope bg-raised rounded-2xl border border-gray-200 overflow-hidden group cursor-pointer flex flex-col">
 
             @if (blog.coverImage) {
-              <div class="zoom-wrap shrink-0">
+              <div class="zoom-wrap cover-frame shrink-0">
                 <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="{{ blog.title }}" title="{{ blog.title }}"
                      class="zoom-img w-full h-44 object-cover"/>
+              </div>
+            } @else {
+              <div class="zoom-wrap cover-frame shrink-0 h-44">
+                <app-gen-cover class="zoom-img w-full h-full" [seed]="blog.id" [title]="blog.title"/>
               </div>
             }
 
@@ -130,7 +135,7 @@
               </div>
 
               <!-- Title + excerpt -->
-              <h3 class="text-card-title mb-2.5 group-hover:text-indigo-700 transition-colors line-clamp-2">
+              <h3 class="text-card-title mb-2.5 group-hover:text-[var(--clay)] transition-colors line-clamp-2">
                 <a [routerLink]="['/blog', blog.slug || blog.id]" (click)="$event.stopPropagation()">{{ blog.title }}</a>
               </h3>
               <p class="font-reading text-gray-600 text-[0.98rem] leading-relaxed line-clamp-3">{{ excerpt(blog.content) }}</p>

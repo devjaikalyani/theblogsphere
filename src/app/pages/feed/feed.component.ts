@@ -2,10 +2,12 @@ import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BlogService } from '../../services/blog.service';
 import { HoverDirective } from '../../directives/hover.directive';
+import { AmbientDirective } from '../../directives/ambient.directive';
+import { GenCoverComponent } from '../../components/gen-cover/gen-cover.component';
 
 @Component({
   selector: 'app-feed',
-  imports: [RouterLink, HoverDirective],
+  imports: [RouterLink, HoverDirective, AmbientDirective, GenCoverComponent],
   templateUrl: './feed.component.html',
 })
 export class FeedComponent implements OnInit {

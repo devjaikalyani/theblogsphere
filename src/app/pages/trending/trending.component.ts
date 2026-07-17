@@ -4,10 +4,11 @@ import { BlogService } from '../../services/blog.service';
 import { SeoService } from '../../services/seo.service';
 import { RevealDirective } from '../../directives/reveal.directive';
 import { HoverDirective } from '../../directives/hover.directive';
+import { GenCoverComponent } from '../../components/gen-cover/gen-cover.component';
 
 @Component({
   selector: 'app-trending',
-  imports: [RouterLink, RevealDirective, HoverDirective],
+  imports: [RouterLink, RevealDirective, HoverDirective, GenCoverComponent],
   templateUrl: './trending.component.html',
 })
 export class TrendingComponent implements OnInit {

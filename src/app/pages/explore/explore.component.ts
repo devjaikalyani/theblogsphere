@@ -5,10 +5,12 @@ import { BlogService } from '../../services/blog.service';
 import { SeoService } from '../../services/seo.service';
 import { RevealDirective } from '../../directives/reveal.directive';
 import { HoverDirective } from '../../directives/hover.directive';
+import { AmbientDirective } from '../../directives/ambient.directive';
+import { GenCoverComponent } from '../../components/gen-cover/gen-cover.component';
 
 @Component({
   selector: 'app-explore',
-  imports: [FormsModule, RouterLink, RevealDirective, HoverDirective],
+  imports: [FormsModule, RouterLink, RevealDirective, HoverDirective, AmbientDirective, GenCoverComponent],
   templateUrl: './explore.component.html',
 })
 export class ExploreComponent implements OnInit {

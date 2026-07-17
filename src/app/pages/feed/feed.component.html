@@ -39,10 +39,17 @@
       <div class="space-y-4">
         @for (blog of blogs(); track blog.id) {
           <article [routerLink]="['/blog', blog.slug || blog.id]"
-            appHover class="card-interactive bg-raised rounded-2xl border border-gray-200 p-6 cursor-pointer group">
+            [appAmbient]="blog.coverImage" [ambSeed]="blog.id" [ambTitle]="blog.title"
+            appHover class="card-interactive amb-card amb-scope bg-raised rounded-2xl border border-gray-200 p-6 cursor-pointer group">
 
             @if (blog.coverImage) {
-              <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="" class="w-full h-44 object-cover rounded-lg mb-5"/>
+              <div class="cover-frame rounded-lg mb-5">
+                <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="" class="w-full h-44 object-cover"/>
+              </div>
+            } @else {
+              <div class="cover-frame rounded-lg mb-5 h-40">
+                <app-gen-cover class="w-full h-full" [seed]="blog.id" [title]="blog.title"/>
+              </div>
             }
 
             <div class="flex items-center gap-2 mb-3">

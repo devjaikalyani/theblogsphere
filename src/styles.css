@@ -735,7 +735,7 @@
 
   /* AI key-takeaways panel, a soft clay-tinted aside above the article body. */
   .takeaways {
-    background: rgba(193, 92, 61, 0.05);
+    background: var(--clay-tint);
     border: 1px solid var(--hairline);
     border-left: 3px solid var(--clay);
     border-radius: 0.9rem;
@@ -806,6 +806,99 @@
   .toc-active {
     color: var(--clay) !important;
     font-weight: 600;
+  }
+
+  /* ══════════ AMBIENT ART DIRECTION ══════════
+     Every story carries its own color identity, extracted from its cover
+     image (or derived from its generative cover). The AmbientDirective sets
+     `--amb*` custom properties inline and adds `amb-on`; these rules do the
+     rest. Until amb-on lands (SSR, first paint, palette in flight) everything
+     falls back to the site's own clay, so nothing ever flashes or jumps. */
+
+  /* Scope: remap the clay tokens to the story's own accent. The inline
+     `--amb*` values set by the directive are literal colors, so this remap
+     can never cycle. Every existing accent inside (drop caps, section
+     numerals, progress bars, chips, link underlines) re-tunes itself. */
+  .amb-scope.amb-on {
+    --clay: var(--amb);
+    --clay-soft: var(--amb-soft);
+    --clay-tint: var(--amb-tint);
+    --clay-tint-2: var(--amb-tint-2);
+  }
+
+  /* Card identity: hairline and hover glow take the story's color. The
+     defaults below keep pre-palette cards on the site clay. */
+  .amb-card {
+    --amb: var(--clay);
+    --amb-soft: var(--clay-soft);
+    --amb-tint: var(--clay-tint);
+    --amb-tint-2: var(--clay-tint-2);
+    --amb-glow: rgba(168, 71, 46, 0.14);
+  }
+  .amb-card.amb-on {
+    border-color: color-mix(in srgb, var(--amb) 16%, var(--hairline));
+  }
+  .amb-card.amb-on:hover {
+    border-color: color-mix(in srgb, var(--amb) 36%, var(--hairline-strong)) !important;
+    box-shadow: 0 2px 4px rgba(26, 23, 20, 0.05), 0 18px 44px var(--amb-glow) !important;
+  }
+
+  /* Page wash: a soft aurora of the story's color breathing down from the
+     top of the page, painted in the element's own background so it never
+     interferes with stacking, sticky rails, or text. */
+  .amb-bg {
+    --amb-tint: var(--clay-tint);
+    --amb-tint-2: var(--clay-tint-2);
+    background:
+      radial-gradient(56% 400px at 14% 0%, var(--amb-tint-2), transparent 64%),
+      radial-gradient(42% 340px at 88% 0%, var(--amb-tint), transparent 58%),
+      var(--paper);
+  }
+
+  /* Cover treatment: one recipe that flatters ANY photograph. A gentle
+     saturation/contrast lift, a duotone wash that pulls the image toward the
+     story's accent, a bottom scrim for depth, and film grain so even a flat
+     phone snap reads as deliberate print production. */
+  .cover-frame {
+    position: relative;
+    overflow: hidden;
+    background: var(--paper-sunken);
+  }
+  .cover-frame > img {
+    filter: saturate(1.12) contrast(1.05);
+  }
+  .cover-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      linear-gradient(155deg, var(--amb-tint-2, var(--clay-tint-2)), transparent 52%),
+      linear-gradient(0deg, rgba(26, 23, 20, 0.24), transparent 44%);
+  }
+  .cover-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    mix-blend-mode: overlay;
+    opacity: 0.3;
+  }
+
+  /* Article cover as a mounted plate: raised mat, inner frame, the way a
+     print sits in a gallery. Pairs with .cover-frame on the inner element. */
+  .cover-plate {
+    padding: 0.6rem;
+    background: var(--paper-raised);
+    border-radius: 16px;
+    box-shadow: var(--ring-inset), var(--shadow-2);
+  }
+  .cover-plate .cover-frame {
+    border-radius: 10px;
   }
 }
 

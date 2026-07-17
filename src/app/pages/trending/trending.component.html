@@ -61,9 +61,13 @@
 
               <!-- Thumbnail -->
               @if (blog.coverImage) {
-                <div class="zoom-wrap hidden sm:block shrink-0 rounded-xl overflow-hidden">
+                <div class="zoom-wrap cover-frame hidden sm:block shrink-0 rounded-xl overflow-hidden">
                   <img loading="lazy" decoding="async" [src]="blog.coverImage" [alt]="blog.title"
                        class="zoom-img w-20 h-20 object-cover"/>
+                </div>
+              } @else {
+                <div class="zoom-wrap cover-frame hidden sm:block shrink-0 rounded-xl overflow-hidden">
+                  <app-gen-cover class="zoom-img w-20 h-20" [seed]="blog.id" [title]="blog.title"/>
                 </div>
               }
 

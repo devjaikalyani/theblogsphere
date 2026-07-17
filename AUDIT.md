@@ -1,95 +1,156 @@
 # TheBlogSphere: Full Audit
 
-Date: 2026-07-13. Scope: codebase, security, ops, live production, content, and market readiness.
+Date: 2026-07-17 (supersedes the 2026-07-13 audit). Scope: codebase, security, ops, live
+production, and product readiness, re-run after the growth-feature batch shipped
+(follower emails, annual pass, RSS, write-time sanitization, report alerts, annual
+upgrade path).
+
 Live at https://www.theblogsphere.co.in (Vercel frontend, Railway backend, Postgres, R2).
 
 ## Executive summary
 
-The engineering is well ahead of the business. This is a production-grade, legally compliant,
-cost-safe platform with real security discipline, and it currently has 22 posts (nearly all by
-the founder), one other author, and single-digit view counts. Nothing in the codebase blocks
-growth; the absence of a distribution strategy does. The two product gaps that matter most for
-growth are (1) no email loop to followers and (2) no import path from Medium.
+The July 13 audit's three highest-impact engineering gaps are now closed: the retention
+loop exists (follower publish emails with signed one-click unsubscribe), RSS is live,
+and HTML is sanitized on write. Billing gained an annual pass with carry-over and a
+subscription-conflict guard. Live production is healthy: bad credentials return 401,
+RSS serves with the right content type, 18/18 server tests and the type gate pass.
+
+This pass found one genuine security/privacy bug (drafts are publicly readable by id),
+one operational landmine (the production migration ledger now provably disagrees with
+the schema after the manual ALTER TABLE), and a set of quality gaps in the new email
+loop that will matter exactly when it starts working (deliverability headers, no email
+verification). The distribution problem from the last audit is unchanged and is still
+the binding constraint; nothing below changes that priority.
 
 ## Scorecard
 
-| Area | Score | Note |
-|---|---|---|
-| Architecture | 8.5/10 | Clean NestJS modules, Angular SSR, sensible SWC-loader tradeoff |
-| Security | 8/10 | CSP without unsafe-eval, CORS allowlist, rate limits, signature-verified webhooks, magic-byte uploads, billing idempotency ledger |
-| Cost engineering | 9/10 | Character-metered narration with documented margin math, cached AI summaries, Pro fair-use backstop |
-| SEO | 8/10 | SSR, JSON-LD, dynamic sitemap, slugs, canonical, per-route OG |
-| Legal/compliance | 9/10 | IT Rules 2021, grievance officer, GST notices, DMCA, refunds, consent, deletion + export |
-| Testing | 5/10 | One real server spec (billing, the right choice), frontend specs are mostly scaffolds, no e2e |
-| Ops | 7/10 | Sentry, health probe, CI gates; no uptime monitor, caches are in-memory |
-| Traction / distribution | 1/10 | 22 posts, ~2 authors, single-digit views, no retention loop |
-
-## What is genuinely strong
-
-- Billing correctness: `BillingEvent` idempotency ledger, `timingSafeEqual` signature checks,
-  lazy expiry for one-time purchases, dual-gateway (Razorpay INR + Stripe USD) with env-gated
-  modes. The one server test suite covers exactly this. This is the hardest part of the app to
-  get right and it was treated that way.
-- Cost ceilings everywhere an external API is called: narration metered by billed characters,
-  free tier is a bounded lifetime taste, Pro has a silent abuse backstop, summaries cached 24h.
-- Boot-time env validation, fail-fast config, `.env` secrets never committed (verified against
-  full git history).
-- UPI-native tipping (receive-only VPA + QR) already built. Strategically this is the most
-  valuable feature in the codebase; see MARKET-STRATEGY.md.
-- Legal surface is unusually complete for a solo project and removes a real barrier to
-  operating publicly in India.
+| Area | Score | Change | Note |
+|---|---|---|---|
+| Architecture | 8.5/10 | = | Clean modules; new mail/notify code follows house style |
+| Security | 7.5/10 | -0.5 | Draft-privacy leak found; everything else still strong |
+| Cost engineering | 9/10 | = | Metering order verified: assert, generate, then record |
+| Retention loop | 7/10 | +6 | Emails + RSS exist; deliverability and verification gaps remain |
+| SEO | 8.5/10 | +0.5 | RSS autodiscovery added |
+| Legal/compliance | 9/10 | = | Report alerts now start the grievance clock immediately |
+| Testing | 5.5/10 | +0.5 | 18 billing tests incl. carry-over math; still no e2e |
+| Ops | 6.5/10 | -0.5 | Migration-ledger drift is now real, not theoretical |
+| Traction | 1/10 | = | The GTM work has not started; the platform is ready for it |
 
 ## Findings by severity
 
-### High (blocks growth, not correctness)
+### High
 
-1. No retention loop. Followers are never notified when a writer publishes: no email digest,
-   no RSS. Every reader visit is a re-acquisition. Resend is already integrated for password
-   resets ([auth.config.ts](server/src/auth/auth.config.ts)), so the email rail exists.
-2. No import path. A writer with 40 posts on Medium has to copy-paste each one. Medium's
-   export zip is HTML and the platform already stores HTML, so an importer is cheap to build
-   and removes the main switching cost.
-3. Backend region vs audience. The frontend is on Vercel's edge but every API call goes to
-   Railway (US). Observed /api/health round trip: ~0.86s. For an India-first audience this
-   taxes every page. Options: Mumbai VPS using the existing [deploy/](deploy/) configs, or an
-   Asia-region host. Measure TTFB from India before and after.
+1. Unpublished drafts are publicly readable. `GET /api/blogs/:idOrSlug`
+   ([blog.controller.ts:51](server/src/blog/blog.controller.ts#L51)) resolves through
+   `findById` / `findBySlugOrId` ([blog.service.ts:102-137](server/src/blog/blog.service.ts#L102-L137)),
+   which filter only on `deletedAt`, never on `status` or ownership. Blog ids are
+   sequential integers, so anyone can walk `/api/blogs/1..N` and read every draft's
+   full text; drafts also get slugs at creation. Writers reasonably believe drafts are
+   private, and the marketing positions the platform as writer-first. Fix: return
+   drafts only to their owner (optional-session check in the controller), keep the
+   published-only path cacheable, and never cache owner reads of drafts.
+
+2. Production migration ledger is out of sync with the schema. The
+   `notifyFollowedPosts` column was applied to prod by hand (Railway Data tab) during
+   the July 16 incident, so `_prisma_migrations` does not record
+   `20260713000000_notify_followed_posts`, and the original `db push` baseline
+   reconciliation in [prisma/MIGRATIONS.md](prisma/MIGRATIONS.md) has not been run
+   either. The first `prisma migrate deploy` against prod will attempt to re-create
+   existing tables/columns and fail mid-deploy. Fix (10 minutes, one-time): follow
+   MIGRATIONS.md and `migrate resolve --applied` all three migrations (`0_init`,
+   `20260709000000_narration_char_budget`, `20260713000000_notify_followed_posts`),
+   confirm with `migrate status`, then use `migrate deploy` forever after. Do this
+   before the next schema change, not during it.
 
 ### Medium
 
-4. Sanitization is render-side only. Blog HTML is stored raw and sanitized by Angular's
-   DomSanitizer at render ([markdown.pipe.ts](src/app/pipes/markdown.pipe.ts)). Safe for the
-   Angular app, but any future consumer (RSS, emails, mobile) re-inherits the risk, and live
-   posts already carry pasted Medium inline styles (font-size spans) that fight the design
-   system and dark mode. Sanitize and normalize on write in the blog service.
-5. In-memory caches. AI summary cache ([ai.service.ts](server/src/ai/ai.service.ts)) and blog
-   cache reset on every deploy and break under horizontal scaling. Fine today on one
-   instance; document the constraint or move to Redis when scaling.
-6. Prisma migration transition is mid-flight. Production was built with `db push` and the
-   README deployment checklist still says `db push`, while [prisma/MIGRATIONS.md](prisma/MIGRATIONS.md)
-   plans the reconciliation. Finish the one-time baseline soon; the longer the two paths
-   coexist, the higher the drift risk.
-7. Secrets on disk. `client_secret_*.json`, `rzp-key.csv`, `.env.production` sit in the
-   project root. Never committed (verified), but they live in Downloads on a laptop: cloud
-   backup, sync tools, or a stolen machine leaks live production keys. Move them to a
-   password manager and delete from the working tree.
-8. Test depth. Billing is covered; auth session handling, quota metering edge cases, and the
-   blog cache/soft-delete interactions are not. The frontend Karma specs are scaffolds. One
-   Playwright smoke (sign up, publish, read, tip) would catch more than all current specs.
+3. Follower emails lack deliverability plumbing. The unsubscribe link lives only in
+   the body text; there is no `List-Unsubscribe` / `List-Unsubscribe-Post` header.
+   Gmail and Yahoo's bulk-sender rules require one-click unsubscribe headers, and
+   without them the retention loop's emails start landing in spam right when a writer
+   gets popular. Resend passes custom headers through. Fix: extend `MailService` to
+   accept per-message headers and set both on every notification.
+
+4. Notification emails go to unverified addresses. Password signups store
+   `emailVerified: false` and no verification flow is configured
+   ([auth.config.ts](server/src/auth/auth.config.ts)), so a typo'd signup address
+   becomes a hard bounce or a spam complaint against the sending domain the first time
+   someone they follow publishes. Fix: now that the mail rail exists, enable Better
+   Auth email verification (non-blocking at signup), and have the fan-out prefer
+   verified addresses once a meaningful share of accounts are verified.
+
+5. View counts are trivially inflatable. `POST /api/blogs/:id/view` is anonymous and
+   only limited by the global 30/min/IP throttle, which still allows ~43k views/day
+   from one IP. Views are the biggest input to the trending score and to the "prove
+   the money" positioning, so fake numbers become a credibility risk the moment
+   anyone looks. Fix: per-(IP, blog) dedupe with a short-TTL in-memory set; it does
+   not need to be perfect, only to make inflation boring.
+
+6. Sessions expire after 24 hours (`expiresIn: 60*60*24` in auth.config.ts). A reader
+   who returns every few days signs in again every visit, which taxes the exact
+   retention loop the emails are building. Better Auth's default is 7 days; 30 days
+   with `updateAge` of a day is normal for a content platform. One-line change; weigh
+   against the convenience of the current stricter posture.
+
+7. Secrets still on disk in the project root (`client_secret_*.json`, `rzp-key.csv`,
+   `.env.production`). Flagged on July 13, still present. Never committed (verified
+   again), but Downloads is the least defensible place on a laptop for live payment
+   and OAuth credentials. Move to a password manager, delete from the tree.
+
+8. README's deployment checklist still instructs `prisma db push` on prod
+   ([README.md:202](README.md#L202)) while MIGRATIONS.md forbids it. Whichever
+   document is read second wins; make them agree (migrate deploy after the one-time
+   reconciliation in finding 2).
 
 ### Low
 
-9. Anonymous AI generation. `/api/ai/generate` allows signed-out use at 5 req/min per IP.
-   Bounded, but it is the only external-cost endpoint reachable without an account; consider
-   requiring auth once real traffic exists.
-10. No admin UI. Reports land in the `Report` table with a status column; managing them means
-    SQL. Fine at this scale, needed before any real moderation volume.
-11. No uptime monitoring. Sentry catches exceptions, nothing watches availability. A free
-    monitor pointed at /api/health is a five-minute fix.
+9. In-memory caches (AI summaries, blog cache, and now palette/billing ledgers'
+   read paths) reset per deploy and assume one instance. Fine today; documented
+   constraint stands.
+10. Anonymous `/api/ai/generate` remains the only external-cost endpoint without
+    auth (5 req/min/IP). Unchanged recommendation: require auth once real traffic
+    exists.
+11. No uptime monitor on `/api/health`. Five minutes with any free monitor.
+12. Backend region: API round trips observed ~0.6-1.0s. For an India-first audience
+    the Railway US region taxes every interaction. Options unchanged: Railway
+    Southeast Asia region or the Mumbai VPS configs in [deploy/](deploy/).
+13. Report handling is still SQL-only (email alert now exists; no admin UI). Fine at
+    current volume.
+
+## What improved since July 13
+
+- Retention loop: publish fan-out (first publish only, capped at 2000 recipients,
+  batched 100/call, fire-and-forget), HMAC-signed unsubscribe verified with
+  `timingSafeEqual`, settings toggle, and the column is live in prod.
+- RSS 2.0 with autodiscovery, XML-escaped, throttle-exempt, edge-cacheable.
+- Write-time sanitization via `sanitize-html`: scripts/handlers can no longer reach
+  the database, and pasted Medium inline styles are stripped on write.
+- Annual pass (Rs 2,999/365d) on the one-time checkout path with per-term amount
+  validation, expiry carry-over, and a guard preventing subscription-Pro users from
+  double-paying. Three tests cover the carry-over math.
+- Report alerts email ADMIN_EMAIL immediately (IT Rules grievance clock).
+- Live prod verified healthy end to end during this audit.
+
+## Best upgrades, in order of leverage
+
+1. Ambient visual system (in progress, this session): palette-driven per-story
+   theming plus generative covers, so the site looks deliberate no matter what image
+   a writer uploads. Details in the implementation notes below.
+2. Draft privacy fix (finding 1), a prerequisite for the Medium importer, whose
+   imports land as drafts.
+3. Medium importer: export-zip upload -> parsed posts -> sanitized drafts. The
+   sanitizer built last week does the heavy lifting; this removes the main switching
+   cost for the exact writers the strategy targets.
+4. Deliverability hardening (findings 3, 4) before any writer with real followers
+   joins; retrofitting sender reputation is much harder than starting clean.
+5. Migration-ledger reconciliation (finding 2) before the next schema change.
+6. Uptime monitor + session-length bump (findings 6, 11): trivial, immediate.
+7. Backend region move (finding 12) when GTM starts driving Indian traffic.
 
 ## Market-readiness verdict
 
-Feature-completeness is not the gap; the platform already exceeds what Medium offered at
-launch. The gap is that it is positioned as a general blog platform, a category owned by
-incumbents, with monetization (Writer Pro) offered before there is an audience to monetize.
-The strategy in MARKET-STRATEGY.md repositions it around the one structural advantage no
-global incumbent can copy quickly: Indian writers getting paid, in rupees, over UPI.
+Unchanged from July 13, but sharper: the product gaps that excused inaction are gone.
+The platform now notifies, syndicates, sanitizes, and takes annual money. What it does
+not have is writers, and no finding in this document produces them. The 90-day GTM
+calendar in MARKET-STRATEGY.md is the critical path; everything above is either a
+quick hardening pass or leverage for that calendar.

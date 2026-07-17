@@ -104,11 +104,18 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           @for (blog of blogs(); track blog.id; let i = $index) {
             <article [routerLink]="['/blog', blog.slug || blog.id]"
-              appHover class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden flex flex-col cursor-pointer group">
+              [appAmbient]="blog.coverImage" [ambSeed]="blog.id" [ambTitle]="blog.title"
+              appHover class="card-interactive amb-card amb-scope bg-raised rounded-2xl border border-gray-200 overflow-hidden flex flex-col cursor-pointer group">
 
               @if (blog.coverImage) {
-                <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="{{ blog.title }}" title="{{ blog.title }}"
-                     class="w-full h-40 object-cover"/>
+                <div class="cover-frame">
+                  <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="{{ blog.title }}" title="{{ blog.title }}"
+                       class="w-full h-40 object-cover"/>
+                </div>
+              } @else {
+                <div class="cover-frame h-40">
+                  <app-gen-cover class="w-full h-full" [seed]="blog.id" [title]="blog.title"/>
+                </div>
               }
 
               <div class="p-6 flex flex-col gap-2.5 flex-1">

@@ -4,10 +4,11 @@ import { BlogService } from '../../services/blog.service';
 import { ToastService } from '../../services/toast.service';
 import { RevealDirective } from '../../directives/reveal.directive';
 import { HoverDirective } from '../../directives/hover.directive';
+import { GenCoverComponent } from '../../components/gen-cover/gen-cover.component';
 
 @Component({
   selector: 'app-bookmarks',
-  imports: [RouterLink, RevealDirective, HoverDirective],
+  imports: [RouterLink, RevealDirective, HoverDirective, GenCoverComponent],
   templateUrl: './bookmarks.component.html',
 })
 export class BookmarksComponent implements OnInit {

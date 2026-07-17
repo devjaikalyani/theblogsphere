@@ -124,19 +124,21 @@
 
       <!-- Featured post -->
       @if (blogs()[0]) {
-        <article [appReveal]="0" [routerLink]="['/blog', blogs()[0].slug || blogs()[0].id]" appHover class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden mb-5 group cursor-pointer">
+        <article [appReveal]="0" [routerLink]="['/blog', blogs()[0].slug || blogs()[0].id]"
+          [appAmbient]="blogs()[0].coverImage" [ambSeed]="blogs()[0].id" [ambTitle]="blogs()[0].title"
+          appHover class="card-interactive amb-card amb-scope bg-raised rounded-2xl border border-gray-200 overflow-hidden mb-5 group cursor-pointer">
           <div class="grid md:grid-cols-5 min-h-56">
-            <!-- Cover image or ink panel -->
+            <!-- Cover image or generative art panel -->
             @if (blogs()[0].coverImage) {
-              <div class="md:col-span-2 zoom-wrap relative min-h-48">
+              <div class="md:col-span-2 zoom-wrap cover-frame relative min-h-48">
                 <img [src]="blogs()[0].coverImage" alt="{{ blogs()[0].title }}" title="{{ blogs()[0].title }}"
                      class="zoom-img w-full h-full object-cover min-h-48"/>
-                <span class="badge absolute top-4 left-4 bg-[#1A1714]/70 !text-[#F3EFE7] backdrop-blur-sm">Featured</span>
+                <span class="badge absolute top-4 left-4 z-10 bg-[#1A1714]/70 !text-[#F3EFE7] backdrop-blur-sm">Featured</span>
               </div>
             } @else {
-              <div class="md:col-span-2 bg-featured-panel p-8 flex flex-col justify-between min-h-48 relative overflow-hidden">
-                <span class="eyebrow !text-[#C9C2B5]">Featured</span>
-                <p class="font-display text-[#FAF8F3]/10 leading-none select-none text-8xl">01</p>
+              <div class="md:col-span-2 zoom-wrap cover-frame relative min-h-48">
+                <app-gen-cover class="zoom-img w-full h-full min-h-48" [seed]="blogs()[0].id" [title]="blogs()[0].title"/>
+                <span class="badge absolute top-4 left-4 z-10 bg-[#1A1714]/70 !text-[#F3EFE7] backdrop-blur-sm">Featured</span>
               </div>
             }
 
@@ -154,7 +156,7 @@
                   </div>
                   <span class="ml-auto eyebrow !text-[11px]">{{ readTime(blogs()[0].content) }} min read</span>
                 </div>
-                <h2 class="text-featured-title mb-3.5 group-hover:text-indigo-700 transition-colors line-clamp-2">
+                <h2 class="text-featured-title mb-3.5 group-hover:text-[var(--clay)] transition-colors line-clamp-2">
                   <a [routerLink]="['/blog', blogs()[0].slug || blogs()[0].id]" (click)="$event.stopPropagation()">{{ blogs()[0].title }}</a>
                 </h2>
                 <p class="font-reading text-gray-600 text-[1.05rem] leading-relaxed line-clamp-3">{{ excerpt(blogs()[0].content, 220) }}</p>
@@ -173,11 +175,17 @@
       <!-- Remaining blog grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         @for (blog of blogs().slice(1); track blog.id; let i = $index) {
-          <article [appReveal]="i * 60" [routerLink]="['/blog', blog.slug || blog.id]" appHover class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden group cursor-pointer flex flex-col">
+          <article [appReveal]="i * 60" [routerLink]="['/blog', blog.slug || blog.id]"
+            [appAmbient]="blog.coverImage" [ambSeed]="blog.id" [ambTitle]="blog.title"
+            appHover class="card-interactive amb-card amb-scope bg-raised rounded-2xl border border-gray-200 overflow-hidden group cursor-pointer flex flex-col">
             @if (blog.coverImage) {
-              <div class="zoom-wrap shrink-0">
+              <div class="zoom-wrap cover-frame shrink-0">
                 <img loading="lazy" decoding="async" [src]="blog.coverImage" alt="{{ blog.title }}" title="{{ blog.title }}"
                      class="zoom-img w-full h-44 object-cover"/>
+              </div>
+            } @else {
+              <div class="zoom-wrap cover-frame shrink-0 h-44">
+                <app-gen-cover class="zoom-img w-full h-full" [seed]="blog.id" [title]="blog.title"/>
               </div>
             }
             <div class="p-6 flex-1">
@@ -192,7 +200,7 @@
                   <p class="text-xs text-gray-500 mt-0.5">{{ formatDate(blog.publishDate) }}</p>
                 </div>
               </div>
-              <h3 class="text-card-title mb-2.5 group-hover:text-indigo-700 transition-colors line-clamp-2">
+              <h3 class="text-card-title mb-2.5 group-hover:text-[var(--clay)] transition-colors line-clamp-2">
                 <a [routerLink]="['/blog', blog.slug || blog.id]" (click)="$event.stopPropagation()">{{ blog.title }}</a>
               </h3>
               <p class="font-reading text-gray-600 text-[0.98rem] leading-relaxed line-clamp-3">{{ excerpt(blog.content) }}</p>

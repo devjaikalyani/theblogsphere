@@ -6,10 +6,12 @@ import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SeoService } from '../../services/seo.service';
 import { HoverDirective } from '../../directives/hover.directive';
+import { AmbientDirective } from '../../directives/ambient.directive';
+import { GenCoverComponent } from '../../components/gen-cover/gen-cover.component';
 
 @Component({
   selector: 'app-author',
-  imports: [RouterLink, DatePipe, HoverDirective],
+  imports: [RouterLink, DatePipe, HoverDirective, AmbientDirective, GenCoverComponent],
   templateUrl: './author.component.html',
 })
 export class AuthorComponent implements OnInit {

@@ -1,4 +1,5 @@
-<div class="bg-page min-h-screen">
+<div class="min-h-screen amb-scope amb-bg"
+     [appAmbient]="blog()?.coverImage" [ambSeed]="blog()?.id" [ambTitle]="blog()?.title">
 
   <!-- Reading progress -->
   @if (!loading() && blog()) {
@@ -194,15 +195,21 @@
           </div>
         </header>
 
-        <!-- Cover -->
+        <!-- Cover, mounted like a print: raised mat + duotone/grain frame -->
         @if (blog().coverImage) {
-          <figure class="mb-12">
-            <img [src]="blog().coverImage" alt="{{ blog().title }}" title="{{ blog().title }}"
-                 fetchpriority="high" decoding="async"
-                 class="w-full rounded-xl elev-2"/>
+          <figure class="mb-12 cover-plate">
+            <div class="cover-frame">
+              <img [src]="blog().coverImage" alt="{{ blog().title }}" title="{{ blog().title }}"
+                   fetchpriority="high" decoding="async"
+                   class="w-full object-cover"/>
+            </div>
           </figure>
         } @else {
-          <hr class="rule-fade mb-12"/>
+          <figure class="mb-12 cover-plate" aria-hidden="true">
+            <div class="cover-frame h-52 sm:h-64">
+              <app-gen-cover class="w-full h-full" [seed]="blog().id" [title]="blog().title"/>
+            </div>
+          </figure>
         }
 
         <!-- AI key takeaways -->
@@ -365,9 +372,16 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
             @for (post of related(); track post.id) {
               <a appHover [routerLink]="['/blog', post.slug || post.id]"
-                 class="card-interactive bg-raised rounded-2xl border border-gray-200 overflow-hidden flex flex-col no-underline group">
+                 [appAmbient]="post.coverImage" [ambSeed]="post.id" [ambTitle]="post.title"
+                 class="card-interactive amb-card amb-scope bg-raised rounded-2xl border border-gray-200 overflow-hidden flex flex-col no-underline group">
                 @if (post.coverImage) {
-                  <img loading="lazy" decoding="async" [src]="post.coverImage" alt="" class="w-full h-32 object-cover"/>
+                  <div class="cover-frame">
+                    <img loading="lazy" decoding="async" [src]="post.coverImage" alt="" class="w-full h-32 object-cover"/>
+                  </div>
+                } @else {
+                  <div class="cover-frame h-32">
+                    <app-gen-cover class="w-full h-full" [seed]="post.id" [title]="post.title"/>
+                  </div>
                 }
                 <div class="p-4 flex flex-col flex-1">
                   @if (tagsOf(post).length) {

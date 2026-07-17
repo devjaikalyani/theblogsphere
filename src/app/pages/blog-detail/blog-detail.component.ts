@@ -9,12 +9,14 @@ import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
 import { HoverDirective } from '../../directives/hover.directive';
+import { AmbientDirective } from '../../directives/ambient.directive';
+import { GenCoverComponent } from '../../components/gen-cover/gen-cover.component';
 import { ReportDialogComponent } from '../../components/report-dialog/report-dialog.component';
 import { BlogTag } from '../../types/blog.types';
 
 @Component({
   selector: 'app-blog-detail',
-  imports: [RouterLink, DatePipe, FormsModule, MarkdownPipe, NgTemplateOutlet, HoverDirective, ReportDialogComponent],
+  imports: [RouterLink, DatePipe, FormsModule, MarkdownPipe, NgTemplateOutlet, HoverDirective, ReportDialogComponent, AmbientDirective, GenCoverComponent],
   templateUrl: './blog-detail.component.html',
 })
 export class BlogDetailComponent implements OnInit, OnDestroy {
