@@ -288,7 +288,7 @@ Before going live:
 | POST | `/api/billing/checkout` | Yes | Start a Pro subscription (Razorpay/Stripe), returns a redirect URL |
 | POST | `/api/billing/razorpay/order` | Yes | Create a one-time Pro order (Standard Checkout modal); body `term: "monthly"` (30 days, default) or `"annual"` (365 days at ₹2,999) |
 | POST | `/api/billing/razorpay/topup` | Yes | Create a prepaid narration top-up order (Pro only) |
-| POST | `/api/billing/razorpay/verify` | Yes | Verify a Checkout payment signature; grants Pro or adds top-up credits |
+| POST | `/api/billing/razorpay/verify` | Yes | Verify a Checkout payment signature; grants Pro or adds top-up credits. An active one-time Pro buying again has the new window start at the current expiry (remaining days carry over) |
 | POST | `/api/billing/manage` | Yes | Manage/cancel the subscription (Stripe portal / Razorpay cancel-at-cycle-end) |
 | POST | `/api/billing/webhook` | No | Stripe webhook (signature-gated) |
 | POST | `/api/billing/razorpay-webhook` | No | Razorpay subscription webhook (signature-gated) |

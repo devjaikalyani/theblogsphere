@@ -155,6 +155,7 @@ export class PricingComponent implements OnInit {
   }
 
   private verifyPayment(res: any) {
+    const wasPro = this.isPro; // pre-purchase state, for the right message below
     this.billing.verifyPayment({
       orderId: res.razorpay_order_id,
       paymentId: res.razorpay_payment_id,
@@ -164,6 +165,9 @@ export class PricingComponent implements OnInit {
         this.loading.set(false);
         if (r?.topup) {
           this.toast.show(`Top-up added. About ${r.addedNarrations ?? ''} more narrations this month.`, 'success');
+        } else if (wasPro && r?.proUntil) {
+          const until = new Date(r.proUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+          this.toast.show(`Pro extended. Your access now runs until ${until}.`, 'success');
         } else {
           this.toast.show('Welcome to Writer Pro. Unlimited AI and your monthly narration budget are now unlocked.', 'success');
         }

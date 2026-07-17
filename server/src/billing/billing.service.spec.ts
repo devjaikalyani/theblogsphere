@@ -173,6 +173,44 @@ describe('razorpay payment verification', () => {
     })).rejects.toThrow(/amount/i);
   });
 
+  it('carries remaining days over when an active one-time Pro extends with the annual pass', async () => {
+    const tenDaysLeft = new Date(Date.now() + 10 * 864e5);
+    const order = { id: 'order_5', currency: 'INR', amount: 299900, notes: { userId: 'u1', purpose: 'writer-pro-365d' } };
+    const { svc } = makeService({
+      user: proUser({ billingProvider: 'razorpay_onetime', planRenewsAt: tenDaysLeft }),
+      razorpay: { orders: { fetch: vi.fn(async () => order) } },
+    });
+    const res: any = await svc.verifyRazorpayPayment('u1', {
+      orderId: 'order_5', paymentId: 'pay_5', signature: sign('order_5', 'pay_5'),
+    });
+    const days = (new Date(res.proUntil).getTime() - Date.now()) / 864e5;
+    expect(days).toBeGreaterThan(374); // 365 + ~10 carried over, not 365 from now
+    expect(days).toBeLessThanOrEqual(375);
+  });
+
+  it('starts from now (no carry-over) when the previous one-time pass already expired', async () => {
+    const expired = new Date(Date.now() - 5 * 864e5);
+    const order = { id: 'order_6', currency: 'INR', amount: 299900, notes: { userId: 'u1', purpose: 'writer-pro-365d' } };
+    const { svc } = makeService({
+      user: proUser({ billingProvider: 'razorpay_onetime', planRenewsAt: expired }),
+      razorpay: { orders: { fetch: vi.fn(async () => order) } },
+    });
+    const res: any = await svc.verifyRazorpayPayment('u1', {
+      orderId: 'order_6', paymentId: 'pay_6', signature: sign('order_6', 'pay_6'),
+    });
+    const days = (new Date(res.proUntil).getTime() - Date.now()) / 864e5;
+    expect(days).toBeGreaterThan(364);
+    expect(days).toBeLessThanOrEqual(365);
+  });
+
+  it('blocks a subscription-provider Pro from creating a one-time pass order', async () => {
+    const { svc } = makeService({
+      user: proUser({ billingProvider: 'razorpay' }),
+      razorpay: { orders: { create: vi.fn(async () => ({ id: 'order_x' })) } },
+    });
+    await expect(svc.createRazorpayOrder('u1', 'INR', 'annual')).rejects.toThrow(/subscription/i);
+  });
+
   it('adds prepaid credits for a narration top-up order', async () => {
     const order = { id: 'order_2', currency: 'INR', amount: 19900, notes: { userId: 'u1', purpose: 'narration-topup', chars: String(NARRATION_TOPUP_CHARS) } };
     const { svc, updates } = makeService({ user: proUser(), razorpay: { orders: { fetch: vi.fn(async () => order) } } });

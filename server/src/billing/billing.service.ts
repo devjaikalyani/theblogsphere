@@ -524,6 +524,18 @@ export class BillingService {
     if (currency !== 'INR' && !this.razorpayInternational) {
       throw new BadRequestException('International payments are not enabled yet.');
     }
+    // A subscription-provider Pro (Stripe / Razorpay subscription) buying a
+    // one-time pass would leave two overlapping billing arrangements; only
+    // free users and one-time pass holders (extending) may buy passes.
+    const buyer = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true, billingProvider: true },
+    });
+    if (buyer?.plan === 'pro' && buyer.billingProvider && buyer.billingProvider !== 'razorpay_onetime') {
+      throw new BadRequestException(
+        'You already have an auto-renewing subscription. Manage or cancel it from Settings instead of buying a pass.',
+      );
+    }
     const order: any = await this.razorpay.orders.create({
       amount,
       currency,
@@ -632,8 +644,23 @@ export class BillingService {
       return { ok: true, alreadyProcessed: true }; // replayed verify, no free extension
     }
 
+    // Carry-over: an active one-time Pro buying again (e.g. a monthly holder
+    // upgrading to the annual pass) keeps the days already paid for; the new
+    // window starts where the current one ends, never from "now".
+    const current = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true, billingProvider: true, planRenewsAt: true },
+    });
+    const activeOneTimeUntil =
+      current?.plan === 'pro' &&
+      current.billingProvider === 'razorpay_onetime' &&
+      current.planRenewsAt &&
+      new Date(current.planRenewsAt).getTime() > Date.now()
+        ? new Date(current.planRenewsAt).getTime()
+        : Date.now();
+
     const days = annual ? PRO_ANNUAL_DAYS : PRO_ONE_TIME_DAYS;
-    const proUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    const proUntil = new Date(activeOneTimeUntil + days * 24 * 60 * 60 * 1000);
     await this.prisma.user.update({
       where: { id: userId },
       data: { plan: 'pro', billingProvider: 'razorpay_onetime', planRenewsAt: proUntil },

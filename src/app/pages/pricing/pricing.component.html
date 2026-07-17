@@ -97,6 +97,13 @@
               <span class="block w-full text-center px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714]">
                 Writer Pro active
               </span>
+              @if (config()?.razorpayMode === 'checkout') {
+                <button type="button" (click)="buyAnnual()" [disabled]="loading()"
+                  class="block w-full px-5 py-3 text-sm font-semibold rounded-full border border-[#C9C2B5]/30 text-[#E8E3DA] hover:bg-white/10 transition-colors disabled:opacity-60">
+                  {{ loading() ? 'Working…' : 'Extend with the annual pass (₹2,999)' }}
+                </button>
+                <p class="text-xs text-center text-[#A39B8D]">Your remaining days carry over; the year starts when your current pass ends.</p>
+              }
             } @else {
               <button type="button" (click)="manage()" [disabled]="loading()"
                 class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
