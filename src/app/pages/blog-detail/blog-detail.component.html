@@ -46,62 +46,6 @@
 
   <!-- Article -->
   @if (!loading() && blog()) {
-
-    <!-- Cinematic opening: the cover (or its generative art) fills the frame
-         under the story's own color grade; the title rises like a credit and
-         the footage parallaxes away into the read. -->
-    <section class="article-hero">
-      <div class="article-hero-layer" [style.transform]="'translate3d(0,' + heroShift() + 'px,0)'">
-        @if (blog().coverImage) {
-          <img [src]="blog().coverImage" alt="" fetchpriority="high" decoding="async"
-               class="article-hero-media"/>
-        } @else {
-          <app-gen-cover class="article-hero-media" [seed]="blog().id" [title]="blog().title"/>
-        }
-      </div>
-      <div class="article-hero-grade" aria-hidden="true"></div>
-
-      <a routerLink="/explore" class="hero-back no-underline">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-        All stories
-      </a>
-
-      <div class="article-hero-inner" [style.opacity]="heroFade()">
-        @if (blogTags().length > 0) {
-          <div class="flex flex-wrap gap-2 mb-5 hero-rise" style="animation-delay: 0.1s">
-            @for (tag of blogTags(); track tag.id) {
-              <a [routerLink]="['/explore']" [queryParams]="{ tag: tag.slug }"
-                 class="chip chip-glass no-underline">{{ tag.name }}</a>
-            }
-          </div>
-        }
-
-        <h1 class="article-hero-title hero-rise" style="animation-delay: 0.25s">{{ blog().title }}</h1>
-
-        <div class="flex items-center gap-3 mt-7 hero-rise" style="animation-delay: 0.45s">
-          <a [routerLink]="['/author', blog().user?.id ?? blog().userId]"
-             class="w-11 h-11 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 ring-1 ring-white/30 hover:opacity-85 transition-opacity"
-             [style.background]="avatarGradient(blog().author)">
-            {{ blog().author?.charAt(0)?.toUpperCase() }}
-          </a>
-          <div class="text-left">
-            <a [routerLink]="['/author', blog().user?.id ?? blog().userId]"
-               class="text-sm font-semibold text-[#FAF8F3] hover:text-white transition-colors block leading-tight">
-              {{ blog().author }}
-            </a>
-            <div class="flex items-center gap-2 mt-1 text-xs text-[#F3EFE7]/70">
-              <span>{{ blog().publishDate | date:'MMMM d, y' }}</span>
-              <span class="text-[#F3EFE7]/40">&middot;</span>
-              <span>{{ readTimeC() }} min read</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <span class="hero-cue" aria-hidden="true"></span>
-    </section>
-
     <div class="mx-auto max-w-2xl xl:max-w-7xl px-4 sm:px-6 xl:grid xl:grid-cols-[minmax(200px,1fr)_minmax(0,680px)_minmax(200px,1fr)] xl:gap-x-10">
 
       <!-- Reusable actions, shared by the desktop rail and the mobile header row -->
@@ -201,11 +145,72 @@
       <div class="min-w-0">
       <article>
 
-        <!-- Actions (mobile / when the desktop rail is hidden) -->
-        <div class="xl:hidden flex items-center justify-center gap-1 pt-6 pb-2">
-          <ng-container [ngTemplateOutlet]="actionButtons"></ng-container>
+        <!-- Back -->
+        <div class="pt-8 pb-7">
+          <a routerLink="/explore"
+             class="group inline-flex items-center gap-1.5 eyebrow !text-[11px] hover:text-gray-900 transition-colors">
+            <svg class="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            All stories
+          </a>
         </div>
-        <div class="hidden xl:block pt-10"></div>
+
+        <!-- Header -->
+        <header class="text-center mb-9">
+          @if (blogTags().length > 0) {
+            <div class="flex flex-wrap justify-center gap-2 mb-6">
+              @for (tag of blogTags(); track tag.id) {
+                <a [routerLink]="['/explore']" [queryParams]="{ tag: tag.slug }"
+                   class="chip chip-clay no-underline">{{ tag.name }}</a>
+              }
+            </div>
+          }
+
+          <h1 class="article-title text-balance mb-6">{{ blog().title }}</h1>
+
+          <!-- Byline -->
+          <div class="flex items-center justify-center gap-3">
+            <a [routerLink]="['/author', blog().user?.id ?? blog().userId]"
+               class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 hover:opacity-80 transition-opacity"
+               [style.background]="avatarGradient(blog().author)">
+              {{ blog().author?.charAt(0)?.toUpperCase() }}
+            </a>
+            <div class="text-left">
+              <a [routerLink]="['/author', blog().user?.id ?? blog().userId]"
+                 class="text-sm font-semibold text-gray-900 hover:text-indigo-700 transition-colors block leading-tight">
+                {{ blog().author }}
+              </a>
+              <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                <span>{{ blog().publishDate | date:'MMMM d, y' }}</span>
+                <span class="text-gray-300">&middot;</span>
+                <span>{{ readTimeC() }} min read</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions (mobile / when the desktop rail is hidden) -->
+          <div class="xl:hidden flex items-center justify-center gap-1 mt-6">
+            <ng-container [ngTemplateOutlet]="actionButtons"></ng-container>
+          </div>
+        </header>
+
+        <!-- Cover, mounted like a print: raised mat + duotone/grain frame -->
+        @if (blog().coverImage) {
+          <figure class="mb-12 cover-plate">
+            <div class="cover-frame">
+              <img [src]="blog().coverImage" alt="{{ blog().title }}" title="{{ blog().title }}"
+                   fetchpriority="high" decoding="async"
+                   class="w-full object-cover"/>
+            </div>
+          </figure>
+        } @else {
+          <figure class="mb-12 cover-plate" aria-hidden="true">
+            <div class="cover-frame h-52 sm:h-64">
+              <app-gen-cover class="w-full h-full" [seed]="blog().id" [title]="blog().title"/>
+            </div>
+          </figure>
+        }
 
         <!-- AI key takeaways -->
         @if (summaryLoading() || summary().length > 0) {

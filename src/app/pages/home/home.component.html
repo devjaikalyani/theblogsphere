@@ -1,78 +1,53 @@
-<!-- ===== HERO: the reel ===== -->
-<!-- Latest covers cross-fade behind the pitch under a cinematic grade, so the
-     platform opens on its writers' own work. Static first frame under SSR. -->
-<section class="hero-cine">
-  @if (reelBlogs().length > 0) {
-    @for (b of reelBlogs(); track b.id; let i = $index) {
-      @if (b.coverImage) {
-        <img [src]="b.coverImage" alt="" aria-hidden="true" decoding="async"
-             [attr.loading]="i === 0 ? 'eager' : 'lazy'"
-             class="hero-reel-media" [class.reel-active]="i === reelIndex()"/>
-      } @else {
-        <app-gen-cover class="hero-reel-media" [class.reel-active]="i === reelIndex()"
-                       [seed]="b.id" [title]="b.title"/>
-      }
-    }
-  } @else {
-    <app-gen-cover class="hero-reel-media reel-active" [seed]="'theblogsphere'" [title]="'Blogsphere'"/>
-  }
-  <div class="hero-cine-grade" aria-hidden="true"></div>
-
-  <div class="relative z-10 max-w-3xl mx-auto text-center px-4 pt-20 pb-6">
-    <p class="masthead-rail masthead-rail-light max-w-sm mx-auto mb-8 hero-rise" style="animation-delay: 0.1s">Essays &middot; Stories &middot; Ideas</p>
+<!-- ===== HERO ===== -->
+<section class="hero-section">
+  <div class="relative z-10 max-w-3xl mx-auto text-center">
+    <p [appReveal]="0" class="masthead-rail max-w-sm mx-auto mb-8">Essays &middot; Stories &middot; Ideas</p>
 
     <!-- Headline with rotating typewriter line -->
-    <h1 class="hero-cine-title text-balance mb-8 hero-rise" style="animation-delay: 0.25s">
+    <h1 [appReveal]="60" class="text-hero text-balance mb-8">
       A quiet home for<br>
-      <span class="hero-cine-accent">{{ typewriterText() }}<span class="typewriter-cursor"></span></span>
+      <span class="text-gradient">{{ typewriterText() }}<span class="typewriter-cursor"></span></span>
     </h1>
 
-    <p class="font-reading max-w-xl mx-auto mb-10 text-pretty hero-rise text-[#F3EFE7]/85 text-[clamp(1.05rem,2vw,1.2rem)] leading-[1.62]" style="animation-delay: 0.4s">
+    <p [appReveal]="120" class="font-reading max-w-xl mx-auto mb-10 text-hero-sub text-pretty">
       Long-form writing and the people who read it. Publish here and be read,
       heard, and paid: every story can be listened to as audio, and readers can
       tip you directly over UPI. We never take a cut.
     </p>
 
     <!-- CTAs -->
-    <div class="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 hero-rise" style="animation-delay: 0.55s">
+    <div [appReveal]="180" class="flex flex-wrap justify-center items-center gap-x-6 gap-y-3">
       <a routerLink="/explore"
-         class="btn-press px-7 py-3 text-sm font-semibold rounded-full no-underline bg-[#FAF8F3] text-[#1A1714] hover:bg-white transition-colors">
+         class="btn-ink btn-press px-7 py-3 text-sm font-semibold rounded-full no-underline">
         Start reading
       </a>
       <a routerLink="/signup"
-         class="group inline-flex items-center gap-1.5 text-sm font-semibold text-[#F3EFE7] no-underline">
-        <span class="link-underline link-underline-light">Start writing</span>
-        <svg class="w-3.5 h-3.5 text-[#E0A485] group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+         class="group inline-flex items-center gap-1.5 text-sm font-semibold text-gray-800 no-underline">
+        <span class="link-underline">Start writing</span>
+        <svg class="w-3.5 h-3.5 text-clay group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
       </a>
     </div>
+  </div>
 
-    <!-- Value row, over the footage -->
-    <div class="max-w-2xl mx-auto mt-16 grid grid-cols-3 divide-x divide-white/10 text-center hero-rise" style="animation-delay: 0.7s">
-      <div class="px-3">
-        <p class="font-display text-lg text-[#FAF8F3]">Read</p>
-        <p class="text-xs text-[#F3EFE7]/65 mt-1">No paywalls, no ads</p>
-      </div>
-      <div class="px-3">
-        <p class="font-display text-lg text-[#FAF8F3]">Heard</p>
-        <p class="text-xs text-[#F3EFE7]/65 mt-1">Every story as audio</p>
-      </div>
-      <div class="px-3">
-        <p class="font-display text-lg text-[#FAF8F3]">Paid</p>
-        <p class="text-xs text-[#F3EFE7]/65 mt-1">UPI tips, zero cut</p>
-      </div>
+  <!-- Restrained value row -->
+  <div [appReveal]="240" class="relative z-10 max-w-2xl mx-auto mt-16 grid grid-cols-3 divide-x divide-gray-200 text-center">
+    <div class="px-3">
+      <p class="font-display text-lg text-gray-900">Read</p>
+      <p class="text-xs text-gray-500 mt-1">No paywalls, no ads</p>
+    </div>
+    <div class="px-3">
+      <p class="font-display text-lg text-gray-900">Heard</p>
+      <p class="text-xs text-gray-500 mt-1">Every story as audio</p>
+    </div>
+    <div class="px-3">
+      <p class="font-display text-lg text-gray-900">Paid</p>
+      <p class="text-xs text-gray-500 mt-1">UPI tips, zero cut</p>
     </div>
   </div>
 
-  <!-- Which frame is playing -->
-  @if (reelBlogs().length > 0 && reelBlogs()[reelIndex()]; as current) {
-    <a [routerLink]="['/blog', current.slug || current.id]"
-       class="reel-caption absolute bottom-6 left-[clamp(1.25rem,5vw,4rem)] z-10 no-underline hover:text-white transition-colors">
-      <span class="truncate">Now reading: {{ current.title }}</span>
-    </a>
-  }
-  <span class="hero-cue" aria-hidden="true"></span>
+  <div class="hero-rule"></div>
 </section>
 
 <!-- ===== STORIES ===== -->

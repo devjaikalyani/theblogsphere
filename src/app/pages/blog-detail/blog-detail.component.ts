@@ -27,11 +27,6 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   // Table of contents + reading progress (desktop margin rail)
   toc = signal<{ id: string; text: string; level: number; active: boolean }[]>([]);
   readProgress = signal(0);
-  // Cinematic hero: the footage drifts slower than the page (parallax) and
-  // the credits fade as the reader scrolls into the text. Both stay inert
-  // for prefers-reduced-motion.
-  heroShift = signal(0);
-  heroFade = signal(1);
   private headings: HTMLElement[] = [];
   private onScroll?: () => void;
   private routeSub?: Subscription;
@@ -145,8 +140,6 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     this.blog.set(null);
     this.toc.set([]);
     this.readProgress.set(0);
-    this.heroShift.set(0);
-    this.heroFade.set(1);
     this.related.set([]);
     this.summary.set([]);
     this.summaryLoading.set(false);
@@ -628,9 +621,7 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
 
     this.headings = headings;
     this.toc.set(items);
-    // Always attach: the hero parallax needs scroll frames even when the
-    // story has no headings for the contents rail.
-    this.setupScrollSpy();
+    if (items.length) this.setupScrollSpy();
   }
 
   private slugify(s: string): string {
@@ -643,18 +634,12 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   private setupScrollSpy() {
     const view = this.doc.defaultView;
     if (!view) return;
-    const reducedMotion = view.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     let ticking = false;
     const update = () => {
       ticking = false;
       const scrollTop = view.scrollY;
       const docH = this.doc.documentElement.scrollHeight - view.innerHeight;
       this.readProgress.set(docH > 0 ? Math.min(100, Math.max(0, (scrollTop / docH) * 100)) : 0);
-
-      if (!reducedMotion) {
-        this.heroShift.set(Math.min(scrollTop * 0.35, 380));
-        this.heroFade.set(Math.max(0, 1 - scrollTop / 460));
-      }
 
       let activeId = this.toc()[0]?.id;
       for (const el of this.headings) {
