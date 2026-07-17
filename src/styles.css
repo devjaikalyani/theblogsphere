@@ -195,6 +195,26 @@
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* Cinematic vocabulary: a film-credit rise, a slow lens settle, and the
+   scroll cue's reaching line. */
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-settle {
+  from { transform: scale(1.08); }
+  to   { transform: scale(1); }
+}
+@keyframes ken-burns {
+  from { transform: scale(1.02); }
+  to   { transform: scale(1.11); }
+}
+@keyframes cue-reach {
+  0%   { transform: scaleY(0); opacity: 0; }
+  30%  { opacity: 1; }
+  75%  { transform: scaleY(1); opacity: 0.9; }
+  100% { transform: scaleY(1); opacity: 0; }
+}
 
 @layer utilities {
 
@@ -899,6 +919,230 @@
   }
   .cover-plate .cover-frame {
     border-radius: 10px;
+  }
+
+  /* ══════════ CINEMATIC OPENINGS ══════════
+     The article page opens like a title sequence: the cover (or its
+     generative art) fills the screen under the story's color grade, the
+     title rises over it, and the frame parallaxes away into the read.
+     The home page runs the same language as a slow reel of latest covers. */
+
+  .article-hero {
+    position: relative;
+    height: min(82vh, 740px);
+    min-height: 460px;
+    overflow: hidden;
+    background: var(--inverse-surface);
+  }
+  /* Parallax carrier: the component translates this on scroll. */
+  .article-hero-layer {
+    position: absolute;
+    inset: 0;
+    will-change: transform;
+  }
+  .article-hero-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform-origin: 50% 38%;
+    animation: hero-settle 2.6s var(--ease-out) both;
+    filter: saturate(1.1) contrast(1.04);
+  }
+  /* The grade: top vignette for the nav edge, a diagonal wash of the story's
+     own accent, a strong floor scrim that guarantees the title reads on ANY
+     image, and film grain over everything. */
+  .article-hero-grade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(12, 10, 8, 0.5), transparent 30%),
+      linear-gradient(160deg, color-mix(in srgb, var(--amb, #1A1714) 34%, transparent), transparent 58%),
+      linear-gradient(0deg, rgba(12, 10, 8, 0.88) 0%, rgba(12, 10, 8, 0.46) 36%, transparent 64%);
+  }
+  .article-hero-grade::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    mix-blend-mode: overlay;
+    opacity: 0.26;
+  }
+  .article-hero-inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding: 0 clamp(1.25rem, 5vw, 4rem) clamp(2.75rem, 7vh, 5rem);
+  }
+  .article-hero-title {
+    font-family: var(--font-serif);
+    font-optical-sizing: auto;
+    font-size: clamp(2.4rem, 5.6vw, 4.6rem);
+    line-height: 1.03;
+    letter-spacing: -0.022em;
+    font-weight: 600;
+    color: #FAF8F3;
+    text-wrap: balance;
+    max-width: 24ch;
+    text-shadow: 0 2px 28px rgba(12, 10, 8, 0.45);
+  }
+  /* Film-credit entrance; give each element its own animation-delay. */
+  .hero-rise {
+    opacity: 0;
+    animation: hero-rise 0.9s var(--ease-out) forwards;
+  }
+  /* Frosted chip/back-link for text sitting directly on footage. */
+  .chip-glass {
+    color: #F3EFE7;
+    background: rgba(250, 248, 243, 0.13);
+    box-shadow: inset 0 0 0 1px rgba(250, 248, 243, 0.22);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  .chip-glass:hover {
+    color: #FFFFFF;
+    background: rgba(250, 248, 243, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(250, 248, 243, 0.4);
+  }
+  .hero-back {
+    position: absolute;
+    top: 1.4rem;
+    left: clamp(1.25rem, 5vw, 4rem);
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(243, 239, 231, 0.88);
+    padding: 0.5rem 0.95rem;
+    border-radius: 999px;
+    background: rgba(12, 10, 8, 0.35);
+    box-shadow: inset 0 0 0 1px rgba(250, 248, 243, 0.16);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transition: color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .hero-back:hover {
+    color: #FAF8F3;
+    box-shadow: inset 0 0 0 1px rgba(250, 248, 243, 0.35);
+  }
+  /* The reaching line inviting the first scroll. */
+  .hero-cue {
+    position: absolute;
+    z-index: 2;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    height: 56px;
+    background: linear-gradient(180deg, transparent, rgba(250, 248, 243, 0.85));
+    transform-origin: top;
+    animation: cue-reach 2.4s var(--ease-in-out) infinite;
+  }
+
+  /* Home: the reel. Latest covers cross-fade with a slow push-in under the
+     same grade; the platform pitch plays over its own writers' work. */
+  .hero-cine {
+    position: relative;
+    min-height: min(88vh, 780px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--inverse-surface);
+  }
+  .hero-reel-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: opacity 1.8s var(--ease-in-out);
+    transform-origin: 50% 42%;
+  }
+  .hero-reel-media.reel-active {
+    opacity: 1;
+    animation: ken-burns 9s linear both;
+  }
+  .hero-cine-grade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 90% at 50% 8%, rgba(12, 10, 8, 0.36), rgba(12, 10, 8, 0.82) 78%),
+      linear-gradient(0deg, rgba(12, 10, 8, 0.9), rgba(12, 10, 8, 0.35) 40%, rgba(12, 10, 8, 0.45));
+  }
+  .hero-cine-grade::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    mix-blend-mode: overlay;
+    opacity: 0.28;
+  }
+  .hero-cine-title {
+    font-family: var(--font-serif);
+    font-optical-sizing: auto;
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    color: #FAF8F3;
+    line-height: 0.99;
+    letter-spacing: -0.022em;
+    font-weight: 600;
+    text-shadow: 0 2px 28px rgba(12, 10, 8, 0.45);
+  }
+  .hero-cine-accent {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    color: #E0A485;
+    -webkit-text-fill-color: #E0A485;
+  }
+  /* Light variants for chrome sitting on footage. */
+  .masthead-rail-light { color: rgba(243, 239, 231, 0.78); }
+  .masthead-rail-light::before {
+    background: linear-gradient(90deg, transparent, rgba(243, 239, 231, 0.28));
+  }
+  .masthead-rail-light::after {
+    background: linear-gradient(90deg, rgba(243, 239, 231, 0.28), transparent);
+  }
+  .link-underline-light {
+    background-image: linear-gradient(#F3EFE7, #F3EFE7);
+  }
+
+  /* "Now reading" caption: ties the reel frame to a real story. */
+  .reel-caption {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    max-width: 24rem;
+    color: rgba(243, 239, 231, 0.82);
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  .reel-caption::before {
+    content: '';
+    width: 1.6rem;
+    height: 1px;
+    flex: none;
+    background: rgba(243, 239, 231, 0.45);
   }
 }
 
