@@ -140,8 +140,27 @@ export class BlogService {
   }
 
   // User profile
-  updateProfile(data: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string; upiId?: string; notifyFollowedPosts?: boolean }): Observable<any> {
+  updateProfile(data: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string; upiId?: string; notifyFollowedPosts?: boolean; notifyWeeklyDigest?: boolean }): Observable<any> {
     return this.http.patch('/api/users/me', data, { withCredentials: true });
+  }
+
+  // Tips (self-reported UPI confirmations; the money never touches the platform)
+  getTipSummary(blogId: number): Observable<{ count: number; total: number }> {
+    return this.http.get<{ count: number; total: number }>(`/api/tips/${blogId}/summary`);
+  }
+
+  confirmTip(blogId: number, amount: number): Observable<{ ok: boolean; count: number; total: number }> {
+    return this.http.post<{ ok: boolean; count: number; total: number }>('/api/tips', { blogId, amount }, { withCredentials: true });
+  }
+
+  /** Import Medium export files (the HTML files from the export's posts/
+   *  folder). Every parsed story is created as a draft for review. */
+  importMedium(files: File[]): Observable<{ imported: { id: number; title: string }[]; skipped: { file: string; reason: string }[] }> {
+    const fd = new FormData();
+    for (const f of files) fd.append('files', f);
+    return this.http.post<{ imported: { id: number; title: string }[]; skipped: { file: string; reason: string }[] }>(
+      '/api/import/medium', fd, { withCredentials: true },
+    );
   }
 
   // Upload

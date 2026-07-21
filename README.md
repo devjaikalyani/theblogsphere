@@ -15,6 +15,10 @@ A full-stack blogging platform built with Angular 20, NestJS, PostgreSQL (Prisma
 - Cover image upload (Cloudflare R2), with server-side magic-byte validation
 - Comments, bookmarks, follow system, and personalized feed
 - Follower notifications: an email (Resend) when a writer you follow publishes, with a signed one-click unsubscribe link and a Settings toggle
+- Weekly digest email: the five most-read stories of the week, sent by an external cron hitting a secret-gated endpoint, with its own signed one-click unsubscribe and Settings toggle
+- Medium importer: upload the HTML files from a Medium export's `posts/` folder and every story arrives as a draft to review ("Import from Medium" on My Stories)
+- WhatsApp, X, and LinkedIn share buttons on every story (WhatsApp message includes the "listen as audio" hook)
+- Tip proof loop: readers confirm a UPI tip they sent (self-reported amount), giving every story a public tip tally and the platform its earnings data, while the money itself always moves directly reader to writer
 - RSS 2.0 feed of the latest public stories (`/api/rss.xml`, autodiscovery link in the page head)
 - Server-side HTML sanitization on write (defence in depth beyond the client's render-time sanitizer; also strips pasted inline styles that fight the design system)
 - Writer analytics dashboard (views, top posts, monthly trends)
@@ -44,6 +48,7 @@ A full-stack blogging platform built with Angular 20, NestJS, PostgreSQL (Prisma
 ### SEO
 
 - Per-route title / description / Open Graph / Twitter / canonical (SSR-rendered)
+- `max-image-preview:large` robots meta sitewide (Google Discover eligibility) plus a soft cover-image nudge at publish
 - Structured data (JSON-LD): `Article` on posts, `FAQPage` on the FAQ
 - Dynamic `sitemap.xml` and `robots.txt`
 - AI-scraper / model-training bots (GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, CCBot, etc.) disallowed in `robots.txt`
@@ -110,6 +115,7 @@ Key variables:
 | `OPENAI_API_KEY` | *Optional*, human-quality narration (browser-voice fallback if unset) |
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | *Optional*, Writer Pro billing (India, UPI / cards) |
 | `STRIPE_SECRET_KEY` / `STRIPE_PRICE_PRO` | *Optional*, Writer Pro billing (international) |
+| `DIGEST_SECRET` | *Optional*, enables the weekly digest endpoint (`POST /api/digest/run`); unset = inert |
 
 ---
 
@@ -202,8 +208,12 @@ Before going live:
 - [ ] Apply schema on the production DB: `npx prisma db push` (NOT `migrate dev`; it would wipe data).
       The follower-notification feature adds a `User.notifyFollowedPosts` column
       (also available as migration `20260713000000_notify_followed_posts` for the
-      migrate-based path); deploy the schema BEFORE this code version boots.
+      migrate-based path); the tips + digest features add the `Tip` table and a
+      `User.notifyWeeklyDigest` column (migration
+      `20260719000000_tips_and_weekly_digest`). Deploy the schema BEFORE this
+      code version boots.
 - [ ] Set `RESEND_API_KEY`, `EMAIL_FROM`, and `ADMIN_EMAIL` so publish notifications, unsubscribe, and report alerts actually send
+- [ ] Set `DIGEST_SECRET` and schedule a weekly `POST /api/digest/run` (external cron) if you want the digest
 - [ ] Run `npm run db:trigram` and `npm run backfill:slugs` on production
 - [ ] Set `NODE_ENV=production`
 - [ ] Ensure R2 bucket CORS policy allows your domain
@@ -280,6 +290,25 @@ Before going live:
 |--------|-------|------|-------------|
 | POST | `/api/tts/:blogId` | Yes | Neural narration URL for a story (cached in R2). Replaying an already-narrated story is free; generating new audio is metered by the plan's character budget (`402` when exhausted) |
 
+### Tips (proof loop)
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/tips` | Optional | Reader confirms a UPI tip they sent: body `{ blogId, amount }` (rupees, 1 to 50,000). Self-reported; the money never touches the platform |
+| GET | `/api/tips/:blogId/summary` | No | `{ count, total }` of confirmed tips for a story |
+
+### Import
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/import/medium` | Yes | Multipart `files[]`: the HTML files from a Medium export's `posts/` folder (max 50, 2 MB each). Parsed stories are created as drafts; responses and profile pages are skipped |
+
+### Digest
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/digest/run` | Secret | Weekly digest fan-out (top 5 stories of the week to every opted-in user). Gated by `DIGEST_SECRET` via `x-digest-secret` header or `?secret=`; `404` when unconfigured. Call from an external weekly cron; re-runs within 20 hours are no-ops |
+
 ### Billing
 
 | Method | Route | Auth | Description |
@@ -310,7 +339,7 @@ Before going live:
 | GET | `/api/health` | No | Liveness/readiness probe (`200` when DB is up, `503` otherwise) |
 | GET | `/api/sitemap.xml` | No | Dynamic XML sitemap (static pages + all public posts) |
 | GET | `/api/rss.xml` | No | RSS 2.0 feed of the latest 50 public stories |
-| GET | `/api/notifications/unsubscribe?u=&t=` | No (signed) | One-click opt-out from "writer you follow published" emails; `t` is an HMAC of the user id |
+| GET | `/api/notifications/unsubscribe?u=&t=&k=` | No (signed) | One-click opt-out; `t` is an HMAC of the user id. `k=digest` targets the weekly digest (its own HMAC scope), otherwise the "writer you follow published" emails |
 
 ### Auth (Better Auth)
 

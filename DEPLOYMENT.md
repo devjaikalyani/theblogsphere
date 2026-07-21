@@ -88,6 +88,35 @@ CI runs this on every push/PR (`.github/workflows/ci.yml`).
 - **Full-text search** beyond trigram: consider a `tsvector` column +
   `websearch_to_tsquery` for ranked relevance if search volume grows.
 
+## 4b. India latency: move the backend near the audience
+
+The primary audience is in India. "Deployed and reachable worldwide" is not
+the same as "fast from India": the Railway service runs in one physical
+region (US by default), so every API call and SSR render from an Indian
+reader pays a ~250-300ms ocean round trip before anything downloads.
+Sub-second loads on Indian mobile networks are a growth feature, not a
+nicety. Three paths, cheapest first:
+
+1. **Stay on Railway, switch the service region to Southeast Asia
+   (Singapore).** Region is a per-service setting; India-to-Singapore RTT
+   (~70ms) is a large improvement over US-East (~250ms+) with no host
+   migration. The Postgres volume is region-bound, so moving it means a
+   dump/restore (`pg_dump` via `railway run`, restore into a new Postgres in
+   the target region), then re-point `DATABASE_URL`. Keep app and DB in the
+   SAME region; splitting them moves the latency instead of removing it.
+2. **Managed host with an India region** (Render does not have one; AWS
+   App Runner / Lightsail ap-south-1 does) if leaving Railway anyway.
+3. **Mumbai VPS (the endgame at sustained traffic).** DigitalOcean, Vultr, or
+   AWS Lightsail Mumbai at Rs 500 to 1,000/month replaces the Railway fee.
+   The single-VPS configs in [`deploy/`](deploy/) (Caddyfile, nginx.conf, PM2
+   ecosystem file) are exactly this topology: both processes plus Postgres on
+   one box, one origin, auto-HTTPS via Caddy.
+
+Either way, the weekly digest cron and the `DIGEST_SECRET` env var move with
+the backend. Verify afterwards with a TTFB check from an Indian vantage point
+(e.g. `curl -w "%{time_starttransfer}\n" -o /dev/null -s https://<domain>/`
+over a VPN, or webpagetest.org's Mumbai location).
+
 ## 5. Enable billing: Razorpay (India, INR/UPI)
 
 Two modes; partial config fails boot on purpose.
