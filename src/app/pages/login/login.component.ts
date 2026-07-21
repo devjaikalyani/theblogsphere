@@ -3,10 +3,11 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { TutorialService } from '../../services/tutorial.service';
+import { GenCoverComponent } from '../../components/gen-cover/gen-cover.component';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, GenCoverComponent],
   templateUrl: './login.component.html',
 })
 export class LoginComponent {

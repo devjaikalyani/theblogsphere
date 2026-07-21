@@ -34,6 +34,7 @@ export class UserController {
           tipUrl: true,
           upiId: true,
           notifyFollowedPosts: true,
+          notifyWeeklyDigest: true,
           createdAt: true,
           _count: {
             select: { followers: true, following: true },
@@ -55,11 +56,11 @@ export class UserController {
         isFollowing = !!follow;
       }
 
-      // The notification preference is the owner's business only; the public
-      // profile view doesn't need (or get) it.
-      const { notifyFollowedPosts, ...publicUser } = user;
+      // The notification preferences are the owner's business only; the public
+      // profile view doesn't need (or get) them.
+      const { notifyFollowedPosts, notifyWeeklyDigest, ...publicUser } = user;
       const self = session?.user?.id === id;
-      return res.json({ ...publicUser, ...(self && { notifyFollowedPosts }), isFollowing });
+      return res.json({ ...publicUser, ...(self && { notifyFollowedPosts, notifyWeeklyDigest }), isFollowing });
     } catch (e: any) {
       console.error('[GET /users/:id] error:', e?.message ?? e);
       return res.status(500).json({ error: 'Internal server error' });
@@ -69,7 +70,7 @@ export class UserController {
   @Patch('me')
   @UseGuards(AuthGuard)
   async updateProfile(
-    @Body() body: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string; upiId?: string; notifyFollowedPosts?: boolean },
+    @Body() body: { firstName?: string; lastName?: string; bio?: string; website?: string; writingStyle?: string; tippingEnabled?: boolean; tipUrl?: string; upiId?: string; notifyFollowedPosts?: boolean; notifyWeeklyDigest?: boolean },
     @CurrentUser('id') userId: string,
   ) {
     const user = await this.prisma.user.update({
@@ -84,8 +85,9 @@ export class UserController {
         ...(body.tipUrl !== undefined && { tipUrl: body.tipUrl }),
         ...(body.upiId !== undefined && { upiId: body.upiId }),
         ...(body.notifyFollowedPosts !== undefined && { notifyFollowedPosts: body.notifyFollowedPosts }),
+        ...(body.notifyWeeklyDigest !== undefined && { notifyWeeklyDigest: body.notifyWeeklyDigest }),
       },
-      select: { id: true, firstName: true, lastName: true, bio: true, website: true, writingStyle: true, tippingEnabled: true, tipUrl: true, upiId: true, notifyFollowedPosts: true },
+      select: { id: true, firstName: true, lastName: true, bio: true, website: true, writingStyle: true, tippingEnabled: true, tipUrl: true, upiId: true, notifyFollowedPosts: true, notifyWeeklyDigest: true },
     });
 
     // The author name is denormalised onto every Blog (`author`) and onto the

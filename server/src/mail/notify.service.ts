@@ -35,7 +35,21 @@ export class NotifyService {
   }
 
   verifyUnsubscribeToken(userId: string, token: string): boolean {
-    const expected = Buffer.from(this.unsubscribeToken(userId), 'hex');
+    return this.tokensMatch(this.unsubscribeToken(userId), token);
+  }
+
+  /** Digest opt-out gets its own HMAC scope so a follow-notification link can
+   *  never flip the digest preference (or the reverse). */
+  digestUnsubscribeToken(userId: string): string {
+    return createHmac('sha256', this.secret()).update(`unsub:digest:${userId}`).digest('hex');
+  }
+
+  verifyDigestUnsubscribeToken(userId: string, token: string): boolean {
+    return this.tokensMatch(this.digestUnsubscribeToken(userId), token);
+  }
+
+  private tokensMatch(expectedHex: string, token: string): boolean {
+    const expected = Buffer.from(expectedHex, 'hex');
     let given: Buffer;
     try {
       given = Buffer.from(token, 'hex');

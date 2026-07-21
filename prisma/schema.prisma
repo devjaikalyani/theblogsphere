@@ -29,6 +29,10 @@ model User {
   // signed one-click unsubscribe link in every notification email.
   notifyFollowedPosts Boolean @default(true)
 
+  // The weekly "best of TheBlogSphere" digest email. Same one-click signed
+  // unsubscribe as the publish notifications.
+  notifyWeeklyDigest Boolean @default(true)
+
   // Monetization: platform subscription (Writer Pro) + AI usage metering
   plan                   String    @default("free") // "free" | "pro"
   planRenewsAt           DateTime?
@@ -197,6 +201,24 @@ model Report {
 
   @@index([status])
   @@index([blogId])
+}
+
+// Reader-confirmed UPI tips. The money moves directly reader -> writer over
+// UPI (the platform is never a party to it and takes no cut), so rows here are
+// self-reported confirmations, not verified transactions. They power the
+// per-story tip counts and the public "writers earned this month" posts. No
+// FKs on purpose: the earnings log survives account and story deletion.
+model Tip {
+  id         Int      @id @default(autoincrement())
+  blogId     Int
+  writerId   String
+  reporterId String?  // signed-in reader who confirmed; null when anonymous
+  amount     Int      // rupees, as reported by the reader
+  createdAt  DateTime @default(now())
+
+  @@index([blogId])
+  @@index([writerId])
+  @@index([createdAt])
 }
 
 model Verification {

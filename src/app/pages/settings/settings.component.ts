@@ -23,6 +23,7 @@ export class SettingsComponent implements OnInit {
   tipUrl = '';
   upiId = '';
   notifyFollowedPosts = true;
+  notifyWeeklyDigest = true;
   saving = signal(false);
 
   plan = signal<PlanStatus | null>(null);
@@ -56,6 +57,7 @@ export class SettingsComponent implements OnInit {
         this.tipUrl = p.tipUrl ?? '';
         this.upiId = p.upiId ?? '';
         this.notifyFollowedPosts = p.notifyFollowedPosts ?? true;
+        this.notifyWeeklyDigest = p.notifyWeeklyDigest ?? true;
       },
     });
     fetch('/api/users/me/writing-style', { credentials: 'include' })
@@ -106,6 +108,7 @@ export class SettingsComponent implements OnInit {
       tipUrl: this.tipUrl || undefined,
       upiId: this.upiId || undefined,
       notifyFollowedPosts: this.notifyFollowedPosts,
+      notifyWeeklyDigest: this.notifyWeeklyDigest,
     }).subscribe({
       next: () => { this.saving.set(false); this.toast.show('Settings saved.', 'success'); },
       error: () => { this.saving.set(false); this.toast.show('Could not save settings.', 'error'); },

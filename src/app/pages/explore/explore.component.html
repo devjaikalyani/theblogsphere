@@ -149,7 +149,21 @@
                   <span class="text-[11px] px-2.5 py-0.5 bg-sunken text-gray-600 rounded-full font-medium">{{ tag }}</span>
                 }
               </div>
-              <span class="eyebrow !text-[11px] shrink-0">{{ readTime(blog.content) }} min</span>
+              <div class="flex items-center gap-2.5 shrink-0">
+                <!-- Audio is the reader hook: surface "every story can be
+                     listened to" on the card, not only inside the post. -->
+                <a [routerLink]="['/blog', blog.slug || blog.id]" [queryParams]="{ listen: 1 }"
+                   (click)="$event.stopPropagation()"
+                   title="Listen to this story as audio"
+                   class="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-[var(--clay)] transition-colors no-underline">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H2v6h4l5 4V5z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07"/>
+                  </svg>
+                  Listen
+                </a>
+                <span class="eyebrow !text-[11px]">{{ readTime(blog.content) }} min</span>
+              </div>
             </div>
           </article>
         }

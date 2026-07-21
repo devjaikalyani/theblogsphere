@@ -17,6 +17,7 @@ import { FollowModule } from './follow/follow.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { BillingModule } from './billing/billing.module';
 import { TtsModule } from './tts/tts.module';
+import { TipModule } from './tip/tip.module';
 import { ReportModule } from './report/report.module';
 import { HealthModule } from './health/health.module';
 
@@ -38,6 +39,7 @@ import { HealthModule } from './health/health.module';
     AnalyticsModule,
     BillingModule,
     TtsModule,
+    TipModule,
     ReportModule,
     HealthModule,
   ],
