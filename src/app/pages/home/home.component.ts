@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID, afterNextRender, computed, signal } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID, afterNextRender, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { BlogService } from '../../services/blog.service';
@@ -27,13 +27,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   private deleting = false;
   private timer: ReturnType<typeof setTimeout> | null = null;
 
-  // The reel: latest covers cross-fade behind the hero copy, so the pitch
-  // plays over the writers' own work. Static first frame under SSR; the
-  // rotation only starts in the browser.
-  reelIndex = signal(0);
-  reelBlogs = computed(() => this.blogs().slice(0, 5));
-  private reelTimer: ReturnType<typeof setInterval> | null = null;
-
   constructor(
     private blogService: BlogService,
     @Inject(PLATFORM_ID) private platformId: object,
@@ -49,25 +42,13 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.blogService.getBlogs(1).subscribe({
-      next: (data) => { this.blogs.set(data.blogs ?? []); this.loading.set(false); this.startReel(); },
+      next: (data) => { this.blogs.set(data.blogs ?? []); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
   }
 
   ngOnDestroy() {
     if (this.timer) clearTimeout(this.timer);
-    if (this.reelTimer) clearInterval(this.reelTimer);
-  }
-
-  private startReel() {
-    if (!isPlatformBrowser(this.platformId)) return;
-    if (this.reelTimer || this.reelBlogs().length < 2) return;
-    const view = typeof window !== 'undefined' ? window : null;
-    if (view?.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    this.reelTimer = setInterval(
-      () => this.reelIndex.update((i) => (i + 1) % this.reelBlogs().length),
-      7000,
-    );
   }
 
   private tick() {

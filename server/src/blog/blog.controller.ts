@@ -1,11 +1,9 @@
 import {
   Controller, Get, Post, Patch, Delete,
-  Param, Body, Query, Req, Res, UseGuards,
+  Param, Body, Query, Res, UseGuards,
   ParseIntPipe, HttpCode, HttpStatus, Inject,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
-import { fromNodeHeaders } from 'better-auth/node';
-import { auth } from '../auth/auth.config';
+import { Response } from 'express';
 import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
@@ -50,14 +48,9 @@ export class BlogController {
     return this.blogService.findRelated(id);
   }
 
-  // Optional auth: published stories are public; a draft resolves only for
-  // its owner (the edit page loads drafts through this same endpoint).
   @Get(':idOrSlug')
-  async getBlog(@Param('idOrSlug') idOrSlug: string, @Req() req: Request) {
-    const session = await auth.api
-      .getSession({ headers: fromNodeHeaders(req.headers) })
-      .catch(() => null);
-    return this.blogService.findBySlugOrId(idOrSlug, session?.user?.id);
+  async getBlog(@Param('idOrSlug') idOrSlug: string) {
+    return this.blogService.findBySlugOrId(idOrSlug);
   }
 
   @Post()

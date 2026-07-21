@@ -15,12 +15,7 @@ export class NotificationController {
   ) {}
 
   @Get('unsubscribe')
-  async unsubscribe(
-    @Query('u') userId: string,
-    @Query('t') token: string,
-    @Query('k') kind: string | undefined,
-    @Res() res: Response,
-  ) {
+  async unsubscribe(@Query('u') userId: string, @Query('t') token: string, @Res() res: Response) {
     const page = (title: string, body: string) =>
       `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title></head>` +
       `<body style="font-family: Georgia, serif; background:#FAF8F3; color:#1A1714; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0;">` +
@@ -29,23 +24,15 @@ export class NotificationController {
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
 
-    // `k` selects which email stream the link turns off; each stream's token
-    // has its own HMAC scope so links cannot be repurposed across streams.
-    const isDigest = kind === 'digest';
-    const valid = isDigest
-      ? this.notify.verifyDigestUnsubscribeToken(userId ?? '', token ?? '')
-      : this.notify.verifyUnsubscribeToken(userId ?? '', token ?? '');
-    if (!userId || !token || !valid) {
+    if (!userId || !token || !this.notify.verifyUnsubscribeToken(userId, token)) {
       return res.status(400).send(page('Link not valid', 'This unsubscribe link is incomplete or expired. You can also turn off notifications in Settings on TheBlogSphere.'));
     }
 
     await this.prisma.user.updateMany({
       where: { id: userId },
-      data: isDigest ? { notifyWeeklyDigest: false } : { notifyFollowedPosts: false },
+      data: { notifyFollowedPosts: false },
     });
 
-    return res.send(page("You're unsubscribed", isDigest
-      ? 'You will no longer get the weekly digest. You can turn it back on any time in Settings.'
-      : 'You will no longer get an email when writers you follow publish. You can turn these back on any time in Settings.'));
+    return res.send(page("You're unsubscribed", 'You will no longer get an email when writers you follow publish. You can turn these back on any time in Settings.'));
   }
 }

@@ -15,7 +15,6 @@ export class MyStoriesComponent implements OnInit {
   blogs = signal<any[]>([]);
   loading = signal(true);
   deleting = signal<number | null>(null);
-  importing = signal(false);
 
   published = computed(() => this.blogs().filter(b => b.status === 'published'));
   drafts = computed(() => this.blogs().filter(b => b.status === 'draft'));
@@ -26,41 +25,9 @@ export class MyStoriesComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadStories();
-  }
-
-  private loadStories() {
     this.blogService.getMyBlogs().subscribe({
       next: (b) => { this.blogs.set(b); this.loading.set(false); },
       error: () => this.loading.set(false),
-    });
-  }
-
-  /** Medium import: the writer selects the HTML files from the posts/ folder
-   *  of their Medium export zip; everything lands here as drafts to review. */
-  onImportFiles(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files ?? []);
-    input.value = '';
-    if (!files.length) return;
-    this.importing.set(true);
-    this.blogService.importMedium(files).subscribe({
-      next: (r) => {
-        this.importing.set(false);
-        if (r.imported.length) {
-          this.toast.show(`Imported ${r.imported.length} ${r.imported.length === 1 ? 'story' : 'stories'} as drafts. Review and publish when ready.`, 'success');
-          this.loadStories();
-        }
-        if (r.skipped.length && !r.imported.length) {
-          this.toast.show('Nothing imported. Select the HTML files inside the posts folder of your Medium export.', 'error');
-        } else if (r.skipped.length) {
-          this.toast.show(`${r.skipped.length} file${r.skipped.length === 1 ? '' : 's'} skipped (not Medium stories).`, 'info');
-        }
-      },
-      error: () => {
-        this.importing.set(false);
-        this.toast.show('Import failed. Are the files from your Medium export?', 'error');
-      },
     });
   }
 

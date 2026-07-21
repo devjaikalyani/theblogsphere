@@ -13,25 +13,13 @@
             </p>
           }
         </div>
-        <div class="flex flex-wrap items-center justify-end gap-3 shrink-0 mb-1">
-          <label class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 transition-colors cursor-pointer"
-                 [class.opacity-50]="importing()"
-                 title="Unzip your Medium export (medium.com/me/export) and select the HTML files inside its posts folder. Stories arrive as drafts.">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12L8 8m4-4l4 4"/>
-            </svg>
-            {{ importing() ? 'Importing…' : 'Import from Medium' }}
-            <input type="file" accept=".html,text/html" multiple class="hidden" [disabled]="importing()"
-                   (change)="onImportFiles($event)"/>
-          </label>
-          <a routerLink="/create"
-             class="btn-ink btn-press inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full no-underline">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            New story
-          </a>
-        </div>
+        <a routerLink="/create"
+           class="btn-ink btn-press inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full no-underline shrink-0 mb-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          New story
+        </a>
       </div>
     </div>
   </div>

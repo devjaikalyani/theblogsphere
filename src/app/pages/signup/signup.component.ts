@@ -3,11 +3,10 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { TutorialService } from '../../services/tutorial.service';
-import { GenCoverComponent } from '../../components/gen-cover/gen-cover.component';
 
 @Component({
   selector: 'app-signup',
-  imports: [FormsModule, RouterLink, GenCoverComponent],
+  imports: [FormsModule, RouterLink],
   templateUrl: './signup.component.html',
 })
 export class SignupComponent {

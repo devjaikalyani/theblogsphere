@@ -99,20 +99,10 @@ export class BlogService {
     return result;
   }
 
-  /** Drafts are private: ids are sequential integers and slugs are assigned
-   *  at creation, so without this gate anyone could enumerate /api/blogs/1..N
-   *  and read unpublished work. Applied AFTER the cache (the cache stores the
-   *  raw row; visibility is per-viewer). */
-  private visibleTo(blog: any, viewerId?: string) {
-    if (!blog) return null;
-    if (blog.status === 'published') return blog;
-    return viewerId && blog.userId === viewerId ? blog : null;
-  }
-
-  async findById(id: number, viewerId?: string) {
+  async findById(id: number) {
     const cacheKey = `blogs:id:${id}`;
     const cached = this.cache.get(cacheKey);
-    if (cached) return this.visibleTo(cached, viewerId);
+    if (cached) return cached;
 
     const blog = await this.prisma.blog.findFirst({
       where: { id, deletedAt: null },
@@ -123,16 +113,16 @@ export class BlogService {
     });
 
     if (blog) this.cache.set(cacheKey, blog, 120);
-    return this.visibleTo(blog, viewerId);
+    return blog;
   }
 
   /** Resolve a story by numeric id OR its SEO slug. */
-  async findBySlugOrId(idOrSlug: string, viewerId?: string) {
-    if (/^\d+$/.test(idOrSlug)) return this.findById(parseInt(idOrSlug, 10), viewerId);
+  async findBySlugOrId(idOrSlug: string) {
+    if (/^\d+$/.test(idOrSlug)) return this.findById(parseInt(idOrSlug, 10));
 
     const cacheKey = `blogs:slug:${idOrSlug}`;
     const cached = this.cache.get(cacheKey);
-    if (cached) return this.visibleTo(cached, viewerId);
+    if (cached) return cached;
 
     const blog = await this.prisma.blog.findFirst({
       where: { slug: idOrSlug, deletedAt: null },
@@ -143,7 +133,7 @@ export class BlogService {
     });
 
     if (blog) this.cache.set(cacheKey, blog, 120);
-    return this.visibleTo(blog, viewerId);
+    return blog;
   }
 
   async findByUser(userId: string) {

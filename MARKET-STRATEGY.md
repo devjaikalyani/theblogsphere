@@ -96,27 +96,13 @@ is encouraged, not fought. The platform is the home, socials are the megaphone.
 
 1. DONE (2026-07-13): Publish notifications to followers, sent on first publish via the
    existing Resend integration, with a signed one-click unsubscribe and a Settings toggle.
-2. DONE (2026-07-19): Medium importer. POST /api/import/medium takes the HTML files from
-   the export's posts/ folder; stories land as drafts for review (responses/profile pages
-   are skipped, images keep pointing at Medium's CDN). "Import from Medium" button on
-   My Stories.
-3. PARTIAL (2026-07-19): WhatsApp share button on every story (prefilled title + link +
-   "listen as audio" line). The full audio share card (waveform video/image for status)
-   is still open; the plain share unblocks the loop today.
+2. Medium importer (their export zip is HTML; storage is already HTML). Removes the main
+   switching cost for Ring 1.
+3. Audio share cards (the WhatsApp loop from section 4).
 4. DONE (2026-07-13): RSS 2.0 feed at /api/rss.xml with head autodiscovery.
-5. DONE (2026-07-19): Tip proof loop. Tip model + POST /api/tips (reader-confirmed,
-   self-reported amounts; money still never touches the platform), per-story tally on the
-   author card, confirm prompt after tapping a tip link. This is the data source for the
-   monthly earnings posts.
+5. Tip celebration + per-post tip counts (the proof loop from section 4).
 6. Move the backend near India (Mumbai VPS with the existing deploy/ configs, or an
-   Asia-region host). Sub-second page loads are a growth feature. See DEPLOYMENT.md § 4b
-   for the concrete migration path (still an ops task, not code).
-
-Also shipped 2026-07-19, reader side: weekly "five most-read stories" digest email
-(DigestService, POST /api/digest/run gated by DIGEST_SECRET, Settings toggle + signed
-one-click unsubscribe), a Listen affordance on explore cards deep-linking to ?listen=1,
-sitewide max-image-preview:large for Google Discover, a soft cover-image nudge at
-publish, and the home value row now says "No ads, paywalls, or login walls".
+   Asia-region host). Sub-second page loads are a growth feature.
 
 Also shipped alongside (2026-07-13): the annual Pro pass from BUSINESS-STRATEGY.md section 3
 (Rs 2,999 / 365 days on the one-time Checkout path), the read/heard/paid hero and pricing

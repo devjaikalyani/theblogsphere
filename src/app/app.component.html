@@ -10,7 +10,9 @@
 </div>
 
 <!-- Navbar -->
-<nav [class]="navClass()">
+<nav [class]="scrolled()
+  ? 'sticky top-0 z-50 glass-nav transition-shadow duration-300 shadow-elevated'
+  : 'sticky top-0 z-50 glass-nav transition-shadow duration-300'">
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     <div class="flex items-center justify-between h-16">
 

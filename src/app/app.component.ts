@@ -22,21 +22,6 @@ export class AppComponent implements OnInit {
   scrolled = signal(false);
   readingProgress = signal(0);
 
-  /** Routes that open on full-bleed footage (home reel, article hero). There
-   *  the nav overlays the film as a transparent light-on-dark bar, and
-   *  dissolves to the usual glass paper once the reader scrolls, or whenever
-   *  a dropdown needs a solid surface behind it. */
-  private cineRoute = signal(false);
-  private navOverlay = computed(
-    () => this.cineRoute() && !this.scrolled() && !this.menuOpen() && !this.profileMenuOpen(),
-  );
-  navClass = computed(() => {
-    const base = 'sticky top-0 z-50 transition-[background-color,border-color,box-shadow] duration-300 ';
-    const overlayLayout = this.cineRoute() ? 'nav-cine ' : '';
-    if (this.navOverlay()) return base + overlayLayout + 'nav-transparent';
-    return base + overlayLayout + 'glass-nav' + (this.scrolled() ? ' shadow-elevated' : '');
-  });
-
   initials = computed(() => {
     const user = this.auth.session()?.user;
     if (!user) return '';
@@ -51,13 +36,6 @@ export class AppComponent implements OnInit {
     readonly tour: TutorialService,
     @Inject(PLATFORM_ID) private platformId: object,
   ) {
-    // Not browser-guarded: SSR must also render the transparent overlay nav
-    // on cinematic routes, or the first paint flashes a paper bar over the film.
-    this.cineRoute.set(this.isCineUrl(this.router.url));
-    this.router.events
-      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe((e) => this.cineRoute.set(this.isCineUrl(e.urlAfterRedirects ?? e.url)));
-
     if (isPlatformBrowser(this.platformId)) {
       this.router.events
         .pipe(filter(e => e instanceof NavigationEnd))
@@ -66,11 +44,6 @@ export class AppComponent implements OnInit {
           this.profileMenuOpen.set(false);
         });
     }
-  }
-
-  private isCineUrl(url: string): boolean {
-    const path = url.split('?')[0].split('#')[0];
-    return path === '/' || path.startsWith('/blog/');
   }
 
   ngOnInit() {

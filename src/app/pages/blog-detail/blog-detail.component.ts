@@ -45,9 +45,6 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
   narrationLoading = signal(false);
   narrationsLeft = signal<number | null>(null);
   narrationPro = signal(false);
-  /** Set when the reader arrived via a "Listen" card link (?listen=1): pulse
-   *  the speaker button instead of autoplaying, which browsers would block. */
-  listenHint = signal(false);
   private audio?: HTMLAudioElement;
   private speechQueue: string[] = [];
   private speechIndex = 0;
@@ -55,15 +52,6 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
 
   /** Data-URL QR for the author's UPI tip (India), generated client-side. */
   upiQr = signal('');
-
-  /** Tip proof loop: the platform never sees the UPI transaction, so readers
-   *  confirm a tip themselves. The count is the story's social proof. */
-  tipCount = signal(0);
-  tipTotal = signal(0);
-  tipPromptVisible = signal(false);
-  tipReporting = signal(false);
-  tipThanked = signal(false);
-  tipCustomAmount = '';
 
   comments = signal<any[]>([]);
   commentsLoading = signal(true);
@@ -161,13 +149,6 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     this.liked.set(false);
     this.likeCount.set(0);
     this.upiQr.set('');
-    this.listenHint.set(false);
-    this.tipCount.set(0);
-    this.tipTotal.set(0);
-    this.tipPromptVisible.set(false);
-    this.tipReporting.set(false);
-    this.tipThanked.set(false);
-    this.tipCustomAmount = '';
     this.following.set(false);
     this.followers.set(0);
     this.commentText = '';
@@ -212,10 +193,6 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
             this.enhanceArticle();
             this.ensureVoices();
             if (b.user?.upiId) this.buildUpiQr(b.user.upiId, b.author);
-            if (this.route.snapshot.queryParamMap.get('listen') === '1') {
-              this.listenHint.set(true);
-              this.toast.show('Tap the pulsing speaker to hear this story narrated.', 'info');
-            }
           }
         }
         this.loading.set(false);
@@ -251,13 +228,6 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     if (aid) {
       this.blogService.getFollowStatus(aid).subscribe({
         next: (s) => { this.following.set(s.following); this.followers.set(s.followers); },
-        error: () => {},
-      });
-    }
-
-    if (blog?.user?.tippingEnabled) {
-      this.blogService.getTipSummary(id).subscribe({
-        next: (s) => { this.tipCount.set(s.count); this.tipTotal.set(s.total); },
         error: () => {},
       });
     }
@@ -361,49 +331,9 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** The reader tapped a tip link (UPI deep link or external tip page). The
-   *  payment happens outside the platform, so ask for a confirmation when they
-   *  come back; that self-report is the only earnings data that can exist. */
-  onTipIntent() {
-    if (!this.tipThanked()) this.tipPromptVisible.set(true);
-  }
-
-  confirmTip(amount: number) {
-    const id = this.blog()?.id;
-    if (!id || this.tipReporting()) return;
-    if (!Number.isFinite(amount) || amount < 1 || amount > 50000) {
-      this.toast.show('Enter the tip amount in rupees (1 to 50,000).', 'error');
-      return;
-    }
-    this.tipReporting.set(true);
-    this.blogService.confirmTip(id, Math.round(amount)).subscribe({
-      next: (r) => {
-        this.tipCount.set(r.count);
-        this.tipTotal.set(r.total);
-        this.tipReporting.set(false);
-        this.tipThanked.set(true);
-        this.tipPromptVisible.set(false);
-        this.toast.show(`Thank you for supporting ${this.blog()?.author ?? 'this writer'}.`, 'success');
-      },
-      error: () => {
-        this.tipReporting.set(false);
-        this.toast.show('Could not log the tip. The writer still received it directly.', 'error');
-      },
-    });
-  }
-
-  confirmCustomTip() {
-    this.confirmTip(parseInt(this.tipCustomAmount, 10));
-  }
-
-  dismissTipPrompt() {
-    this.tipPromptVisible.set(false);
-  }
-
   // ── Read aloud ───────────────────────────────────────────────────────────
   toggleReadAloud() {
     if (!isPlatformBrowser(this.platformId)) return;
-    this.listenHint.set(false);
     if (this.speaking() || this.narrationLoading()) { this.stopNarration(); return; }
     const blog = this.blog();
     if (!blog) return;
@@ -615,17 +545,9 @@ export class BlogDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  shareUrl(network: 'x' | 'linkedin' | 'whatsapp'): string {
+  shareUrl(network: 'x' | 'linkedin'): string {
     const url = encodeURIComponent(this.currentUrl);
     const text = encodeURIComponent(this.blog()?.title ?? '');
-    if (network === 'whatsapp') {
-      // WhatsApp is how stories travel in India: one prefilled message with the
-      // title and link, ready for a chat, a group, or a status.
-      const message = encodeURIComponent(
-        `${this.blog()?.title ?? 'A story on TheBlogSphere'}\n\nRead it, or listen to it as audio:\n${this.currentUrl}`,
-      );
-      return `https://wa.me/?text=${message}`;
-    }
     return network === 'x'
       ? `https://twitter.com/intent/tweet?url=${url}&text=${text}`
       : `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;

@@ -139,19 +139,10 @@ export class CreateComponent implements AfterViewInit {
     });
   }
 
-  /** Soft cover-image gate: stories with a real cover are what Google Discover
-   *  and WhatsApp link previews surface, so nudge once, never block. */
-  private coverNudged = false;
-
   submit() {
     if (!this.title.trim() || !this.content.trim()) {
       this.error.set('Title and content are required.');
       this.toast.show('Title and content are required.', 'error');
-      return;
-    }
-    if (!this.coverImage() && !this.coverNudged) {
-      this.coverNudged = true;
-      this.toast.show('A cover image gets your story featured on Google and looks better when shared. Publish again to continue without one.', 'info');
       return;
     }
     this.error.set('');
