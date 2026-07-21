@@ -43,6 +43,17 @@ async function bootstrap() {
     ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
     : ['http://localhost:4200', 'http://localhost:3000'];
 
+  // Media (the hero promo film) is served from the R2 bucket rather than the
+  // repo, so the CSP has to name that origin. Derived from the same env the
+  // uploader uses, so moving buckets needs no code change.
+  const r2Origin = (() => {
+    try {
+      return process.env.R2_PUBLIC_URL ? new URL(process.env.R2_PUBLIC_URL).origin : null;
+    } catch {
+      return null;
+    }
+  })();
+
   // scriptSrc: no 'unsafe-eval'; production Angular doesn't need it, and the
   // Razorpay Checkout script + modal iframe need their origins allowed.
   app.use(helmet({
@@ -54,8 +65,8 @@ async function bootstrap() {
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
-        // Self-hosted video (the hero promo film in public/media).
-        mediaSrc: ["'self'", 'blob:'],
+        // Video: the hero promo film streams from R2, not the app origin.
+        mediaSrc: ["'self'", 'blob:', ...(r2Origin ? [r2Origin] : [])],
         connectSrc: ["'self'", ...allowedOrigins, 'https://api.razorpay.com', 'https://lumberjack.razorpay.com'],
         frameSrc: ['https://api.razorpay.com', 'https://checkout.razorpay.com'],
         frameAncestors: ["'none'"],
