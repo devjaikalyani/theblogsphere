@@ -222,6 +222,13 @@
     font-weight: 600;
   }
 
+  /* The home claim is a full sentence, far longer than the one or two words
+     .text-hero was scaled for, so it needs a lower floor or it overflows a
+     phone. Same ceiling, so the desktop presence is unchanged. */
+  .text-hero-claim {
+    font-size: clamp(2rem, 7.4vw, 5.5rem);
+  }
+
   .text-section-title {
     font-family: var(--font-serif);
     font-size: clamp(2rem, 4.6vw, 3.1rem);
@@ -322,6 +329,88 @@
   .hero-rule {
     position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
     background: linear-gradient(90deg, transparent, var(--hairline-strong) 30%, var(--hairline-strong) 70%, transparent);
+  }
+
+  /* ── Hero promo film ──────────────────────────────────────────────
+     A framed plate rather than a bare video: warm mount, hairline, and a
+     soft riser so it sits on the paper like a printed still. The tinted
+     background stands in for a poster frame while the file loads, so the
+     area never flashes an empty black box. */
+  .promo-plate {
+    position: relative;
+    margin: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    background:
+      linear-gradient(150deg, color-mix(in srgb, var(--clay) 14%, transparent), transparent 62%),
+      var(--paper-raised);
+    box-shadow: var(--shadow-3);
+    outline: 1px solid var(--hairline);
+    outline-offset: -1px;
+    aspect-ratio: 16 / 9;
+  }
+  .promo-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Full-bleed click target; the visible controls sit above it. */
+  .promo-surface {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    padding: 0;
+  }
+  .promo-play {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.25rem;
+    height: 4.25rem;
+    border-radius: 999px;
+    pointer-events: none;
+    color: var(--ink);
+    background: rgba(250, 248, 243, 0.92);
+    box-shadow: 0 10px 30px -10px rgba(26, 23, 20, 0.55);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition: transform 0.25s ease;
+  }
+  .promo-plate:hover .promo-play { transform: translate(-50%, -50%) scale(1.06); }
+  .promo-sound {
+    position: absolute;
+    right: 0.85rem;
+    bottom: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 999px;
+    border: 0;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #F6F3EC;
+    background: rgba(26, 23, 20, 0.62);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: background 0.2s ease;
+  }
+  .promo-sound:hover { background: rgba(26, 23, 20, 0.82); }
+  .promo-sound-label { line-height: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .promo-plate:hover .promo-play { transform: translate(-50%, -50%); }
+    .promo-play, .promo-sound { transition: none; }
   }
   /* legacy decorative glow hooks, neutralised for the calm aesthetic */
   .hero-glow-tl, .hero-glow-tr, .hero-glow-center,

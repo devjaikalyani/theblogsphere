@@ -1,38 +1,98 @@
 <!-- ===== HERO ===== -->
 <section class="hero-section">
-  <div class="relative z-10 max-w-3xl mx-auto text-center">
-    <p [appReveal]="0" class="masthead-rail max-w-sm mx-auto mb-8">Essays &middot; Stories &middot; Ideas</p>
+  <!-- Masthead statement: the claim, in one line -->
+  <div class="relative z-10 max-w-4xl mx-auto text-center">
+    <p [appReveal]="0" class="masthead-rail max-w-xs mx-auto mb-8">For writers in India</p>
 
-    <!-- Headline with rotating typewriter line -->
-    <h1 [appReveal]="60" class="text-hero text-balance mb-8">
-      A quiet home for<br>
-      <span class="text-gradient">{{ typewriterText() }}<span class="typewriter-cursor"></span></span>
+    <h1 [appReveal]="60" class="text-hero text-hero-claim text-balance mb-6">
+      Write here.<br>
+      <span class="text-gradient">Get read, get heard, get paid.</span>
     </h1>
 
-    <p [appReveal]="120" class="font-reading max-w-xl mx-auto mb-10 text-hero-sub text-pretty">
-      Long-form writing and the people who read it. Publish here and be read,
-      heard, and paid: every story can be listened to as audio, and readers can
-      tip you directly over UPI. We never take a cut.
+    <p [appReveal]="120" class="font-reading max-w-lg mx-auto text-hero-sub text-pretty">
+      The long-form home where your readers pay you directly.
     </p>
+  </div>
 
-    <!-- CTAs -->
-    <div [appReveal]="180" class="flex flex-wrap justify-center items-center gap-x-6 gap-y-3">
-      <a routerLink="/explore"
-         class="btn-ink btn-press px-7 py-3 text-sm font-semibold rounded-full no-underline">
-        Start reading
-      </a>
-      <a routerLink="/signup"
-         class="group inline-flex items-center gap-1.5 text-sm font-semibold text-gray-800 no-underline">
-        <span class="link-underline">Start writing</span>
-        <svg class="w-3.5 h-3.5 text-clay group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-        </svg>
-      </a>
+  <!-- Film + the story it tells -->
+  <div class="relative z-10 max-w-6xl mx-auto mt-14 sm:mt-16 lg:mt-20 grid lg:grid-cols-12 gap-9 lg:gap-14 items-center">
+
+    <!-- LEFT: the film -->
+    <div [appReveal]="180" class="lg:col-span-7">
+      <figure class="promo-plate group">
+        <video #promo class="promo-video" muted loop playsinline preload="metadata"
+               (loadeddata)="promoReady.set(true)"
+               (play)="promoPlaying.set(true)"
+               (pause)="promoPlaying.set(false)"
+               aria-label="A short film about writing on TheBlogSphere">
+          <source src="/media/promo.mp4" type="video/mp4">
+        </video>
+
+        <!-- Click surface: tap anywhere to play or pause -->
+        <button type="button" class="promo-surface" (click)="togglePromoPlay()"
+                [title]="promoPlaying() ? 'Pause' : 'Play'"
+                [attr.aria-label]="promoPlaying() ? 'Pause the film' : 'Play the film'"></button>
+
+        <!-- Big play affordance, shown whenever the film is not running -->
+        @if (!promoPlaying()) {
+          <span class="promo-play" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 ml-0.5">
+              <path d="M8 5.14v13.72a.5.5 0 00.76.43l11.02-6.86a.5.5 0 000-.86L8.76 4.71a.5.5 0 00-.76.43z"/>
+            </svg>
+          </span>
+        }
+
+        <!-- Sound: the film has audio, but autoplay must start muted -->
+        <button type="button" class="promo-sound" (click)="togglePromoSound()"
+                [attr.aria-label]="promoMuted() ? 'Unmute the film' : 'Mute the film'"
+                [title]="promoMuted() ? 'Tap for sound' : 'Mute'">
+          @if (promoMuted()) {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M23 9l-6 6m0-6l6 6"/>
+            </svg>
+            <span class="promo-sound-label">Sound</span>
+          } @else {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
+            </svg>
+          }
+        </button>
+      </figure>
+    </div>
+
+    <!-- RIGHT: the quiet-home story -->
+    <div [appReveal]="240" class="lg:col-span-5 text-center lg:text-left">
+      <h2 class="font-display text-[clamp(1.75rem,3.4vw,2.4rem)] leading-[1.08] tracking-[-0.018em] text-gray-900 mb-5">
+        A quiet home for<br class="hidden sm:block">
+        <span class="text-gradient">{{ typewriterText() }}<span class="typewriter-cursor"></span></span>
+      </h2>
+
+      <p class="font-reading text-hero-sub text-pretty mb-8 mx-auto lg:mx-0 max-w-md">
+        Long-form writing and the people who read it. Publish here and be read,
+        heard, and paid: every story can be listened to as audio, and readers can
+        tip you directly over UPI. We never take a cut.
+      </p>
+
+      <div class="flex flex-wrap justify-center lg:justify-start items-center gap-x-6 gap-y-3">
+        <a routerLink="/explore"
+           class="btn-ink btn-press px-7 py-3 text-sm font-semibold rounded-full no-underline">
+          Start reading
+        </a>
+        <a routerLink="/signup"
+           class="group inline-flex items-center gap-1.5 text-sm font-semibold text-gray-800 no-underline">
+          <span class="link-underline">Start writing</span>
+          <svg class="w-3.5 h-3.5 text-clay group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
     </div>
   </div>
 
   <!-- Restrained value row -->
-  <div [appReveal]="240" class="relative z-10 max-w-2xl mx-auto mt-16 grid grid-cols-3 divide-x divide-gray-200 text-center">
+  <div [appReveal]="300" class="relative z-10 max-w-2xl mx-auto mt-16 grid grid-cols-3 divide-x divide-gray-200 text-center">
     <div class="px-3">
       <p class="font-display text-lg text-gray-900">Read</p>
       <p class="text-xs text-gray-500 mt-1">No ads, paywalls, or login walls</p>

@@ -54,6 +54,8 @@ async function bootstrap() {
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        // Self-hosted video (the hero promo film in public/media).
+        mediaSrc: ["'self'", 'blob:'],
         connectSrc: ["'self'", ...allowedOrigins, 'https://api.razorpay.com', 'https://lumberjack.razorpay.com'],
         frameSrc: ['https://api.razorpay.com', 'https://checkout.razorpay.com'],
         frameAncestors: ["'none'"],
