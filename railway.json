@@ -5,7 +5,8 @@
     "comment": "Install + build phases are defined in nixpacks.toml (the install phase must use `npm install`, not Nixpacks' default `npm ci`, which strict-fails on npm 9's rollup optional-deps bug). This block only carries deploy settings."
   },
   "deploy": {
-    "startCommand": "npm run server:start",
+    "comment": "server:start:deploy runs `prisma db push` before booting, so an additive schema change ships with its code and the DB never drifts behind (the cause of the post-deploy Prisma P2022 500s). db push is idempotent (a no-op when already in sync) and, WITHOUT --accept-data-loss, refuses a destructive change: the deploy then fails loudly instead of dropping data.",
+    "startCommand": "npm run server:start:deploy",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",

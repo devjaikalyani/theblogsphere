@@ -22,17 +22,25 @@ server. Configs are in [`deploy/`](deploy/): `Caddyfile` (auto-HTTPS, simplest),
 2. **Point OAuth + auth at the prod domain**: `GOOGLE_CALLBACK_URL`,
    `BETTER_AUTH_URL`, and `ALLOWED_ORIGINS` must be your real HTTPS origin, and
    the same callback must be whitelisted in the Google Cloud console.
-3. **Apply the schema** via Prisma migration history:
+3. **Schema**: on Railway this is now automatic. The deploy start command is
+   `npm run server:start:deploy`, which runs `prisma db push` before booting, so
+   an additive schema change ships with its code and the DB never drifts behind
+   it (that drift was the cause of the post-deploy Prisma `P2022` 500s on
+   sign-in). `db push` is idempotent, a no-op when already in sync, and
+   **without** `--accept-data-loss` it refuses a destructive change, so the
+   deploy fails loudly instead of dropping data. The one-time extras still run
+   by hand once (in the Railway shell):
    ```bash
-   npm run prisma:migrate:deploy   # applies prisma/migrations/* (idempotent)
    npm run db:trigram              # pg_trgm fast-search indexes (no psql needed)
    npm run backfill:slugs          # give pre-existing posts their slugs (idempotent)
    ```
-   > ⚠️  The **existing production DB was built with `db push`**, so its
-   > migration ledger is incomplete. Do the one-time reconciliation in
-   > [`prisma/MIGRATIONS.md`](prisma/MIGRATIONS.md) **before** `migrate deploy`
-   > there, or it will try to re-create existing columns and fail. Never run
+   > On a **self-hosted** box (start command `npm run server:start`, no auto
+   > push) apply the schema yourself with `npm run db:push`. The existing
+   > production DB was built with `db push`, so its Prisma migration ledger is
+   > incomplete: prefer `db push` over `migrate deploy` there. Never run
    > `prisma migrate dev` against production (it can reset/wipe the database).
+   > If you scale beyond one instance, move the push to a one-off release step
+   > so replicas don't run it concurrently.
 4. **R2 bucket CORS**: allow your origin to GET the public bucket URL.
 5. **Reverse proxy**: edit `deploy/Caddyfile` (or `nginx.conf`), replace
    `yourdomain.com`, and start it. Update `Sitemap:` host in `public/robots.txt`.

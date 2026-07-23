@@ -205,13 +205,14 @@ Before going live:
 - [ ] Set `BETTER_AUTH_URL` to your production domain
 - [ ] Set `ALLOWED_ORIGINS` to your production domain
 - [ ] Update `GOOGLE_CALLBACK_URL` to production OAuth callback URL
-- [ ] Apply schema on the production DB: `npx prisma db push` (NOT `migrate dev`; it would wipe data).
-      The follower-notification feature adds a `User.notifyFollowedPosts` column
-      (also available as migration `20260713000000_notify_followed_posts` for the
-      migrate-based path); the tips + digest features add the `Tip` table and a
-      `User.notifyWeeklyDigest` column (migration
-      `20260719000000_tips_and_weekly_digest`). Deploy the schema BEFORE this
-      code version boots.
+- [ ] Schema: on **Railway** this is automatic. The deploy start command is
+      `npm run server:start:deploy`, which runs `prisma db push` before booting,
+      so an additive schema change ships with its code (no more post-deploy
+      Prisma `P2022` 500s from a DB that drifted behind the code). `db push` is
+      idempotent and, without `--accept-data-loss`, refuses a destructive change
+      (the deploy fails loudly rather than dropping data). On a **self-hosted**
+      box run `npx prisma db push` yourself before the new code boots (NOT
+      `migrate dev`; it would wipe data).
 - [ ] Set `RESEND_API_KEY`, `EMAIL_FROM`, and `ADMIN_EMAIL` so publish notifications, unsubscribe, and report alerts actually send
 - [ ] Set `DIGEST_SECRET` and schedule a weekly `POST /api/digest/run` (external cron) if you want the digest
 - [ ] Run `npm run db:trigram` and `npm run backfill:slugs` on production

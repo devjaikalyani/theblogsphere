@@ -15,6 +15,7 @@
     "server:dev": "node --import @swc-node/register/esm-register server/src/main.ts",
     "server:build": "npx prisma generate",
     "server:start": "NODE_ENV=production node --import @swc-node/register/esm-register server/src/main.ts",
+    "server:start:deploy": "npx prisma db push --skip-generate && npm run server:start",
     "dev": "concurrently --names \"frontend,server\" --prefix-colors \"cyan,yellow\" \"npm run start\" \"npm run server:dev\"",
     "backfill:slugs": "node --import @swc-node/register/esm-register server/src/scripts/backfill-slugs.ts",
     "db:trigram": "node --import @swc-node/register/esm-register server/src/scripts/apply-trigram.ts",
