@@ -25,10 +25,12 @@ import { SeoService } from '../../services/seo.service';
 
         <h2 class="font-display text-xl sm:text-2xl text-gray-900 mt-10 mb-3">1. What you are paying for</h2>
         <p class="font-reading text-gray-600 leading-relaxed mb-4">
-          Writer Pro is a paid upgrade to your account that unlocks features such as unlimited AI writing assistance,
-          a monthly human-quality narration allowance (with optional prepaid top-up packs), unlimited replay of
-          already-narrated stories, and premium analytics. Current pricing (for example, ₹399 in India or
-          $7.99 internationally, each for 30 days of access, or ₹2,999 for a 365-day annual pass) is shown on the <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page. Applicable taxes, if any, are
+          Writer and Writer Pro are paid upgrades to your account that unlock features such as unlimited AI writing
+          assistance, a monthly human-quality narration allowance (with optional prepaid top-up packs), unlimited
+          replay of already-narrated stories, and premium analytics. Writer Pro adds a larger monthly narration
+          budget. Current pricing (for example, Writer at ₹149/mo or ₹999/year, and Writer Pro at ₹399/mo or ₹2,999
+          for a 365-day annual pass in India, with international card prices shown alongside) is on the
+          <a routerLink="/pricing" class="link-underline text-gray-800 font-medium">Pricing</a> page. Applicable taxes, if any, are
           charged as required by law.
         </p>
 

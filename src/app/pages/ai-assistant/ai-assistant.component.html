@@ -8,9 +8,9 @@
           <h1 class="text-section-title">Writing assistant</h1>
           <p class="font-reading text-[1.05rem] text-gray-600 mt-2">Find ideas, draft passages, and shape your writing, in your voice.</p>
           @if (plan(); as p) {
-            @if (p.pro) {
+            @if (p.paid) {
               <span class="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold px-3 py-1 rounded-full bg-sunken text-gray-700">
-                <span class="w-1.5 h-1.5 rounded-full bg-[var(--clay)]"></span> Pro, unlimited AI
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--clay)]"></span> Unlimited AI
               </span>
             } @else if (p.ai.remaining !== null) {
               <span class="inline-flex items-center gap-2 mt-3 text-xs font-medium px-3 py-1 rounded-full bg-sunken text-gray-600">

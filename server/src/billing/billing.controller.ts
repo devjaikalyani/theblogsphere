@@ -42,11 +42,13 @@ export class BillingController {
     @CurrentUser('id') userId: string,
     @Body('currency') currency?: string,
     @Body('term') term?: string,
+    @Body('tier') tier?: string,
   ) {
     return this.billing.createRazorpayOrder(
       userId,
       currency ?? 'INR',
       term === 'annual' ? 'annual' : 'monthly',
+      tier === 'writer' ? 'writer' : 'pro',
     );
   }
 

@@ -1,6 +1,6 @@
 # TheBlogSphere
 
-A full-stack blogging platform built with Angular 20, NestJS, PostgreSQL (Prisma), Better Auth, AI-assisted writing, human-quality narration, and Writer Pro billing.
+A full-stack blogging platform built with Angular 20, NestJS, PostgreSQL (Prisma), Better Auth, AI-assisted writing, human-quality narration, and tiered Writer / Writer Pro billing.
 
 ---
 
@@ -28,11 +28,13 @@ A full-stack blogging platform built with Angular 20, NestJS, PostgreSQL (Prisma
 
 ### Monetization & billing
 
-- **Writer Pro** at ₹399/mo (India) or $7.99/mo (international): unlimited AI writing, premium analytics, and a monthly narration budget
-- **Annual pass** at ₹2,999 (365 days, about 37% off; one-time Checkout mode only), riding the same lazy-expiry path as the 30-day purchase
+- **Two paid tiers**, both with unlimited AI writing and premium analytics; they differ on the monthly narration budget:
+  - **Writer** at ₹149/mo or ₹999/year (₹83/mo), or $2.99/mo international: a light narration budget (~5 narrations/mo). The entry tier, priced in the entertainment-subscription band.
+  - **Writer Pro** at ₹399/mo or ₹2,999/year, or $7.99/mo international: the full narration budget (~20 narrations/mo, 4× Writer)
+- **Annual pass** on each tier (365 days, riding the same lazy-expiry path as the 30-day purchase). Annual is the primary call to action given India's card-on-file friction
 - **Razorpay** (India, UPI / cards) + **Stripe** (international): one-time Standard Checkout or auto-renewing subscription, signature-verified, with a `BillingEvent` idempotency ledger against replays
 - **Cost-based metering**: narration is metered by characters (exactly what the TTS provider bills), so re-listening to an already-narrated story is free for everyone; only new generation draws down the budget
-- **Prepaid narration top-up packs** for Pro users who exceed the monthly budget
+- **Prepaid narration top-up packs** for paid users (either tier) who exceed the monthly budget
 
 ### Design & front-end
 
@@ -316,7 +318,7 @@ Before going live:
 |--------|-------|------|-------------|
 | GET | `/api/billing/status` | Yes | Plan + AI/narration quota snapshot |
 | POST | `/api/billing/checkout` | Yes | Start a Pro subscription (Razorpay/Stripe), returns a redirect URL |
-| POST | `/api/billing/razorpay/order` | Yes | Create a one-time Pro order (Standard Checkout modal); body `term: "monthly"` (30 days, default) or `"annual"` (365 days at ₹2,999) |
+| POST | `/api/billing/razorpay/order` | Yes | Create a one-time plan order (Standard Checkout modal); body `tier: "writer"` or `"pro"` (default) and `term: "monthly"` (30 days, default) or `"annual"` (365 days) |
 | POST | `/api/billing/razorpay/topup` | Yes | Create a prepaid narration top-up order (Pro only) |
 | POST | `/api/billing/razorpay/verify` | Yes | Verify a Checkout payment signature; grants Pro or adds top-up credits. An active one-time Pro buying again has the new window start at the current expiry (remaining days carry over) |
 | POST | `/api/billing/manage` | Yes | Manage/cancel the subscription (Stripe portal / Razorpay cancel-at-cycle-end) |

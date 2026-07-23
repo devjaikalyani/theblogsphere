@@ -5,32 +5,35 @@
       <p class="running-head mb-3">Pricing</p>
       <h1 class="text-section-title mb-4">Free to read. Free to write. Paid to you.</h1>
       <p class="font-reading text-gray-600 text-[1.1rem] leading-relaxed max-w-xl mx-auto">
-        TheBlogSphere will always be free, with no ads. Readers tip you directly over UPI and
-        we never take a cut; that money is yours. Upgrade to Writer Pro when you want
-        unlimited AI, more narration, and deeper analytics.
+        Publishing, discovery, and UPI tips are free forever, and we never take a cut of what your
+        readers send you. That money is yours. Upgrade only when the tools start earning their keep:
+        more narration, deeper analytics, and unlimited AI.
+      </p>
+      <p class="text-sm text-gray-500 mt-4">
+        Start free. Your readers can pay you from day one, before you pay us anything.
       </p>
     </div>
   </div>
 
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
 
       <!-- Free -->
-      <div class="bg-raised rounded-2xl border border-gray-200 p-8 flex flex-col">
+      <div class="bg-raised rounded-2xl border border-gray-200 p-6 flex flex-col">
         <p class="eyebrow text-gray-500 mb-2">Free</p>
         <div class="flex items-baseline gap-1 mb-1">
-          <span class="font-display text-4xl text-gray-900">$0</span>
+          <span class="font-display text-4xl text-gray-900">&#8377;0</span>
           <span class="text-sm text-gray-500">/ forever</span>
         </div>
-        <p class="text-sm text-gray-500 mb-6">Everything you need to read and publish.</p>
+        <p class="text-sm text-gray-500 mb-6">Everything you need to read, publish, and get paid.</p>
         <ul class="space-y-3 text-sm text-gray-700 flex-1">
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            Unlimited reading and publishing
+            Accept reader tips over UPI, with <span class="font-semibold text-gray-900">zero platform cut</span>
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            25 AI writing actions per month
+            Unlimited reading and publishing
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -42,49 +45,122 @@
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            Accept reader tips over UPI, with zero platform cut
+            25 AI writing actions per month
           </li>
         </ul>
         <div class="mt-8">
-          @if (!isPro) {
+          @if (!isPaid) {
             <span class="block w-full text-center px-5 py-3 text-sm font-semibold rounded-full border border-gray-300 text-gray-500">
               Your current plan
             </span>
           } @else {
             <span class="block w-full text-center px-5 py-3 text-sm font-semibold rounded-full border border-gray-200 text-gray-400">
-              Included in Pro
+              Included in your plan
             </span>
           }
         </div>
       </div>
 
-      <!-- Pro -->
-      <div class="bg-featured-panel rounded-2xl p-8 flex flex-col relative overflow-hidden">
+      <!-- Writer (entry tier, the volume plan) -->
+      <div class="bg-raised rounded-2xl border-2 border-[var(--clay)] p-6 flex flex-col relative">
+        <div class="flex items-center justify-between mb-2">
+          <p class="eyebrow text-clay">Writer</p>
+          <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--clay)] text-white">Best for most writers</span>
+        </div>
+        <div class="flex items-baseline gap-1 mb-1">
+          <span class="font-display text-4xl text-gray-900">&#8377;149</span>
+          <span class="text-sm text-gray-500">/ month</span>
+        </div>
+        <p class="text-sm text-gray-500 mb-6">Or <span class="font-semibold text-gray-900">&#8377;999 a year</span> (about &#8377;83/mo). <span class="text-gray-400">Internationally $2.99/mo.</span></p>
+        <ul class="space-y-3 text-sm text-gray-700 flex-1">
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Everything in Free, including 0% tips
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span><span class="font-semibold text-gray-900">Premium analytics</span>: followers, engagement rate, 12-month history</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            About 5 new narrations each month, unlimited replay, top up anytime
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-clay mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span><span class="font-semibold text-gray-900">Unlimited</span> AI writing assistance</span>
+          </li>
+        </ul>
+        <div class="mt-8 space-y-2.5">
+          @if (tier === 'writer') {
+            <span class="block w-full text-center px-5 py-3 text-sm font-semibold rounded-full bg-[var(--clay)] text-white">
+              Writer active
+            </span>
+            @if (oneTime) {
+              <button type="button" (click)="buy('writer', 'annual')" [disabled]="loading()"
+                class="block w-full px-5 py-3 text-sm font-semibold rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 transition-colors disabled:opacity-60">
+                {{ loading() ? 'Working…' : 'Extend with a year (₹999)' }}
+              </button>
+              <p class="text-xs text-center text-gray-400">Your remaining days carry over.</p>
+            }
+          } @else if (tier === 'pro') {
+            <span class="block w-full text-center px-5 py-3 text-sm font-semibold rounded-full border border-gray-200 text-gray-400">
+              Included in Pro
+            </span>
+          } @else {
+            <button type="button" (click)="buy('writer', 'annual')" [disabled]="loading()"
+              class="btn-ink btn-press block w-full px-5 py-3 text-sm font-semibold rounded-full">
+              {{ loading() ? 'Working…' : 'Get a year — ₹999 (save 44%)' }}
+            </button>
+            <button type="button" (click)="buy('writer', 'monthly')" [disabled]="loading()"
+              class="block w-full px-5 py-2.5 text-sm font-semibold rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 transition-colors disabled:opacity-60">
+              {{ loading() ? 'Working…' : 'Or pay ₹149/month' }}
+            </button>
+            @if (!config() || config()?.stripeEnabled || config()?.razorpayInternational) {
+              <button type="button" (click)="buyInternational('writer', 'annual')" [disabled]="loading()"
+                class="block w-full px-5 py-2 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors disabled:opacity-60">
+                {{ loading() ? 'Working…' : 'Pay with an international card ($19.99/yr)' }}
+              </button>
+            }
+          }
+        </div>
+
+        @if (tier === 'writer' && status()?.narration) {
+          <div class="mt-5 pt-5 border-t border-gray-200">
+            <p class="text-sm text-gray-600">
+              About <span class="font-semibold text-gray-900">{{ status()?.narration?.remaining }}</span> narrations left this month.
+              <span class="text-gray-400">Replaying already-narrated stories is always free.</span>
+            </p>
+            <button type="button" (click)="buyTopup()" [disabled]="loading()"
+              class="mt-3 inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 transition-colors disabled:opacity-60">
+              {{ loading() ? 'Working…' : 'Buy narration top-up (₹199)' }}
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- Pro (full narration tier) -->
+      <div class="bg-featured-panel rounded-2xl p-6 flex flex-col relative overflow-hidden">
         <div class="flex items-center justify-between mb-2">
           <p class="eyebrow text-indigo-300">Writer Pro</p>
-          <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--clay)] text-white">Most popular</span>
+          <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/10 text-[#E8E3DA]">For heavy narrators</span>
         </div>
         <div class="flex items-baseline gap-1 mb-1">
           <span class="font-display text-4xl text-[#F3EFE7]">&#8377;399</span>
           <span class="text-sm text-[#A39B8D]">/ month</span>
         </div>
-        <p class="text-sm text-[#A39B8D] mb-6">For writers who want the full toolkit. <span class="text-[#7E7668]">Or $7.99/mo internationally.</span></p>
+        <p class="text-sm text-[#A39B8D] mb-6">Or <span class="font-semibold text-[#F3EFE7]">&#8377;2,999 a year</span> (about &#8377;250/mo). <span class="text-[#7E7668]">Internationally $7.99/mo.</span></p>
         <ul class="space-y-3 text-sm text-[#E8E3DA] flex-1">
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span><span class="font-semibold text-[#F3EFE7]">Unlimited</span> AI writing assistance</span>
+            Everything in Writer
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span><span class="font-semibold text-[#F3EFE7]">Unlimited</span> listening, plus about 20 new narrations each month <span class="text-[#A39B8D]">(top up anytime)</span></span>
+            <span>The <span class="font-semibold text-[#F3EFE7]">full narration budget</span>: about 20 new narrations each month (4&#215; Writer)</span>
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            Premium analytics, followers, engagement rate, 12-month history
-          </li>
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            Everything in Free
+            Best value once your writing is already earning
           </li>
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-indigo-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -92,18 +168,16 @@
           </li>
         </ul>
         <div class="mt-8 space-y-2.5">
-          @if (isPro) {
-            @if (status()?.provider === 'razorpay_onetime') {
+          @if (tier === 'pro') {
+            @if (oneTime) {
               <span class="block w-full text-center px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714]">
                 Writer Pro active
               </span>
-              @if (config()?.razorpayMode === 'checkout') {
-                <button type="button" (click)="buyAnnual()" [disabled]="loading()"
-                  class="block w-full px-5 py-3 text-sm font-semibold rounded-full border border-[#C9C2B5]/30 text-[#E8E3DA] hover:bg-white/10 transition-colors disabled:opacity-60">
-                  {{ loading() ? 'Working…' : 'Extend with the annual pass (₹2,999)' }}
-                </button>
-                <p class="text-xs text-center text-[#A39B8D]">Your remaining days carry over; the year starts when your current pass ends.</p>
-              }
+              <button type="button" (click)="buy('pro', 'annual')" [disabled]="loading()"
+                class="block w-full px-5 py-3 text-sm font-semibold rounded-full border border-[#C9C2B5]/30 text-[#E8E3DA] hover:bg-white/10 transition-colors disabled:opacity-60">
+                {{ loading() ? 'Working…' : 'Extend with a year (₹2,999)' }}
+              </button>
+              <p class="text-xs text-center text-[#A39B8D]">Your remaining days carry over.</p>
             } @else {
               <button type="button" (click)="manage()" [disabled]="loading()"
                 class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
@@ -111,28 +185,39 @@
               </button>
             }
           } @else {
-            @if (!config() || config()?.razorpayEnabled) {
-              <button type="button" (click)="upgrade('razorpay')" [disabled]="loading()"
-                class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
-                {{ loading() ? 'Redirecting…' : 'Pay in INR, UPI / Cards' }}
-              </button>
-              @if (config()?.razorpayMode === 'checkout') {
-                <button type="button" (click)="buyAnnual()" [disabled]="loading()"
-                  class="block w-full px-5 py-3 text-sm font-semibold rounded-full border border-[#C9C2B5]/30 text-[#E8E3DA] hover:bg-white/10 transition-colors disabled:opacity-60">
-                  {{ loading() ? 'Working…' : 'Get a year for ₹2,999 (save 37%)' }}
+            @if (proSubMode) {
+              @if (!config() || config()?.razorpayEnabled) {
+                <button type="button" (click)="subscribePro('razorpay')" [disabled]="loading()"
+                  class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
+                  {{ loading() ? 'Redirecting…' : 'Subscribe in INR (UPI / Cards)' }}
                 </button>
               }
-            }
-            @if (!config() || config()?.stripeEnabled || config()?.razorpayInternational) {
-              <button type="button" (click)="payInternational()" [disabled]="loading()"
-                class="block w-full px-5 py-3 text-sm font-semibold rounded-full border border-[#C9C2B5]/30 text-[#E8E3DA] hover:bg-white/10 transition-colors disabled:opacity-60">
-                {{ loading() ? 'Working…' : 'Pay with international card ($7.99)' }}
+              @if (config()?.stripeEnabled || config()?.razorpayInternational) {
+                <button type="button" (click)="buyInternational('pro', 'monthly')" [disabled]="loading()"
+                  class="block w-full px-5 py-2.5 text-sm font-semibold rounded-full border border-[#C9C2B5]/30 text-[#E8E3DA] hover:bg-white/10 transition-colors disabled:opacity-60">
+                  {{ loading() ? 'Working…' : 'Pay with international card ($7.99)' }}
+                </button>
+              }
+            } @else {
+              <button type="button" (click)="buy('pro', 'annual')" [disabled]="loading()"
+                class="block w-full px-5 py-3 text-sm font-semibold rounded-full bg-[#F3EFE7] text-[#1A1714] hover:bg-white transition-colors disabled:opacity-60">
+                {{ loading() ? 'Working…' : 'Get a year — ₹2,999 (save 37%)' }}
               </button>
+              <button type="button" (click)="buy('pro', 'monthly')" [disabled]="loading()"
+                class="block w-full px-5 py-2.5 text-sm font-semibold rounded-full border border-[#C9C2B5]/30 text-[#E8E3DA] hover:bg-white/10 transition-colors disabled:opacity-60">
+                {{ loading() ? 'Working…' : 'Or pay ₹399/month' }}
+              </button>
+              @if (config()?.stripeEnabled || config()?.razorpayInternational) {
+                <button type="button" (click)="buyInternational('pro', 'annual')" [disabled]="loading()"
+                  class="block w-full px-5 py-2 text-xs font-semibold text-[#A39B8D] hover:text-[#F3EFE7] transition-colors disabled:opacity-60">
+                  {{ loading() ? 'Working…' : 'Pay with an international card ($59.99/yr)' }}
+                </button>
+              }
             }
           }
         </div>
 
-        @if (isPro && status()?.narration) {
+        @if (tier === 'pro' && status()?.narration) {
           <div class="mt-5 pt-5 border-t border-[#4A443C]">
             <p class="text-sm text-[#E8E3DA]">
               About <span class="font-semibold text-[#F3EFE7]">{{ status()?.narration?.remaining }}</span> narrations left this month.
@@ -147,9 +232,9 @@
       </div>
     </div>
 
-    @if (isPro && status()?.renewsAt) {
+    @if (isPaid && status()?.renewsAt) {
       <p class="text-center text-xs text-gray-500 mt-6">
-        {{ status()?.provider === 'razorpay_onetime' ? 'Your Pro access lasts until' : 'Your Pro plan renews on' }}
+        {{ oneTime ? 'Your access lasts until' : 'Your plan renews on' }}
         {{ status()?.renewsAt | date:'mediumDate' }}.
       </p>
     }
@@ -158,11 +243,11 @@
          If you are GST-registered, keep "inclusive of applicable taxes"; if not yet
          registered, this still reads correctly (no tax is "applicable" until then). -->
     <p class="text-center text-xs text-gray-400 mt-8 max-w-lg mx-auto">
-      @if (config()?.razorpayMode === 'subscription' || config()?.stripeEnabled) {
-        Writer Pro renews automatically each month until you cancel.
+      @if (proSubMode) {
+        Writer is a one-time purchase; Writer Pro can renew automatically each month until you cancel.
       } @else {
-        Writer Pro is a one-time purchase that unlocks 30 days (or 365 days for the annual
-        pass) of access. It does not auto-renew.
+        Writer and Writer Pro are one-time purchases that unlock 30 days (or 365 days for the annual
+        pass) of access. They do not auto-renew.
       }
       Prices are inclusive of applicable taxes (GST) where required, and a payment receipt is issued for
       every charge. See our

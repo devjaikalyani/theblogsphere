@@ -37,7 +37,7 @@ export class AiAssistantComponent implements OnInit {
     this.billing.status().subscribe({
       next: (s) => {
         this.plan.set(s);
-        if (!s.pro && s.ai.remaining !== null && s.ai.remaining <= 0) this.quotaReached.set(true);
+        if (!s.paid && s.ai.remaining !== null && s.ai.remaining <= 0) this.quotaReached.set(true);
       },
       error: () => {},
     });

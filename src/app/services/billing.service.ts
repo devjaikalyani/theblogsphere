@@ -3,15 +3,19 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export type BillingProvider = 'razorpay' | 'stripe';
+/** The two paid tiers. Writer is the entry tier (unlimited AI + premium
+ *  analytics + a light narration budget); Pro adds the full narration budget. */
+export type PaidTier = 'writer' | 'pro';
 
 export interface RazorpayOrder {
   orderId: string;
   amount: number;
   currency: string;
   keyId: string;
-  days?: number;       // Pro one-time window (absent for top-ups)
-  chars?: number;      // top-up characters (absent for Pro)
-  narrations?: number; // approx narrations in a top-up (absent for Pro)
+  days?: number;       // plan one-time window (absent for top-ups)
+  tier?: PaidTier;     // which plan the order buys (absent for top-ups)
+  chars?: number;      // top-up characters (absent for a plan)
+  narrations?: number; // approx narrations in a top-up (absent for a plan)
 }
 
 /** Public gateway config (no user data), for rendering pricing to anyone. */
@@ -24,8 +28,9 @@ export interface BillingConfig {
 }
 
 export interface PlanStatus {
-  plan: string;
-  pro: boolean;
+  plan: string;   // 'free' | 'writer' | 'pro'
+  paid: boolean;  // on any paid tier (Writer or Pro)
+  pro: boolean;   // on the top tier only
   renewsAt: string | null;
   provider: BillingProvider | 'razorpay_onetime' | null;
   billingEnabled: boolean;
@@ -77,12 +82,17 @@ export class BillingService {
     return this.http.post<{ url?: string; cancelled?: boolean }>('/api/billing/manage', {}, { withCredentials: true });
   }
 
-  /** Razorpay Standard Checkout (keys-only mode): create a one-time Pro order
+  /** Razorpay Standard Checkout (keys-only mode): create a one-time plan order
    *  for the Checkout modal to collect. INR for India (UPI/cards); USD for
    *  international cards where the account has International enabled.
-   *  term 'annual' buys a 365-day pass; 'monthly' (default) a 30-day one. */
-  createOrder(currency: 'INR' | 'USD' = 'INR', term: 'monthly' | 'annual' = 'monthly'): Observable<RazorpayOrder> {
-    return this.http.post<RazorpayOrder>('/api/billing/razorpay/order', { currency, term }, { withCredentials: true });
+   *  tier 'writer' buys the entry plan, 'pro' the full one. term 'annual' buys a
+   *  365-day pass; 'monthly' (default) a 30-day one. */
+  createOrder(
+    tier: PaidTier = 'pro',
+    currency: 'INR' | 'USD' = 'INR',
+    term: 'monthly' | 'annual' = 'monthly',
+  ): Observable<RazorpayOrder> {
+    return this.http.post<RazorpayOrder>('/api/billing/razorpay/order', { tier, currency, term }, { withCredentials: true });
   }
 
   /** Prepaid narration top-up pack (Pro only): one-time order for the same
@@ -93,7 +103,7 @@ export class BillingService {
 
   /** Hand the modal's payment result to the server for signature verification.
    *  Pro (or top-up credits) are applied synchronously on success. */
-  verifyPayment(payload: { orderId: string; paymentId: string; signature: string }): Observable<{ ok: boolean; proUntil?: string; topup?: boolean; addedNarrations?: number }> {
-    return this.http.post<{ ok: boolean; proUntil?: string; topup?: boolean; addedNarrations?: number }>('/api/billing/razorpay/verify', payload, { withCredentials: true });
+  verifyPayment(payload: { orderId: string; paymentId: string; signature: string }): Observable<{ ok: boolean; plan?: PaidTier; proUntil?: string; topup?: boolean; addedNarrations?: number }> {
+    return this.http.post<{ ok: boolean; plan?: PaidTier; proUntil?: string; topup?: boolean; addedNarrations?: number }>('/api/billing/razorpay/verify', payload, { withCredentials: true });
   }
 }

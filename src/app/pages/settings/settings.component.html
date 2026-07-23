@@ -15,21 +15,23 @@
           <div>
             <h2 class="font-display text-lg text-gray-900 mb-1">Plan</h2>
             <p class="text-sm text-gray-500">
-              @if (p.pro) {
+              @if (p.plan === 'pro') {
                 You're on <span class="font-semibold text-gray-900">Writer Pro</span>.
+              } @else if (p.plan === 'writer') {
+                You're on <span class="font-semibold text-gray-900">Writer</span>.
               } @else {
                 You're on the <span class="font-semibold text-gray-900">Free</span> plan.
               }
             </p>
           </div>
-          <span [class]="p.pro
+          <span [class]="p.paid
             ? 'text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--clay)] text-white'
             : 'text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sunken text-gray-600'">
-            {{ p.pro ? 'PRO' : 'FREE' }}
+            {{ p.plan === 'pro' ? 'PRO' : (p.plan === 'writer' ? 'WRITER' : 'FREE') }}
           </span>
         </div>
 
-        @if (!p.pro && p.ai.limit !== null) {
+        @if (!p.paid && p.ai.limit !== null) {
           <div class="mb-5">
             <div class="flex items-center justify-between text-xs text-gray-500 mb-1.5">
               <span>AI actions this month</span>
@@ -40,16 +42,16 @@
                    [style.width.%]="p.ai.limit ? (p.ai.used / p.ai.limit) * 100 : 0"></div>
             </div>
           </div>
-        } @else if (p.pro) {
+        } @else if (p.paid) {
           <p class="text-sm text-gray-600 mb-5">Unlimited AI assistance, premium analytics, and a full year of history.</p>
         }
 
         <div class="flex flex-wrap items-center gap-4">
-          @if (p.pro) {
+          @if (p.paid) {
             @if (p.provider === 'razorpay_onetime') {
               <a routerLink="/pricing"
                 class="text-sm font-semibold px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 hover:border-gray-900 transition-colors no-underline">
-                Extend Pro
+                {{ p.plan === 'pro' ? 'Extend Pro' : 'Extend or upgrade' }}
               </a>
             } @else {
               <button type="button" (click)="manageBilling()" [disabled]="billingLoading()"
@@ -60,7 +62,7 @@
           } @else {
             <a routerLink="/pricing"
               class="btn-ink btn-press text-sm font-semibold px-5 py-2.5 rounded-full no-underline">
-              Upgrade to Pro
+              Upgrade
             </a>
           }
         </div>

@@ -3,6 +3,7 @@ import { createHmac } from 'crypto';
 import {
   BillingService,
   FREE_NARRATION_CHARS,
+  WRITER_NARRATION_CHARS,
   PRO_NARRATION_CHARS,
   NARRATION_TOPUP_CHARS,
 } from './billing.service';
@@ -47,6 +48,11 @@ const freeUser = (over: any = {}) => ({
 });
 const proUser = (over: any = {}) => ({
   plan: 'pro', billingProvider: 'razorpay', planRenewsAt: new Date(Date.now() + 20 * 864e5),
+  narrationCharsUsed: 0, narrationPeriodStart: new Date(), narrationCreditChars: 0,
+  ...over,
+});
+const writerUser = (over: any = {}) => ({
+  plan: 'writer', billingProvider: 'razorpay_onetime', planRenewsAt: new Date(Date.now() + 20 * 864e5),
   narrationCharsUsed: 0, narrationPeriodStart: new Date(), narrationCreditChars: 0,
   ...over,
 });
@@ -103,6 +109,18 @@ describe('narration character metering', () => {
     expect(updates[0].narrationCharsUsed).toBe(PRO_NARRATION_CHARS); // 128k + 2k
     expect(updates[0].narrationCreditChars).toBe(46_000); // 50k - 4k
   });
+
+  it('meters a Writer against the smaller Writer narration budget', async () => {
+    const { svc } = makeService({ user: writerUser({ narrationCharsUsed: WRITER_NARRATION_CHARS - 3_000 }) });
+    // Within the remaining Writer budget: allowed, and flagged as a paid path.
+    const ok = await svc.assertNarrationAllowed('u1', 2_000);
+    expect(ok.pro).toBe(true);
+    // Beyond the remaining Writer budget: a top-up prompt (not an upgrade one).
+    await expect(svc.assertNarrationAllowed('u1', 6_000)).rejects.toMatchObject({
+      status: 402,
+      response: { error: 'narration_quota_exceeded', topup: true },
+    });
+  });
 });
 
 describe('razorpay payment verification', () => {
@@ -114,7 +132,7 @@ describe('razorpay payment verification', () => {
     process.env.RAZORPAY_KEY_SECRET = secret;
   });
 
-  const proOrder = { id: 'order_1', currency: 'INR', amount: 39900, notes: { userId: 'u1', purpose: 'writer-pro-30d' } };
+  const proOrder = { id: 'order_1', currency: 'INR', amount: 39900, notes: { userId: 'u1', purpose: 'plan-pro-30d' } };
 
   it('grants Pro on a valid signature + matching order', async () => {
     const { svc, updates } = makeService({
@@ -125,6 +143,34 @@ describe('razorpay payment verification', () => {
       orderId: 'order_1', paymentId: 'pay_1', signature: sign('order_1', 'pay_1'),
     });
     expect(res.ok).toBe(true);
+    expect(res.plan).toBe('pro');
+    expect(updates[0]).toMatchObject({ plan: 'pro', billingProvider: 'razorpay_onetime' });
+  });
+
+  it('grants the Writer tier for a ₹149 Writer order', async () => {
+    const order = { id: 'order_w', currency: 'INR', amount: 14900, notes: { userId: 'u1', purpose: 'plan-writer-30d' } };
+    const { svc, updates } = makeService({ user: freeUser(), razorpay: { orders: { fetch: vi.fn(async () => order) } } });
+    const res: any = await svc.verifyRazorpayPayment('u1', {
+      orderId: 'order_w', paymentId: 'pay_w', signature: sign('order_w', 'pay_w'),
+    });
+    expect(res.plan).toBe('writer');
+    expect(updates[0]).toMatchObject({ plan: 'writer', billingProvider: 'razorpay_onetime' });
+  });
+
+  it('rejects a Writer order paid at less than the Writer price', async () => {
+    const order = { id: 'order_w2', currency: 'INR', amount: 9900, notes: { userId: 'u1', purpose: 'plan-writer-30d' } };
+    const { svc } = makeService({ user: freeUser(), razorpay: { orders: { fetch: vi.fn(async () => order) } } });
+    await expect(svc.verifyRazorpayPayment('u1', {
+      orderId: 'order_w2', paymentId: 'pay_w2', signature: sign('order_w2', 'pay_w2'),
+    })).rejects.toThrow(/amount/i);
+  });
+
+  it('still honours a legacy one-time Pro order (writer-pro-30d) as Pro', async () => {
+    const order = { id: 'order_l', currency: 'INR', amount: 39900, notes: { userId: 'u1', purpose: 'writer-pro-30d' } };
+    const { svc, updates } = makeService({ user: freeUser(), razorpay: { orders: { fetch: vi.fn(async () => order) } } });
+    const res: any = await svc.verifyRazorpayPayment('u1', {
+      orderId: 'order_l', paymentId: 'pay_l', signature: sign('order_l', 'pay_l'),
+    });
     expect(res.plan).toBe('pro');
     expect(updates[0]).toMatchObject({ plan: 'pro', billingProvider: 'razorpay_onetime' });
   });
@@ -153,7 +199,7 @@ describe('razorpay payment verification', () => {
   });
 
   it('grants a 365-day window for an annual-pass order at the annual price', async () => {
-    const order = { id: 'order_3', currency: 'INR', amount: 299900, notes: { userId: 'u1', purpose: 'writer-pro-365d' } };
+    const order = { id: 'order_3', currency: 'INR', amount: 299900, notes: { userId: 'u1', purpose: 'plan-pro-365d' } };
     const { svc, updates } = makeService({ user: freeUser(), razorpay: { orders: { fetch: vi.fn(async () => order) } } });
     const res: any = await svc.verifyRazorpayPayment('u1', {
       orderId: 'order_3', paymentId: 'pay_3', signature: sign('order_3', 'pay_3'),
@@ -166,7 +212,7 @@ describe('razorpay payment verification', () => {
   });
 
   it('rejects an annual-pass order paid at the monthly price', async () => {
-    const order = { id: 'order_4', currency: 'INR', amount: 39900, notes: { userId: 'u1', purpose: 'writer-pro-365d' } };
+    const order = { id: 'order_4', currency: 'INR', amount: 39900, notes: { userId: 'u1', purpose: 'plan-pro-365d' } };
     const { svc } = makeService({ user: freeUser(), razorpay: { orders: { fetch: vi.fn(async () => order) } } });
     await expect(svc.verifyRazorpayPayment('u1', {
       orderId: 'order_4', paymentId: 'pay_4', signature: sign('order_4', 'pay_4'),
@@ -175,7 +221,7 @@ describe('razorpay payment verification', () => {
 
   it('carries remaining days over when an active one-time Pro extends with the annual pass', async () => {
     const tenDaysLeft = new Date(Date.now() + 10 * 864e5);
-    const order = { id: 'order_5', currency: 'INR', amount: 299900, notes: { userId: 'u1', purpose: 'writer-pro-365d' } };
+    const order = { id: 'order_5', currency: 'INR', amount: 299900, notes: { userId: 'u1', purpose: 'plan-pro-365d' } };
     const { svc } = makeService({
       user: proUser({ billingProvider: 'razorpay_onetime', planRenewsAt: tenDaysLeft }),
       razorpay: { orders: { fetch: vi.fn(async () => order) } },
@@ -190,7 +236,7 @@ describe('razorpay payment verification', () => {
 
   it('starts from now (no carry-over) when the previous one-time pass already expired', async () => {
     const expired = new Date(Date.now() - 5 * 864e5);
-    const order = { id: 'order_6', currency: 'INR', amount: 299900, notes: { userId: 'u1', purpose: 'writer-pro-365d' } };
+    const order = { id: 'order_6', currency: 'INR', amount: 299900, notes: { userId: 'u1', purpose: 'plan-pro-365d' } };
     const { svc } = makeService({
       user: proUser({ billingProvider: 'razorpay_onetime', planRenewsAt: expired }),
       razorpay: { orders: { fetch: vi.fn(async () => order) } },

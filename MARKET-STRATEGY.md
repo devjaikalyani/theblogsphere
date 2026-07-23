@@ -123,6 +123,15 @@ Also shipped alongside (2026-07-13): the annual Pro pass from BUSINESS-STRATEGY.
 reframe with the zero-cut promise, server-side HTML sanitization on write, and admin email
 alerts on new content reports.
 
+Shipped (2026-07-23): the two-tier pricing restructure from BUSINESS-STRATEGY.md section 3.
+A new Writer tier (Rs 149/mo, Rs 999/year) sits below Writer Pro (Rs 399) with unlimited AI
+and premium analytics but a light narration budget; Pro keeps the full narration budget.
+Annual is now the primary call to action on both tiers, and the pricing page leads with the
+0%-cut earning story rather than "unlimited AI" (which no longer justifies a Rs 399 headline
+against ChatGPT Go at the same price and a free-AI floor). The entry tier exists to clear the
+reflexive-no line a not-yet-earning writer has; the Rs 399 tier is repositioned for heavy
+narrators and writers already earning.
+
 Defer: custom domains (a future Pro lever), regional languages (Ring 3), native mobile app
 (the PWA is enough).
 

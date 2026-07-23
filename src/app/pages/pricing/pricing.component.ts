@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { BillingService, BillingProvider, BillingConfig, PlanStatus, RazorpayOrder } from '../../services/billing.service';
+import { BillingService, BillingProvider, BillingConfig, PlanStatus, RazorpayOrder, PaidTier } from '../../services/billing.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SeoService } from '../../services/seo.service';
@@ -42,7 +42,7 @@ export class PricingComponent implements OnInit {
   ) {
     seo.set({
       title: 'Pricing | TheBlogSphere',
-      description: 'TheBlogSphere is free to read and write. Upgrade to Writer Pro for unlimited AI assistance, premium analytics, and a custom presence.',
+      description: 'Free to read, write, and get paid over UPI with no platform cut. Upgrade to Writer (₹149/mo) or Pro (₹399/mo) for more narration, premium analytics, and unlimited AI.',
       canonicalPath: '/pricing',
     });
   }
@@ -55,23 +55,42 @@ export class PricingComponent implements OnInit {
     }
   }
 
+  get isPaid(): boolean {
+    return this.status()?.paid ?? false;
+  }
   get isPro(): boolean {
     return this.status()?.pro ?? false;
   }
+  /** 'free' | 'writer' | 'pro' — the effective tier for the signed-in user. */
+  get tier(): string {
+    return this.status()?.plan ?? 'free';
+  }
+  /** True when the active paid plan is a one-time pass (extendable, not cancel). */
+  get oneTime(): boolean {
+    return this.status()?.provider === 'razorpay_onetime';
+  }
+  /** True when Pro should be sold as an auto-renewing subscription (a Razorpay
+   *  subscription plan or Stripe is configured) rather than a one-time pass. */
+  get proSubMode(): boolean {
+    return this.config()?.razorpayMode === 'subscription' || (this.config()?.stripeEnabled ?? false);
+  }
+  private label(tier: PaidTier): string {
+    return tier === 'pro' ? 'Writer Pro' : 'Writer';
+  }
 
-  upgrade(provider: BillingProvider) {
-    if (!this.auth.session()?.user) {
-      this.toast.show('Sign in to upgrade to Pro.', 'info');
-      return;
-    }
-    // Keys-only Razorpay runs as a one-time Standard Checkout modal; with a
-    // subscription plan configured it redirects to the hosted page instead.
-    // Checkout is the default, the config request may still be in flight on a
-    // fresh page load, and only an explicit 'subscription' should redirect.
-    if (provider === 'razorpay' && this.config()?.razorpayMode !== 'subscription') {
-      this.payWithModal('INR', 'monthly');
-      return;
-    }
+  /** Buy a plan tier in INR through the one-time Checkout modal. Both Writer
+   *  and Pro sell this way; Pro can also run as an auto-renewing subscription
+   *  (see subscribePro) when the gateway is configured for it. */
+  buy(tier: PaidTier, term: 'monthly' | 'annual') {
+    if (!this.requireAuth()) return;
+    this.payWithModal(tier, 'INR', term);
+  }
+
+  /** Pro via the configured subscription gateway (Razorpay hosted page or
+   *  Stripe). Only used when razorpayMode === 'subscription' / Stripe is on;
+   *  Writer never subscribes. */
+  subscribePro(provider: BillingProvider) {
+    if (!this.requireAuth()) return;
     this.loading.set(true);
     this.billing.checkout(provider).subscribe({
       next: (r) => { if (r.url) window.location.href = r.url; else this.fail(); },
@@ -79,40 +98,36 @@ export class PricingComponent implements OnInit {
     });
   }
 
-  /** International card button: Stripe when configured, otherwise the Razorpay
-   *  USD modal (needs International approved on the Razorpay account). */
-  payInternational() {
-    if (!this.auth.session()?.user) {
-      this.toast.show('Sign in to upgrade to Pro.', 'info');
-      return;
-    }
-    if (this.config()?.stripeEnabled) {
-      this.upgrade('stripe');
+  /** International card path for a tier: Stripe (Pro subscription) when
+   *  configured, otherwise the Razorpay USD modal (one-time, needs
+   *  International approved on the account). */
+  buyInternational(tier: PaidTier, term: 'monthly' | 'annual') {
+    if (!this.requireAuth()) return;
+    if (tier === 'pro' && this.config()?.stripeEnabled) {
+      this.subscribePro('stripe');
       return;
     }
     if (this.config()?.razorpayInternational) {
-      this.payWithModal('USD', 'monthly');
+      this.payWithModal(tier, 'USD', term);
       return;
     }
     this.toast.show('International payments are not available yet. Please try the INR option.', 'info');
   }
 
-  private payWithModal(currency: 'INR' | 'USD', term: 'monthly' | 'annual') {
-    this.loading.set(true);
-    this.billing.createOrder(currency, term).subscribe({
-      next: (order) => this.openCheckout(order, `Writer Pro, ${order.days} days`),
-      error: (e) => this.fail(e),
-    });
+  private requireAuth(): boolean {
+    if (!this.auth.session()?.user) {
+      this.toast.show('Sign in to upgrade.', 'info');
+      return false;
+    }
+    return true;
   }
 
-  /** Annual pass: one payment, 365 days of Pro, no renewal to remember.
-   *  Only offered on the one-time Checkout path (not subscriptions). */
-  buyAnnual() {
-    if (!this.auth.session()?.user) {
-      this.toast.show('Sign in to upgrade to Pro.', 'info');
-      return;
-    }
-    this.payWithModal('INR', 'annual');
+  private payWithModal(tier: PaidTier, currency: 'INR' | 'USD', term: 'monthly' | 'annual') {
+    this.loading.set(true);
+    this.billing.createOrder(tier, currency, term).subscribe({
+      next: (order) => this.openCheckout(order, `${this.label(tier)}, ${order.days} days`),
+      error: (e) => this.fail(e),
+    });
   }
 
   /** Buy a prepaid narration top-up pack (Pro only). */
@@ -155,7 +170,7 @@ export class PricingComponent implements OnInit {
   }
 
   private verifyPayment(res: any) {
-    const wasPro = this.isPro; // pre-purchase state, for the right message below
+    const wasPaid = this.isPaid; // pre-purchase state, for the right message below
     this.billing.verifyPayment({
       orderId: res.razorpay_order_id,
       paymentId: res.razorpay_payment_id,
@@ -163,13 +178,14 @@ export class PricingComponent implements OnInit {
     }).subscribe({
       next: (r) => {
         this.loading.set(false);
+        const name = r?.plan === 'pro' ? 'Writer Pro' : 'Writer';
         if (r?.topup) {
           this.toast.show(`Top-up added. About ${r.addedNarrations ?? ''} more narrations this month.`, 'success');
-        } else if (wasPro && r?.proUntil) {
+        } else if (wasPaid && r?.proUntil) {
           const until = new Date(r.proUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-          this.toast.show(`Pro extended. Your access now runs until ${until}.`, 'success');
+          this.toast.show(`${name} active. Your access now runs until ${until}.`, 'success');
         } else {
-          this.toast.show('Welcome to Writer Pro. Unlimited AI and your monthly narration budget are now unlocked.', 'success');
+          this.toast.show(`Welcome to ${name}. Unlimited AI and your monthly narration budget are now unlocked.`, 'success');
         }
         this.billing.status().subscribe({ next: (s) => this.status.set(s) });
       },

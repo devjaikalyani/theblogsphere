@@ -34,7 +34,7 @@ model User {
   notifyWeeklyDigest Boolean @default(true)
 
   // Monetization: platform subscription (Writer Pro) + AI usage metering
-  plan                   String    @default("free") // "free" | "pro"
+  plan                   String    @default("free") // "free" | "writer" | "pro"
   planRenewsAt           DateTime?
   billingProvider        String?   // "stripe" | "razorpay", which gateway owns the sub
   stripeCustomerId       String?   @unique

@@ -31,7 +31,9 @@ export class AnalyticsController {
       }),
     ]);
 
-    const isPro = this.billing.isPro(plan);
+    // Both paid tiers (Writer and Pro) get the deeper insights + full year of
+    // history; only the narration budget separates them.
+    const isPaid = this.billing.isPaid(plan);
     const published = blogs.filter(b => b.status === 'published');
     const totalViews = blogs.reduce((s, b) => s + b.views, 0);
     const totalComments = blogs.reduce((s, b) => s + b._count.comments, 0);
@@ -41,7 +43,7 @@ export class AnalyticsController {
     // Monthly views bucketed by publish month. Pro gets a full year of history;
     // free sees the last 6 months.
     const now = new Date();
-    const monthsToShow = isPro ? 12 : 6;
+    const monthsToShow = isPaid ? 12 : 6;
     const months: { label: string; views: number }[] = [];
     for (let i = monthsToShow - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -61,7 +63,7 @@ export class AnalyticsController {
       interactions: number;
       engagementRate: number;
     } | null = null;
-    if (isPro) {
+    if (isPaid) {
       const followers = await this.prisma.follow.count({ where: { followingId: user.id } });
       const interactions = totalLikes + totalComments + totalBookmarks;
       premium = {
@@ -72,7 +74,7 @@ export class AnalyticsController {
     }
 
     return {
-      pro: isPro,
+      pro: isPaid, // client shows premium insights when true (any paid tier)
       totalViews,
       totalComments,
       totalBookmarks,

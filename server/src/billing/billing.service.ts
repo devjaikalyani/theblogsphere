@@ -7,19 +7,27 @@ import { PrismaService } from '../prisma/prisma.service';
 /** Free writers get this many AI actions per rolling 30-day window. Tuned to be
  *  generous enough for a hobby writer but to make a serious one feel the ceiling. */
 export const FREE_AI_MONTHLY_LIMIT = 25;
-/** Pro is "unlimited" for any human, but a scripted account could otherwise run
- *  up Groq costs without bound. This is a silent fair-use backstop, far above
- *  what a real writer hits, so it only ever bites abuse. Not shown in the UI. */
+/** Any paid tier (Writer or Pro) is "unlimited" AI for a human, but a scripted
+ *  account could otherwise run up Groq costs without bound. This is a silent
+ *  fair-use backstop, far above what a real writer hits, so it only ever bites
+ *  abuse. Not shown in the UI. */
 export const PRO_AI_MONTHLY_LIMIT = 500;
 /** Narration is metered by characters, exactly what OpenAI bills ($15 / 1M on
  *  tts-1), so the cost ceiling holds no matter how long an article is. A
  *  cache hit (re-listening to an already-narrated story) is free for everyone
  *  and never counted; only generating NEW audio draws these budgets down.
  *
- *  Free: a lifetime taste (~7 average articles). Worst case ~₹60 one-time.
- *  Pro:  a monthly budget (~20 average articles), then prepaid top-up packs.
- *        Worst case ~₹175/mo against ₹399 revenue → the margin is guaranteed. */
+ *  Narration is the one expensive line in the bundle, so the tiers separate on
+ *  it: Writer is the light audio tier, Pro is the heavy one, and top-up packs
+ *  cover anyone who outgrows their monthly budget.
+ *
+ *  Free:   a lifetime taste (~7 average articles). Worst case ~₹60 one-time.
+ *  Writer: a small monthly budget (~5 average articles). Worst case ~₹43/mo
+ *          against ₹149 revenue → margin holds even before typical usage.
+ *  Pro:    a monthly budget (~20 average articles), then prepaid top-up packs.
+ *          Worst case ~₹175/mo against ₹399 revenue → the margin is guaranteed. */
 export const FREE_NARRATION_CHARS = 45_000;
+export const WRITER_NARRATION_CHARS = 32_000;
 export const PRO_NARRATION_CHARS = 130_000;
 /** Characters added by one prepaid narration top-up pack (~15 articles). */
 export const NARRATION_TOPUP_CHARS = 100_000;
@@ -27,29 +35,37 @@ export const NARRATION_TOPUP_CHARS = 100_000;
  *  count. An "average" narration is ~1000 words ≈ 6,400 characters. */
 const AVG_NARRATION_CHARS = 6_400;
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
-/** One-time Standard Checkout prices (smallest currency unit) and the Pro
- *  window they buy. Used when only the Razorpay API keys are configured (no
- *  subscription plan/webhook); the modal flow verifies synchronously by
- *  signature. USD (international cards) additionally needs International
- *  payments approved on the Razorpay account + RAZORPAY_INTERNATIONAL=true. */
-const PRO_ONE_TIME_PRICES: Record<string, number> = {
-  INR: 39900, // ₹399, matches the pricing page
-  USD: 799, // $7.99, the pricing page's international price
-};
-const PRO_ONE_TIME_DAYS = 30;
-/** Annual pass: about 7.5 monthly cycles for 12 months of Pro. Upfront cash
- *  and no renewal friction; rides the exact same one-time Checkout + lazy
- *  expiry path as the 30-day window, just with a longer term. */
-const PRO_ANNUAL_PRICES: Record<string, number> = {
-  INR: 299900, // ₹2,999 (about 37% off twelve months of ₹399)
-  USD: 5999, // $59.99
-};
-const PRO_ANNUAL_DAYS = 365;
+
+/** The two paid tiers. Writer is the India-volume entry tier (unlimited AI +
+ *  premium analytics + a light narration budget); Pro adds the full narration
+ *  budget for heavy or already-earning writers. */
+export type PaidTier = 'writer' | 'pro';
 export type ProTerm = 'monthly' | 'annual';
+
+/** One-time Standard Checkout prices per tier/term/currency (smallest currency
+ *  unit). Used when only the Razorpay API keys are configured (no subscription
+ *  plan/webhook); the modal flow verifies synchronously by signature. Writer is
+ *  sold only through this one-time / annual path (no subscription plan), which
+ *  is also the rail India converts on. USD (international cards) additionally
+ *  needs International payments approved on the account + RAZORPAY_INTERNATIONAL.
+ *  Annual is priced at about 6.7–7.5 monthly cycles: upfront cash for a
+ *  bootstrap and no renewal friction, which matters most in the India market. */
+const TIER_PRICES: Record<PaidTier, Record<ProTerm, Record<string, number>>> = {
+  writer: {
+    monthly: { INR: 14900, USD: 299 }, // ₹149 / $2.99
+    annual: { INR: 99900, USD: 1999 }, // ₹999 / $19.99 (about 6.7 months)
+  },
+  pro: {
+    monthly: { INR: 39900, USD: 799 }, // ₹399 / $7.99
+    annual: { INR: 299900, USD: 5999 }, // ₹2,999 / $59.99 (about 7.5 months)
+  },
+};
+/** Access window each term buys, applied through the same lazy-expiry path. */
+const TERM_DAYS: Record<ProTerm, number> = { monthly: 30, annual: 365 };
 /** Prepaid narration top-up pack prices (smallest currency unit), cut through
- *  the same Standard Checkout + verify flow as Pro (distinguished by the
+ *  the same Standard Checkout + verify flow as a plan (distinguished by the
  *  order's notes.purpose). Cost of the characters is ~₹135, so both prices
- *  clear a healthy margin. */
+ *  clear a healthy margin. Available to any paid tier. */
 const NARRATION_TOPUP_PRICES: Record<string, number> = {
   INR: 19900, // ₹199
   USD: 399, // $3.99
@@ -90,8 +106,20 @@ export class BillingService {
     return this.razorpayEnabled && process.env.RAZORPAY_INTERNATIONAL === 'true';
   }
 
+  /** The top tier only. Use isPaid() for "has any paid plan" (Writer or Pro),
+   *  which is what unlimited AI and premium analytics gate on. */
   isPro(plan?: string | null): boolean {
     return plan === 'pro';
+  }
+  /** Any paid plan: Writer or Pro. Both get unlimited AI and premium analytics;
+   *  they differ only in the monthly narration budget and the price. */
+  isPaid(plan?: string | null): boolean {
+    return plan === 'writer' || plan === 'pro';
+  }
+  /** Monthly narration character budget for a paid tier (free is handled
+   *  separately as a lifetime taste). */
+  private paidNarrationBudget(plan?: string | null): number {
+    return plan === 'writer' ? WRITER_NARRATION_CHARS : PRO_NARRATION_CHARS;
   }
 
   /** A one-time purchase has no webhook to end it, so its expiry is applied
@@ -99,7 +127,7 @@ export class BillingService {
    *  planRenewsAt routinely passes while the gateway confirms renewal. */
   private oneTimeExpired(u: { plan: string | null; billingProvider: string | null; planRenewsAt: Date | null }): boolean {
     return (
-      u.plan === 'pro' &&
+      this.isPaid(u.plan) &&
       u.billingProvider === 'razorpay_onetime' &&
       !!u.planRenewsAt &&
       new Date(u.planRenewsAt).getTime() < Date.now()
@@ -107,7 +135,7 @@ export class BillingService {
   }
 
   /** The user's effective plan, downgrading an expired one-time purchase. */
-  async currentPlan(userId: string): Promise<'free' | 'pro'> {
+  async currentPlan(userId: string): Promise<'free' | 'writer' | 'pro'> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { plan: true, billingProvider: true, planRenewsAt: true },
@@ -120,6 +148,7 @@ export class BillingService {
       });
       return 'free';
     }
+    if (user.plan === 'writer') return 'writer';
     return this.isPro(user.plan) ? 'pro' : 'free';
   }
 
@@ -149,15 +178,17 @@ export class BillingService {
       await this.prisma.user.update({ where: { id: userId }, data: { plan: 'free', planRenewsAt: null } });
       user = { ...user, plan: 'free', planRenewsAt: null };
     }
-    const pro = this.isPro(user?.plan);
+    const plan = user?.plan ?? 'free';
+    const paid = this.isPaid(plan);
     const expired = this.periodExpired(user?.aiUsagePeriodStart ?? null);
     const used = expired ? 0 : user?.aiUsageCount ?? 0;
     const resetsAt = this.periodEnd(user?.aiUsagePeriodStart ?? null, expired);
-    const narration = this.narrationSnapshot(user ?? null, pro);
+    const narration = this.narrationSnapshot(user ?? null, plan);
 
     return {
-      plan: user?.plan ?? 'free',
-      pro,
+      plan,
+      paid,
+      pro: this.isPro(plan),
       renewsAt: user?.planRenewsAt ?? null,
       provider: user?.billingProvider ?? null,
       billingEnabled: this.enabled,
@@ -166,10 +197,10 @@ export class BillingService {
       razorpayMode: this.razorpayMode,
       razorpayInternational: this.razorpayInternational,
       ai: {
-        used: pro ? 0 : used,
-        limit: pro ? null : FREE_AI_MONTHLY_LIMIT,
-        remaining: pro ? null : Math.max(0, FREE_AI_MONTHLY_LIMIT - used),
-        resetsAt: pro ? null : resetsAt,
+        used: paid ? 0 : used,
+        limit: paid ? null : FREE_AI_MONTHLY_LIMIT,
+        remaining: paid ? null : Math.max(0, FREE_AI_MONTHLY_LIMIT - used),
+        resetsAt: paid ? null : resetsAt,
       },
       narration,
     };
@@ -179,18 +210,21 @@ export class BillingService {
    *  figures (the true cost meter) plus a friendly "~N narrations" estimate. */
   private narrationSnapshot(
     u: { narrationCharsUsed: number; narrationPeriodStart: Date | null; narrationCreditChars: number } | null,
-    pro: boolean,
+    plan: string,
   ) {
     const charsUsed = u?.narrationCharsUsed ?? 0;
     const credits = Math.max(0, u?.narrationCreditChars ?? 0);
-    if (pro) {
+    // Both paid tiers narrate against a monthly budget (+ prepaid credits); the
+    // `pro` flag here means "on the monthly budgeted path", not the top tier.
+    if (this.isPaid(plan)) {
+      const budget = this.paidNarrationBudget(plan);
       const nExpired = this.periodExpired(u?.narrationPeriodStart ?? null);
       const usedThisPeriod = nExpired ? 0 : charsUsed;
-      const periodRemaining = Math.max(0, PRO_NARRATION_CHARS - usedThisPeriod);
+      const periodRemaining = Math.max(0, budget - usedThisPeriod);
       const remainingChars = periodRemaining + credits;
       return {
         pro: true,
-        limitChars: PRO_NARRATION_CHARS,
+        limitChars: budget,
         usedChars: usedThisPeriod,
         creditChars: credits,
         remainingChars,
@@ -215,26 +249,30 @@ export class BillingService {
     return Math.floor(Math.max(0, chars) / AVG_NARRATION_CHARS);
   }
 
-  /** Characters of narration a Pro user can still generate now: whatever is
-   *  left of the monthly budget (reset if the window lapsed) plus prepaid
+  /** Characters of narration a paid user can still generate now: whatever is
+   *  left of the tier's monthly budget (reset if the window lapsed) plus prepaid
    *  top-up credits, which are spent only after the monthly budget. */
-  private proNarrationRemaining(u: { narrationCharsUsed: number; narrationPeriodStart: Date | null; narrationCreditChars: number }): number {
+  private paidNarrationRemaining(
+    u: { narrationCharsUsed: number; narrationPeriodStart: Date | null; narrationCreditChars: number },
+    plan: string,
+  ): number {
     const used = this.periodExpired(u.narrationPeriodStart) ? 0 : u.narrationCharsUsed;
-    return Math.max(0, PRO_NARRATION_CHARS - used) + Math.max(0, u.narrationCreditChars);
+    return Math.max(0, this.paidNarrationBudget(plan) - used) + Math.max(0, u.narrationCreditChars);
   }
 
   /** Read-only narration budget for a user, as an approximate narration count.
    *  Used on a cache hit (free replay) so the client can still show the badge
-   *  without spending anything. */
+   *  without spending anything. `pro` here means "on a paid budgeted path". */
   async narrationRemaining(userId: string): Promise<{ pro: boolean; remaining: number }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { plan: true, narrationCharsUsed: true, narrationPeriodStart: true, narrationCreditChars: true },
     });
     if (!user) return { pro: false, remaining: 0 };
-    const pro = this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro';
-    const chars = pro ? this.proNarrationRemaining(user) : Math.max(0, FREE_NARRATION_CHARS - user.narrationCharsUsed);
-    return { pro, remaining: this.approxNarrations(chars) };
+    const plan = await this.currentPlan(userId);
+    const paid = this.isPaid(plan);
+    const chars = paid ? this.paidNarrationRemaining(user, plan) : Math.max(0, FREE_NARRATION_CHARS - user.narrationCharsUsed);
+    return { pro: paid, remaining: this.approxNarrations(chars) };
   }
 
   /** Gate a NEW narration BEFORE spending provider credits. Checks the exact
@@ -247,10 +285,11 @@ export class BillingService {
       select: { plan: true, narrationCharsUsed: true, narrationPeriodStart: true, narrationCreditChars: true },
     });
     if (!user) throw new HttpException({ error: 'unauthorized' }, HttpStatus.UNAUTHORIZED);
-    const pro = this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro';
+    const plan = await this.currentPlan(userId);
+    const paid = this.isPaid(plan);
 
-    if (pro) {
-      const available = this.proNarrationRemaining(user);
+    if (paid) {
+      const available = this.paidNarrationRemaining(user, plan);
       if (chars > available) {
         throw new HttpException(
           {
@@ -288,9 +327,10 @@ export class BillingService {
       select: { plan: true, narrationCharsUsed: true, narrationPeriodStart: true, narrationCreditChars: true },
     });
     if (!user) return { pro: false, remaining: 0 };
-    const pro = this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro';
+    const plan = await this.currentPlan(userId);
+    const paid = this.isPaid(plan);
 
-    if (!pro) {
+    if (!paid) {
       const updated = await this.prisma.user.update({
         where: { id: userId },
         data: { narrationCharsUsed: { increment: chars }, narrationCount: { increment: 1 } },
@@ -299,9 +339,10 @@ export class BillingService {
       return { pro: false, remaining: this.approxNarrations(FREE_NARRATION_CHARS - updated.narrationCharsUsed) };
     }
 
+    const budget = this.paidNarrationBudget(plan);
     const expired = this.periodExpired(user.narrationPeriodStart);
     const used = expired ? 0 : user.narrationCharsUsed;
-    const fromPeriod = Math.min(chars, Math.max(0, PRO_NARRATION_CHARS - used));
+    const fromPeriod = Math.min(chars, Math.max(0, budget - used));
     const fromCredits = chars - fromPeriod;
     const updated = await this.prisma.user.update({
       where: { id: userId },
@@ -313,7 +354,7 @@ export class BillingService {
       },
       select: { narrationCharsUsed: true, narrationPeriodStart: true, narrationCreditChars: true },
     });
-    return { pro: true, remaining: this.approxNarrations(this.proNarrationRemaining(updated)) };
+    return { pro: true, remaining: this.approxNarrations(this.paidNarrationRemaining(updated, plan)) };
   }
 
   /** Spend one AI credit against a rolling 30-day window that resets lazily.
@@ -327,15 +368,15 @@ export class BillingService {
     });
     if (!user) return; // unknown user: no limit to apply
 
-    const pro = this.isPro(user.plan) && (await this.currentPlan(userId)) === 'pro';
-    const limit = pro ? PRO_AI_MONTHLY_LIMIT : FREE_AI_MONTHLY_LIMIT;
+    const paid = this.isPaid(await this.currentPlan(userId));
+    const limit = paid ? PRO_AI_MONTHLY_LIMIT : FREE_AI_MONTHLY_LIMIT;
 
     const expired = this.periodExpired(user.aiUsagePeriodStart);
     const used = expired ? 0 : user.aiUsageCount;
 
     if (used >= limit) {
       throw new HttpException(
-        pro
+        paid
           ? {
               error: 'ai_fair_use_exceeded',
               message: "You've hit this month's fair-use limit for AI assistance. That's unusually high volume; contact us if you have a legitimate need.",
@@ -515,23 +556,23 @@ export class BillingService {
   // ── Razorpay Standard Checkout (one-time, keys-only mode) ──────────────
   /** Create an order for one Pro window. The client opens the Checkout modal
    *  with this order id; keyId is the publishable half of the key pair. */
-  async createRazorpayOrder(userId: string, currency = 'INR', term: ProTerm = 'monthly') {
+  async createRazorpayOrder(userId: string, currency = 'INR', term: ProTerm = 'monthly', tier: PaidTier = 'pro') {
     if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
-    const annual = term === 'annual';
-    const amount = (annual ? PRO_ANNUAL_PRICES : PRO_ONE_TIME_PRICES)[currency];
-    const days = annual ? PRO_ANNUAL_DAYS : PRO_ONE_TIME_DAYS;
+    const amount = TIER_PRICES[tier]?.[term]?.[currency];
+    const days = TERM_DAYS[term];
     if (!amount) throw new BadRequestException('Unsupported currency.');
     if (currency !== 'INR' && !this.razorpayInternational) {
       throw new BadRequestException('International payments are not enabled yet.');
     }
-    // A subscription-provider Pro (Stripe / Razorpay subscription) buying a
+    // A subscription-provider plan (Stripe / Razorpay subscription) buying a
     // one-time pass would leave two overlapping billing arrangements; only
-    // free users and one-time pass holders (extending) may buy passes.
+    // free users and one-time pass holders (extending / switching tier) may
+    // buy passes.
     const buyer = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { plan: true, billingProvider: true },
     });
-    if (buyer?.plan === 'pro' && buyer.billingProvider && buyer.billingProvider !== 'razorpay_onetime') {
+    if (this.isPaid(buyer?.plan) && buyer?.billingProvider && buyer.billingProvider !== 'razorpay_onetime') {
       throw new BadRequestException(
         'You already have an auto-renewing subscription. Manage or cancel it from Settings instead of buying a pass.',
       );
@@ -539,12 +580,12 @@ export class BillingService {
     const order: any = await this.razorpay.orders.create({
       amount,
       currency,
-      receipt: `pro-${Date.now().toString(36)}`,
+      receipt: `${tier}-${Date.now().toString(36)}`,
       // Capture immediately on success; without this, accounts set to manual
       // capture leave the payment "authorized" and it auto-refunds in 5 days
-      // even though Pro was already granted.
+      // even though the plan was already granted.
       payment_capture: 1,
-      notes: { userId, purpose: `writer-pro-${days}d` },
+      notes: { userId, purpose: `plan-${tier}-${days}d` },
     } as any);
     return {
       orderId: order.id as string,
@@ -552,6 +593,7 @@ export class BillingService {
       currency: order.currency as string,
       keyId: process.env.RAZORPAY_KEY_ID!,
       days,
+      tier,
     };
   }
 
@@ -560,8 +602,8 @@ export class BillingService {
    *  through the same Checkout + verify flow, tagged by notes.purpose. */
   async createNarrationTopupOrder(userId: string, currency = 'INR') {
     if (!this.razorpay) throw new BadRequestException('Razorpay is not configured yet.');
-    if ((await this.currentPlan(userId)) !== 'pro') {
-      throw new BadRequestException('Narration top-ups are for Writer Pro; upgrade to Pro first.');
+    if (!this.isPaid(await this.currentPlan(userId))) {
+      throw new BadRequestException('Narration top-ups are for paid plans; upgrade to Writer or Pro first.');
     }
     const amount = NARRATION_TOPUP_PRICES[currency];
     if (!amount) throw new BadRequestException('Unsupported currency.');
@@ -631,11 +673,15 @@ export class BillingService {
       return { ok: true, topup: true, addedChars: chars, addedNarrations: this.approxNarrations(chars) };
     }
 
-    // Otherwise: a Writer Pro window. The term comes from the order's own
-    // purpose note (set server-side at order creation, so it can't be forged
-    // by the client), and the amount must match that term's price exactly.
-    const annual = purpose === `writer-pro-${PRO_ANNUAL_DAYS}d`;
-    const expectedAmount = (annual ? PRO_ANNUAL_PRICES : PRO_ONE_TIME_PRICES)[currency];
+    // Otherwise: a plan window (Writer or Pro). The tier and term both come from
+    // the order's own purpose note (set server-side at order creation, so they
+    // can't be forged by the client), and the amount must match that
+    // tier+term's price exactly.
+    const parsed = this.parsePlanPurpose(purpose);
+    if (!parsed) throw new BadRequestException('Unrecognized order.');
+    const { tier, days } = parsed;
+    const term: ProTerm = days === TERM_DAYS.annual ? 'annual' : 'monthly';
+    const expectedAmount = TIER_PRICES[tier]?.[term]?.[currency];
     if (!expectedAmount || Number(order?.amount) !== expectedAmount) {
       throw new BadRequestException('Unexpected order amount.');
     }
@@ -644,28 +690,40 @@ export class BillingService {
       return { ok: true, alreadyProcessed: true }; // replayed verify, no free extension
     }
 
-    // Carry-over: an active one-time Pro buying again (e.g. a monthly holder
-    // upgrading to the annual pass) keeps the days already paid for; the new
-    // window starts where the current one ends, never from "now".
+    // Carry-over: an active one-time plan buying again (extending, or switching
+    // tier) keeps the days already paid for; the new window starts where the
+    // current one ends, never from "now".
     const current = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { plan: true, billingProvider: true, planRenewsAt: true },
     });
     const activeOneTimeUntil =
-      current?.plan === 'pro' &&
-      current.billingProvider === 'razorpay_onetime' &&
+      this.isPaid(current?.plan) &&
+      current?.billingProvider === 'razorpay_onetime' &&
       current.planRenewsAt &&
       new Date(current.planRenewsAt).getTime() > Date.now()
         ? new Date(current.planRenewsAt).getTime()
         : Date.now();
 
-    const days = annual ? PRO_ANNUAL_DAYS : PRO_ONE_TIME_DAYS;
     const proUntil = new Date(activeOneTimeUntil + days * 24 * 60 * 60 * 1000);
     await this.prisma.user.update({
       where: { id: userId },
-      data: { plan: 'pro', billingProvider: 'razorpay_onetime', planRenewsAt: proUntil },
+      data: { plan: tier, billingProvider: 'razorpay_onetime', planRenewsAt: proUntil },
     });
-    return { ok: true, plan: 'pro', proUntil };
+    return { ok: true, plan: tier, proUntil };
+  }
+
+  /** Parse a plan order's purpose note into its tier and access window. Accepts
+   *  the current `plan-{tier}-{days}d` scheme and the legacy `writer-pro-{days}d`
+   *  one-time-Pro scheme (pre-tiers), so any order created before this change
+   *  still verifies as Pro. Returns null for anything unrecognized. */
+  private parsePlanPurpose(purpose?: string): { tier: PaidTier; days: number } | null {
+    if (!purpose) return null;
+    const m = /^plan-(writer|pro)-(\d+)d$/.exec(purpose);
+    if (m) return { tier: m[1] as PaidTier, days: Number(m[2]) };
+    const legacy = /^writer-pro-(\d+)d$/.exec(purpose);
+    if (legacy) return { tier: 'pro', days: Number(legacy[1]) };
+    return null;
   }
 
   /** Cancel the user's subscription. Stripe users get the billing portal;
